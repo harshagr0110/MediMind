@@ -3,6 +3,7 @@ import SpecialityMenu from '../components/SpecialityMenu';
 import TopDoctors from '../components/TopDoctors';
 import Banner from '../components/Banner';
 import { useNavigate } from 'react-router-dom';
+import HeaderImg from '../assets/header_img.png';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -25,7 +26,7 @@ const Home = () => {
           </div>
           <div className="flex-1 flex justify-center items-center">
             <img
-              src="/src/assets/header_img.png"
+              src={HeaderImg}
               alt="Doctor Booking Hero"
               className="w-full max-w-md rounded-2xl shadow border-2 border-blue-100 bg-white"
               loading="lazy"

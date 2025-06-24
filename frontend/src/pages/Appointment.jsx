@@ -8,7 +8,7 @@ import axios from 'axios';
 import { FaMapMarkerAlt, FaUserMd, FaGraduationCap, FaMoneyBillWave } from 'react-icons/fa';
 
 const Appointment = () => {
-  const daysofweek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const daysofweek = React.useMemo(() => ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"], []);
   const { docId } = useParams();
   const { doctors, backendurl, token } = useContext(AppContext);
 
@@ -16,6 +16,7 @@ const Appointment = () => {
   const [docSlots, setDocSlots] = useState([]);
   const [groupedSlots, setGroupedSlots] = useState({});
   const [selectedSlot, setSelectedSlot] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate();
 
@@ -99,38 +100,38 @@ const Appointment = () => {
 
   const bookAppointment = async () => {
     if (!selectedSlot) {
-      toast.info("Please select a slot", { position: "top-center", theme: "colored" });
+      toast.info("Please select a slot");
       return;
     }
     if (!token) {
-      toast.warning("Please login to book an appointment", { position: "top-center", theme: "colored" });
+      toast.warning("Please login to book an appointment");
       return navigate("/login");
     }
+    setIsLoading(true);
     try {
-      const date = selectedSlot.date;
-      const month = date.getMonth() + 1;
-      const day = date.getDate();
-      const year = date.getFullYear();
-      const slotDate = day + "_" + month + "_" + year;
-      const userId = localStorage.getItem("userId");
       const { data } = await axios.post(`${backendurl}/api/user/book-appointment`, {
-        userId, docId, slotDate, slotTime: selectedSlot.time
+        docId,
+        slotDate: selectedSlot.date.toISOString(),
+        slotTime: selectedSlot.time
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
+
       if (data.success) {
-        toast.success("Appointment Booked Successfully!", { position: "top-center", theme: "colored", autoClose: 2000 });
+        toast.success("Appointment Booked Successfully!");
         navigate("/my-appointments");
       } else {
-        toast.error(data.message, { position: "top-center", theme: "colored" });
+        toast.error(data.message);
       }
-    } catch {
-      toast.error("Oh no, something went wrong!", { position: "top-center", theme: "colored" });
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "An error occurred while booking.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-blue-50 py-10 px-2 flex flex-col items-center w-full">
+    <div className="min-h-screen bg-gray-50 py-12 px-4 flex flex-col items-center w-full">
       {/* Doctor Info */}
       <div className="w-full max-w-4xl flex flex-col md:flex-row items-center md:items-start gap-8 p-8 mt-10 bg-white rounded-2xl shadow-2xl border border-blue-100">
         <img
@@ -212,9 +213,10 @@ const Appointment = () => {
         )}
         <button
           onClick={bookAppointment}
-          className="px-10 py-4 bg-orange-500 text-white rounded-xl font-bold shadow-lg hover:bg-orange-600 transition text-xl w-full md:w-auto"
+          disabled={isLoading}
+          className="px-10 py-4 bg-orange-500 text-white rounded-xl font-bold shadow-lg hover:bg-orange-600 transition text-xl w-full md:w-auto disabled:bg-gray-400 disabled:cursor-not-allowed"
         >
-          Book Appointment
+          {isLoading ? 'Booking...' : 'Book Appointment'}
         </button>
       </div>
     </div>

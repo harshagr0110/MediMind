@@ -65,7 +65,7 @@ const Navbar = () => {
           ))}
           {/* Admin/Doctor Login Button */}
           <a
-            href="http://localhost:5174/login"
+            href={import.meta.env.VITE_ADMIN_URL || "http://localhost:5174/login"}
             target="_blank"
             rel="noopener noreferrer"
             className="px-4 py-2 rounded-lg text-lg font-semibold transition-all duration-200 flex items-center gap-2 shadow-sm text-white bg-blue-600 hover:bg-blue-700"
@@ -176,7 +176,7 @@ const Navbar = () => {
                 </NavLink>
               ))}
               <a
-                href="http://localhost:5174/login"
+                href={import.meta.env.VITE_ADMIN_URL || "http://localhost:5174/login"}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full px-4 py-3 rounded-lg text-base font-semibold transition-all duration-200 flex items-center gap-2 text-white bg-blue-600 hover:bg-blue-700"
