@@ -111,23 +111,26 @@ const Doctors = () => {
         <main className="flex-1 flex flex-col items-center px-2 pt-8 pb-10 md:pl-0 w-full">
           <h1 className="text-3xl font-bold text-left text-blue-700 mb-8 w-full px-2">
             {selectedSpecs.length > 0
-              ? `Doctors: ${selectedSpecs.join(', ')}`
+              ? `Doctors: ${selectedSpecs.map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(', ')}`
               : 'Our Doctors'}
           </h1>
 
           {filteredDoctors.length === 0 ? (
-            <div className="flex flex-col items-center mt-20">
+            <div className="flex flex-col items-center mt-20 text-center">
               <img
-                src="https://cdn-icons-png.flaticon.com/512/2965/2965567.png"
-                alt="No doctors"
-                className="w-20 h-20 opacity-60 mb-4"
+                src={assets.no_doctors_found}
+                alt="No doctors found"
+                className="w-24 h-24 opacity-60 mb-4"
               />
               <p className="text-lg text-gray-600 font-medium">
                 No doctors match your filter.
               </p>
+              <p className="text-sm text-gray-500 mt-2">
+                Try clearing the filters or selecting a different specialty.
+              </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8 w-full px-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8 w-full px-2 transition-opacity duration-500">
               {filteredDoctors.map((doc, idx) => {
                 const isExpanded = expandedDescriptions.includes(doc._id);
                 return (

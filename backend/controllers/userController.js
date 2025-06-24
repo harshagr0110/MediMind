@@ -7,10 +7,9 @@ import doctormodel from "../models/doctorModel.js";
 import appointmentModel from "../models/appointmentModel.js";
 import Stripe from "stripe";
 import axios from "axios";
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-
-
 
 const createToken = (id) => jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "7d" });
 
@@ -382,102 +381,63 @@ export const verifyStripe = async (req, res) => {
   }
 };
 
-
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY; 
-const GEMINI_MODEL = "gemini-2.0-flash"; 
-
-// --- Main Prediction Endpoint ---
-export const predict= async (req, res) => {
-    // Validate API Key is available
-    if (!GEMINI_API_KEY) {
-        console.error('GEMINI_API_KEY is not set in environment variables.');
-        return res.status(500).json({ error: 'Server configuration error: API Key missing.' });
-    }
-
-    let symptoms = req.body.symptoms;
-    let specialitiesList = req.body.specialitiesList;
-    let images = [];
-
-    // If specialitiesList is a string (from FormData), parse it
-    if (typeof specialitiesList === 'string') {
-        try {
-            specialitiesList = JSON.parse(specialitiesList);
-        } catch (e) {
-            specialitiesList = [];
-        }
-    }
-
-    // If files are present (from multer), convert to Gemini inlineData
-    if (req.files && req.files.length > 0) {
-        images = req.files.map(file => ({
-            inlineData: {
-                mimeType: file.mimetype,
-                data: file.buffer.toString('base64')
-            }
-        }));
-    } else if (req.body.images) {
-        // If images are sent as JSON (base64), use them directly
-        images = req.body.images;
-        if (typeof images === 'string') {
-            try {
-                images = JSON.parse(images);
-            } catch (e) {
-                images = [];
-            }
-        }
-    }
-
-    if (!symptoms && (!images || images.length === 0)) {
-        return res.status(400).json({ error: 'Please provide symptoms or images.' });
-    }
-
+export const diseasePrediction = async (req, res) => {
     try {
-        // --- Prepare parts for Gemini API ---
-        let diseaseParts = [{ text: `Based on these symptoms: "${symptoms}" ${images && images.length > 0 ? "and the provided images," : ""}, provide a brief description of the possible condition, its causes, prevention, and treatment. Keep it concise, under 200 words. Format with **bold** section headers.` }];
-        if (images && images.length > 0) {
-            diseaseParts.push(...images); // Add inlineData objects for images
+        const { prompt } = req.body;
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash", generationConfig: { responseMimeType: "application/json" } });
+
+        if (!prompt && !req.file) {
+            return res.status(400).json({ success: false, message: "A textual description or an image is required." });
         }
 
-        let specialistParts = [{ text: `Based on these symptoms: "${symptoms}" ${images && images.length > 0 ? "and the provided images," : ""}, which medical specialist should the patient see? Respond with JUST the specialty name from this exact list: ${specialitiesList.join(', ')}. Provide only the specialty name, one word if possible, or the most common short form.` }];
-        if (images && images.length > 0) {
-            specialistParts.push(...images); // Add inlineData objects for images
-        }
+        const system_prompt = `
+            SYSTEM INSTRUCTION: You are an AI medical assistant. Analyze the user's symptoms and/or images to suggest a relevant medical specialist. You are NOT a doctor and must NOT provide a diagnosis. Your response MUST be a JSON object and nothing else.
 
-        // --- First Gemini API Call: Disease Info ---
-        const diseasePayload = { contents: [{ role: "user", parts: diseaseParts }] };
-        const diseaseResponse = await axios.post(
-            `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
-            diseasePayload,
-            { headers: { "Content-Type": "application/json" } }
-        );
-        const diseaseText = diseaseResponse.data?.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (!diseaseText) {
-            throw new Error("No disease information received from Gemini API.");
-        }
+            IMPORTANT SAFETY RULE: Your response must begin with a clear, prominent disclaimer.
 
-        // --- Second Gemini API Call: Specialist Info ---
-        const specialistPayload = { contents: [{ role: "user", parts: specialistParts }] };
-        const specialistResponse = await axios.post(
-            `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
-            specialistPayload,
-            { headers: { "Content-Type": "application/json" } }
-        );
-        const specialistText = specialistResponse.data?.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (!specialistText) {
-            throw new Error("No specialist suggestion received from Gemini API.");
-        }
+            Analyze the user's input and generate a JSON object with the following structure. The 'specialist.name' field is the most important; it must be one of the common medical specialties that can be used in a URL (e.g., Cardiologist, Dermatologist, etc.).
 
-        // --- Send combined response back to frontend ---
-        res.json({
-            diseaseInfo: diseaseText,
-            specialistResult: specialistText
-        });
+            {
+              "disclaimer": "This is an AI-generated suggestion and not a medical diagnosis. Please consult a qualified healthcare professional for any medical concerns.",
+              "specialist": {
+                "name": "SpecialistName",
+                "reason": "A brief, one-sentence explanation of why this specialty is relevant."
+              },
+              "potential_conditions": [
+                "A list of 2-3 potential, non-alarming conditions related to the symptoms.",
+                "Mention general conditions, not severe or life-threatening ones."
+              ]
+            }
+        `;
+
+        const user_prompt = `User's Symptoms/Query: "${prompt || 'No text symptoms provided.'}"`;
+
+        const parts = [
+            system_prompt,
+            user_prompt
+        ];
+
+        if (req.file) {
+            parts.push({
+                inlineData: {
+                    mimeType: req.file.mimetype,
+                    data: req.file.buffer.toString("base64"),
+                },
+            });
+        }
+        
+        const result = await model.generateContent(parts);
+        const response = await result.response;
+        const text = response.text();
+        
+        const parsedResponse = JSON.parse(text);
+
+        res.status(200).json({ success: true, data: parsedResponse });
 
     } catch (error) {
-        console.error('Error calling Gemini API from backend:', error.response ? error.response.data : error.message);
-        const status = error.response ? error.response.status : 500;
-        const errorMessage = error.response ? error.response.data.error?.message || error.response.data?.message : 'Internal Server Error';
-        res.status(status).json({ error: errorMessage });
+        console.error("Error in disease prediction:", error);
+        res.status(500).json({ success: false, message: "Failed to get a suggestion from the AI service." });
     }
 };
 
@@ -498,4 +458,18 @@ export const deleteAppointment = async (req, res) => {
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
+};
+
+export {
+    registerUser,
+    loginUser,
+    getProfile,
+    updateProfile,
+    bookAppointment,
+    listAppointment,
+    cancelAppointment,
+    createStripeSession,
+    verifyStripe,
+    diseasePrediction,
+    deleteAppointment
 };

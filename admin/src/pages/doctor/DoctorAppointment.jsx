@@ -1,27 +1,7 @@
 import React, { useContext, useEffect } from 'react';
 import { DoctorContext } from '../../context/Doctorcontext';
 import axios from 'axios';
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-
-// Custom Toast options for a greenish-blue theme
-const toastOptions = {
-  position: "top-right",
-  autoClose: 2500,
-  hideProgressBar: false,
-  closeOnClick: true,
-  pauseOnHover: true,
-  draggable: true,
-  progress: undefined,
-  theme: "colored",
-  style: {
-    background: 'linear-gradient(90deg, #38b2ac 0%, #4299e1 100%)', // teal to blue
-    color: '#fff',
-    fontWeight: 500,
-    borderRadius: '10px',
-    boxShadow: '0 2px 12px rgba(56,178,172,0.15)',
-  },
-};
+import { toast } from 'react-toastify';
 
 const DoctorAppointment = () => {
   const { dToken, appointments, getAppointments, backendurl } = useContext(DoctorContext);
@@ -30,8 +10,7 @@ const DoctorAppointment = () => {
     if (dToken) {
       getAppointments();
     }
-    // eslint-disable-next-line
-  }, [dToken]);
+  }, [dToken, getAppointments]);
 
   const handleCancel = async (id) => {
     if (!window.confirm("Are you sure you want to cancel this appointment?")) return;
@@ -42,11 +21,13 @@ const DoctorAppointment = () => {
         { headers: { Authorization: `Bearer ${dToken}` } }
       );
       if (data.success) {
-        toast.success("Appointment cancelled", toastOptions);
+        toast.success("Appointment cancelled");
         getAppointments();
+      } else {
+        toast.error(data.message || 'Failed to cancel appointment');
       }
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to cancel appointment', toastOptions);
+      toast.error(err.response?.data?.message || 'Failed to cancel appointment');
     }
   };
 
@@ -58,11 +39,13 @@ const DoctorAppointment = () => {
         { headers: { Authorization: `Bearer ${dToken}` } }
       );
       if (data.success) {
-        toast.success("Appointment marked as completed", toastOptions);
+        toast.success("Appointment marked as completed");
         getAppointments();
+      } else {
+        toast.error(data.message || 'Failed to complete appointment');
       }
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to complete appointment', toastOptions);
+      toast.error(err.response?.data?.message || 'Failed to complete appointment');
     }
   };
 

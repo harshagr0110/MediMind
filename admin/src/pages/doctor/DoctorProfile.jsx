@@ -1,7 +1,8 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState, useCallback } from 'react';
 import { DoctorContext } from '../../context/Doctorcontext';
 import { toast } from 'react-toastify';
 import axios from 'axios';
+import { assets } from '../../assets/assets_admin/assets';
 
 const DoctorProfile = () => {
   const { dToken, backendurl } = useContext(DoctorContext);
@@ -9,25 +10,23 @@ const DoctorProfile = () => {
   const [editing, setEditing] = useState(false);
   const [formData, setFormData] = useState({});
 
-  const fetchDoctorProfile = async () => {
+  const fetchDoctorProfile = useCallback(async () => {
+    if (!dToken) return;
     try {
       const { data } = await axios.get(
         `${backendurl}/api/doctor/profile`,
-        {
-          headers: {
-            Authorization: `Bearer ${dToken}`,
-          },
-        }
+        { headers: { Authorization: `Bearer ${dToken}` } }
       );
       if (data.success) {
         setDoctor(data.doctor);
         setFormData(data.doctor);
+      } else {
+        toast.error('Failed to load profile');
       }
     } catch (error) {
-      console.error('Error loading doctor profile:', error);
       toast.error('Failed to load profile');
     }
-  };
+  }, [dToken, backendurl]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -36,12 +35,10 @@ const DoctorProfile = () => {
 
   const toggleAvailability = async () => {
     try {
-      const { data } = await axios.post(
+      await axios.post(
         `${backendurl}/api/doctor/update-availability`,
         {},
-        {
-          headers: { Authorization: `Bearer ${dToken}` },
-        }
+        { headers: { Authorization: `Bearer ${dToken}` } }
       );
       toast.success("Availability updated");
       fetchDoctorProfile();
@@ -53,26 +50,27 @@ const DoctorProfile = () => {
   const handleUpdate = async () => {
     try {
       await axios.post(`${backendurl}/api/doctor/update-profile`, formData, {
-        headers: {
-          Authorization: `Bearer ${dToken}`,
-        },
+        headers: { Authorization: `Bearer ${dToken}` }
       });
       toast.success("Profile updated successfully");
       setEditing(false);
       fetchDoctorProfile();
     } catch (error) {
-      console.error("Profile update error:", error);
       toast.error("Failed to update profile");
     }
   };
 
   useEffect(() => {
-    if (dToken) {
-      fetchDoctorProfile();
-    }
-  }, [dToken]);
+    fetchDoctorProfile();
+  }, [fetchDoctorProfile]);
 
-  if (!doctor) return <p className="p-6 pt-24">Loading profile...</p>;
+  if (!doctor) {
+    return (
+      <div className="min-h-screen flex justify-center items-center pt-24">
+        <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-teal-400"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-blue-50 py-12 px-4 md:px-20 flex justify-center items-start pt-28">
@@ -83,7 +81,7 @@ const DoctorProfile = () => {
             alt={doctor.fullName}
             className="w-64 h-64 rounded-2xl object-cover border-4 border-teal-100 shadow-lg"
             onError={(e) => {
-              e.target.src = '/default-doctor.png';
+              e.target.src = assets.profile_pic;
             }}
           />
           <h3 className="text-3xl font-bold mt-6 text-blue-800">{doctor.fullName}</h3>

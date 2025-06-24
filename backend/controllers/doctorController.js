@@ -1,160 +1,181 @@
-import doctormodel from '../models/doctorModel.js';
-import bcrypt from 'bcrypt'
-import jwt from 'jsonwebtoken'
+import doctorModel from '../models/doctorModel.js';
 import appointmentModel from '../models/appointmentModel.js';
+import userModel from '../models/userModel.js';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 
-
-const changeAvailability = async (req, res) => {
-    try{
-        const {docId}=req.body;
-        console.log(docId);
-        const docData=await doctormodel.findById(docId)
-        await doctormodel.findByIdAndUpdate(docId,{available:!docData.available})
-        console.log(docData.available);
-        return res.status(200).json({success:true})
-    }catch(err){
-        return res.status(500).json({success:false,message:err.message})    
-
+const getDoctors = async (req, res) => {
+    try {
+        const doctors = await doctorModel.find({ status: 'approved' }).select('-password');
+        res.status(200).json({ success: true, data: doctors });
+    } catch (error) {
+        console.error("Error fetching doctors:", error);
+        res.status(500).json({ success: false, message: 'Internal server error.' });
     }
-    }
-
-    const doctorList = async (req, res) => {
-        try{    
-            const doctors=await doctormodel.find({}).select('-password');
-            return res.status(200).json({success:true,doctors});
-        } catch (error) {
-            return res.status(500).json({success:false,message:error.message});
-        }
-    }
-
-    export const loginDoctor = async (req, res) => {
-       try{
-        const {email,password}=req.body
-        const docData=await doctormodel.findOne({email})
-        if(!docData){
-            return res.status(400).json({success:false,message:"Invalid credentials"})
-        }
-        const isMatch=await bcrypt.compare(password,docData.password)
-        if(!isMatch){
-            return res.status(400).json({success:false,message:"Invalid credentials"})
-        }
-        else{
-            const token=jwt.sign({id:docData._id},process.env.JWT_SECRET)
-            return res.status(200).json({success:true,token})
-        }
-       }catch(err){
-        return res.status(500).json({success:false,message:err.message})
-        }
-       } 
-
-export const appointmentsDoctor=async(req,res)=>{
-    try{
-        const docId=req.user.id
-      //  console.log("hello",docId);
-        const appointments=await appointmentModel.find({docId})
-       // console.log(appointments);
-        return res.status(200).json({success:true,appointments})
-    }catch(err){
-        return res.status(500).json({success:false,message:err.message})
-    }
-}
-
-
-
-
-export const cancelappointment = async (req, res) => {
-  try {
-    const { id } = req.body;
-
-    if (!id) {
-      return res.status(400).json({ success: false, message: "Appointment ID is required" });
-    }
-
-    const appointment = await appointmentModel.findById(id);
-
-    if (!appointment) {
-      return res.status(404).json({ success: false, message: "Appointment not found" });
-    }
-
-    if (appointment.cancelled) {
-      return res.status(400).json({ success: false, message: "Appointment already cancelled" });
-    }
-
-    // Update the appointment directly
-    await appointmentModel.findByIdAndUpdate(id, { cancelled: true });
-
-    return res.status(200).json({ success: true, message: "Appointment cancelled successfully" });
-  } catch (err) {
-    console.error("Error cancelling appointment:", err);
-    return res.status(500).json({ success: false, message: "Internal server error" });
-  }
 };
 
-export const appointmentcomplete=async(req,res)=>{
-    try{
-        const {id}=req.body
-        await appointmentModel.findByIdAndUpdate(id,{isCompleted:true})
-        return res.status(200).json({success:true})
-    }catch(err){
-        return res.status(500).json({success:false,message:err.message})
+const getDoctor = async (req, res) => {
+    try {
+        const doctor = await doctorModel.findById(req.params.id).select('-password');
+        if (!doctor) {
+            return res.status(404).json({ success: false, message: 'Doctor not found.' });
+        }
+        res.status(200).json({ success: true, data: doctor });
+    } catch (error) {
+        console.error("Error fetching doctor:", error);
+        res.status(500).json({ success: false, message: 'Internal server error.' });
     }
-}
-
-
-export const getDoctorProfile = async (req, res) => {
-  try {
-    const token = req.headers.authorization?.split(" ")[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const doctor = await doctormodel.findById(decoded.id).select('-password');
-
-    if (!doctor) return res.status(404).json({ success: false, message: 'Doctor not found' });
-
-    res.json({ success: true, doctor });
-  } catch (error) {
-    console.error('Get profile error:', error);
-    res.status(500).json({ success: false, message: 'Server error' });
-  }
 };
 
-// Toggle availability
-export const updateDoctorAvailability = async (req, res) => {
-  try {
-    const token = req.headers.authorization?.split(" ")[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    const doctor = await doctormodel.findById(decoded.id);
-    if (!doctor) return res.status(404).json({ success: false, message: 'Doctor not found' });
-
-    doctor.available = !doctor.available;
-    await doctor.save();
-
-    res.json({ success: true, available: doctor.available });
-  } catch (error) {
-    console.error('Toggle availability error:', error);
-    res.status(500).json({ success: false, message: 'Server error' });
-  }
+const getDoctorProfile = async (req, res) => {
+    try {
+        const doctor = await doctorModel.findById(req.params.id).select('-password');
+        if (!doctor) {
+            return res.status(404).json({ success: false, message: 'Doctor not found' });
+        }
+        res.json({ success: true, data: doctor });
+    } catch (error) {
+        console.error('Get profile error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
 };
 
-// Update profile
-export const updateDoctorProfile = async (req, res) => {
-  try {
-    const token = req.headers.authorization?.split(" ")[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    const updates = req.body;
-    const doctor = await doctormodel.findByIdAndUpdate(decoded.id, updates, {
-      new: true,
-      runValidators: true,
-    }).select('-password');
-
-    if (!doctor) return res.status(404).json({ success: false, message: 'Doctor not found' });
-
-    res.json({ success: true, doctor });
-  } catch (error) {
-    console.error('Update profile error:', error);
-    res.status(500).json({ success: false, message: 'Server error' });
-  }
+const updateDoctorProfile = async (req, res) => {
+    try {
+        const updates = req.body;
+        const doctor = await doctorModel.findByIdAndUpdate(req.user.id, updates, { new: true }).select('-password');
+        if (!doctor) {
+            return res.status(404).json({ success: false, message: 'Doctor not found' });
+        }
+        res.json({ success: true, data: doctor });
+    } catch (error) {
+        console.error('Update profile error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
 };
 
-export {changeAvailability,doctorList}
+const updateDoctorAvailability = async (req, res) => {
+    try {
+        const doctor = await doctorModel.findById(req.user.id);
+        if (!doctor) {
+            return res.status(404).json({ success: false, message: 'Doctor not found' });
+        }
+        doctor.available = !doctor.available;
+        await doctor.save();
+        res.json({ success: true, data: { available: doctor.available } });
+    } catch (error) {
+        console.error('Toggle availability error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+const getAppointments = async (req, res) => {
+    try {
+        const appointments = await appointmentModel.find({ docId: req.user.id })
+            .populate('userId', 'fullName image'); // Populate user details
+
+        res.status(200).json({ success: true, data: appointments });
+    } catch (err) {
+        console.error("Error fetching appointments:", err);
+        res.status(500).json({ success: false, message: err.message });
+    }
+};
+
+const updateAppointmentStatus = async (req, res) => {
+    try {
+        const { appointmentId, status } = req.body;
+        const appointment = await appointmentModel.findByIdAndUpdate(appointmentId, { status }, { new: true });
+        
+        // Notify user
+        const user = await userModel.findById(appointment.userId);
+        user.notifications.push({
+            type: 'appointment-status-updated',
+            message: `Your appointment with Dr. ${req.user.fullName} has been ${status}.`,
+            onClickPath: '/my-appointments'
+        });
+        await user.save();
+
+        res.status(200).json({ success: true, message: "Status updated successfully.", data: appointment });
+    } catch (err) {
+        console.error("Error updating status:", err);
+        res.status(500).json({ success: false, message: "Internal server error." });
+    }
+};
+
+const getAvailability = async (req, res) => {
+    try {
+        const { id } = req.params; // Doctor's ID
+        const { date } = req.query;  // Date in "YYYY-MM-DD" format
+
+        if (!date) {
+            return res.status(400).json({ success: false, message: 'A date query parameter is required.' });
+        }
+
+        const appointmentsOnDate = await appointmentModel.find({
+            docId: id,
+            slotDate: date,
+            status: { $in: ['approved', 'pending'] }
+        });
+
+        const bookedTimeSlots = appointmentsOnDate.map(app => app.slotTime);
+        res.status(200).json({ success: true, data: bookedTimeSlots });
+    } catch (error) {
+        console.error("Error fetching doctor availability:", error);
+        res.status(500).json({ success: false, message: 'Internal server error.' });
+    }
+};
+
+const getDoctorDashboardData = async (req, res) => {
+    try {
+        const doctorId = req.user.id;
+
+        // 1. Get all appointments for the doctor
+        const appointments = await appointmentModel.find({ docId: doctorId });
+
+        // 2. Calculate stats
+        const totalAppointments = appointments.length;
+        const totalPatients = new Set(appointments.map(app => app.userId.toString())).size;
+        
+        const totalEarnings = appointments
+            .filter(app => app.status === 'approved' && app.isCompleted) // Or however you define a "paid" appointment
+            .reduce((sum, app) => sum + app.amount, 0);
+
+        // 3. Get upcoming appointments
+        const upcomingAppointments = appointments
+            .filter(app => new Date(app.slotDate) >= new Date() && !app.isCompleted && app.status === 'approved')
+            .sort((a, b) => new Date(a.slotDate) - new Date(b.slotDate))
+            .slice(0, 5) // Get the next 5
+            .map(app => ({
+                patientName: app.userData.fullName,
+                date: app.slotDate,
+                time: app.slotTime,
+            }));
+
+        res.status(200).json({
+            success: true,
+            data: {
+                totalAppointments,
+                totalPatients,
+                totalEarnings,
+                upcomingAppointments,
+            },
+        });
+
+    } catch (error) {
+        console.error("Error fetching doctor dashboard data:", error);
+        res.status(500).json({ success: false, message: 'Internal server error.' });
+    }
+};
+
+export {
+    getDoctor,
+    getDoctors,
+    getDoctorProfile,
+    updateDoctorProfile,
+    updateDoctorAvailability,
+    getAppointments,
+    updateAppointmentStatus,
+    getAvailability,
+    getDoctorDashboardData,
+};
  

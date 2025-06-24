@@ -2,7 +2,8 @@ import React, { useContext, useEffect, useState } from 'react';
 import { AppContext } from '../context/AppContext';
 import axios from 'axios';
 import { useNavigate, useLocation } from 'react-router-dom';
-import 'react-toastify/dist/ReactToastify.css';
+import { toast } from 'react-toastify';
+import { assets } from '../assets/assets'; // Import assets
 
 const MyAppointments = () => {
   const { backendurl, token, removeAppointment } = useContext(AppContext);
@@ -12,25 +13,28 @@ const MyAppointments = () => {
   const [loading, setLoading] = useState(true);
 
   const fetchAppointments = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
       const { data } = await axios.get(
         `${backendurl}/api/user/appointments`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (data.success) {
         setAppointments(data.appointments.reverse());
+      } else {
+        toast.error(data.message || 'Failed to fetch appointments');
       }
     } catch (err) {
-      console.error(err.response?.data?.message || 'Failed to fetch appointments');
+      toast.error(err.response?.data?.message || 'Failed to fetch appointments');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (token) fetchAppointments();
-    // eslint-disable-next-line
+    if (token) {
+      fetchAppointments();
+    }
   }, [token]);
 
   // Refetch appointments after Stripe payment
@@ -39,14 +43,14 @@ const MyAppointments = () => {
     if (params.has('success')) {
       fetchAppointments();
       if (params.get('success') === 'true') {
-        console.log('Payment successful! Your appointment is confirmed.');
+        toast.success('Payment successful! Your appointment is confirmed.');
       } else {
-        console.error('Payment was not completed.');
+        toast.error('Payment was not completed.');
       }
       // Remove payment params from URL
       navigate('/my-appointments', { replace: true });
     }
-  }, [location.search]);
+  }, [location.search, navigate]); // Added navigate to dependency array
 
   const cancelAppointment = async (appointmentId) => {
     if (!window.confirm("Are you sure you want to cancel this appointment?")) return;
@@ -57,11 +61,13 @@ const MyAppointments = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (data.success) {
-        console.log(data.message);
-        fetchAppointments();
+        toast.success(data.message || "Appointment cancelled successfully.");
+        fetchAppointments(); // Refresh the list
+      } else {
+        toast.error(data.message || 'Failed to cancel appointment');
       }
     } catch (err) {
-      console.error(err.response?.data?.message || 'Failed to cancel appointment');
+      toast.error(err.response?.data?.message || 'Failed to cancel appointment');
     }
   };
 
@@ -75,20 +81,27 @@ const MyAppointments = () => {
       if (data.success && data.url) {
         window.location.href = data.url;
       } else {
-        console.error("Could not initiate payment");
+        toast.error("Could not initiate payment");
       }
     } catch (err) {
-      console.error(err.response?.data?.message || "Payment processing failed");
+      toast.error(err.response?.data?.message || "Payment processing failed");
     }
   };
 
   const formatDate = (dateString) => {
-    return dateString?.replace(/_/g, '/') || 'N/A';
+    if (!dateString) return 'N/A';
+    // Assuming dateString is an ISO string from backend now
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+    });
   };
 
   return (
     <div className="min-h-screen bg-blue-50 flex flex-col items-center w-full py-8">
-      <div className="w-full max-w-4xl bg-white rounded-2xl shadow-2xl p-8 border border-blue-100 flex flex-col items-center">
+      <div className="w-full max-w-5xl bg-white rounded-2xl shadow-2xl p-8 border border-blue-100 flex flex-col items-center">
         <h1 className="text-3xl font-bold text-blue-700 mb-6">My Appointments</h1>
         <p className="text-blue-700 mb-8 text-center text-lg font-medium">
           Manage your doctor appointments easily
@@ -103,7 +116,7 @@ const MyAppointments = () => {
           </div>
         ) : appointments.length === 0 ? (
           <div className="flex flex-col items-center py-16">
-            <img src="/empty-appointments.svg" alt="No appointments" className="w-32 h-32 mb-6 opacity-80" />
+            <img src={assets.empty_appointments} alt="No appointments" className="w-32 h-32 mb-6 opacity-80" />
             <p className="text-gray-500 text-lg mb-4">No appointments found.</p>
             <button
               onClick={() => navigate('/doctors')}
@@ -123,11 +136,11 @@ const MyAppointments = () => {
                 >
                   <div className="flex-shrink-0 flex flex-col items-center">
                     <img
-                      src={doc.image || '/default-doctor.png'}
+                      src={doc.image || assets.default_doctor}
                       alt={doc.fullName}
                       className="w-32 h-32 rounded-full object-cover border-4 border-teal-200 shadow"
                       onError={(e) => {
-                        e.target.src = '/default-doctor.png';
+                        e.target.src = assets.default_doctor;
                       }}
                     />
                     <span className="mt-2 text-xs text-white font-semibold bg-blue-500 px-2 py-0.5 rounded-full">

@@ -3,38 +3,33 @@ import axios from "axios";
 import { assets } from "../assets/assets";
 import { AppContext } from "../context/AppContext";
 import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 
 const Myprofile = () => {
   const { userData, setUserData, backendurl, token } = useContext(AppContext);
 
-  const initialProfile = {
-    fullName: userData?.fullName || "John Doe",
-    email: userData?.email || "john.doe@example.com",
-    phone: userData?.phone || "+1 234 567 890",
-    address: userData?.address || "123 Main St, City, Country",
-    gender: userData?.gender || "Male",
-    dob: userData?.dob || "1990-01-01",
-    profileImage: userData?.image || assets.profile_pic,
-  };
-
-  const [profile, setProfile] = useState(initialProfile);
+  const [profile, setProfile] = useState({});
   const [editMode, setEditMode] = useState(false);
   const [imageFile, setImageFile] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!editMode) {
-      setProfile(initialProfile);
-      setImageFile(null);
+    if (userData) {
+      setProfile({
+        fullName: userData.fullName || "",
+        email: userData.email || "",
+        phone: userData.phone || "",
+        address: userData.address || "",
+        gender: userData.gender || "Male",
+        dob: userData.dob ? userData.dob.split("T")[0] : "",
+        profileImage: userData.image || assets.profile_pic,
+      });
     }
-    // eslint-disable-next-line
-  }, [userData, editMode]);
+  }, [userData]);
 
   const handleChange = (e) => {
-    const { name, value, type } = e.target;
-    setProfile((prev) => ({
-      ...prev,
-      [name]: type === "date" ? new Date(value).toISOString().split("T")[0] : value,
-    }));
+    const { name, value } = e.target;
+    setProfile((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleImageChange = (e) => {
@@ -51,6 +46,7 @@ const Myprofile = () => {
   const handleEdit = () => setEditMode(true);
 
   const handleSave = async () => {
+    setLoading(true);
     try {
       const formData = new FormData();
       formData.append("fullName", profile.fullName);
@@ -58,7 +54,9 @@ const Myprofile = () => {
       formData.append("address", profile.address);
       formData.append("dob", profile.dob);
       formData.append("gender", profile.gender);
-      if (imageFile) formData.append("image", imageFile);
+      if (imageFile) {
+        formData.append("image", imageFile);
+      }
 
       const response = await axios.post(`${backendurl}/api/user/update-profile`, formData, {
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "multipart/form-data" },
@@ -67,19 +65,40 @@ const Myprofile = () => {
       if (response.data.success) {
         setUserData(response.data.userData);
         setEditMode(false);
+        toast.success("Profile updated successfully!");
+      } else {
+        toast.error(response.data.message || "Failed to update profile.");
       }
     } catch (err) {
-      console.error("Profile Update Error", err);
+      toast.error(err?.response?.data?.message || "An error occurred.");
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleCancel = () => {
-    setProfile(initialProfile);
     setEditMode(false);
     setImageFile(null);
+    if (userData) {
+        setProfile({
+            fullName: userData.fullName || "",
+            email: userData.email || "",
+            phone: userData.phone || "",
+            address: userData.address || "",
+            gender: userData.gender || "Male",
+            dob: userData.dob ? userData.dob.split("T")[0] : "",
+            profileImage: userData.image || assets.profile_pic,
+        });
+    }
   };
 
-  if (!userData) return null;
+  if (!userData) {
+    return (
+      <div className="flex justify-center items-center min-h-[60vh]">
+        <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-teal-400"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-blue-50 flex flex-col items-center w-full py-8">
@@ -111,7 +130,7 @@ const Myprofile = () => {
           </h2>
         </div>
         {/* Profile Form Section */}
-        <form className="w-full md:w-2/3 flex flex-col gap-6">
+        <form className="w-full md:w-2/3 flex flex-col gap-6" onSubmit={(e) => e.preventDefault()}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="text-blue-700 font-medium mb-1 block">Full Name:</label>
@@ -200,9 +219,10 @@ const Myprofile = () => {
                 <button
                   type="button"
                   onClick={handleSave}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold shadow hover:bg-blue-700 transition"
+                  disabled={loading}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold shadow hover:bg-blue-700 transition disabled:bg-gray-400"
                 >
-                  Save
+                  {loading ? "Saving..." : "Save"}
                 </button>
                 <button
                   type="button"

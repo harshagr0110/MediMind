@@ -1,12 +1,14 @@
-import { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useEffect, useState, useContext } from 'react';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { toast, ToastContainer, Slide } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { AppContext } from '../context/AppContext';
 
 const Verify = () => {
   const { search } = useLocation();
   const navigate = useNavigate();
+  const { token } = useContext(AppContext);
   const query = new URLSearchParams(search);
   const appointmentId = query.get("appointmentId");
   const success = query.get("success");
@@ -23,7 +25,8 @@ const Verify = () => {
       try {
         const { data } = await axios.post(
           `${import.meta.env.VITE_BACKEND_URL}/api/user/verifystripe`,
-          { appointmentId, success }
+          { appointmentId, success },
+          { headers: { Authorization: `Bearer ${token}` } }
         );
 
         if (data.success) {
@@ -69,7 +72,7 @@ const Verify = () => {
     } else {
       setStatus("invalid");
     }
-  }, [appointmentId, success, navigate]);
+  }, [appointmentId, success, navigate, token]);
 
   const statusMessages = {
     pending: {
@@ -139,18 +142,18 @@ const Verify = () => {
           </p>
         )}
         <div className="mt-8 flex flex-col gap-2 items-center w-full">
-          <a
-            href="/"
+          <Link
+            to="/"
             className="text-blue-600 hover:underline font-medium text-base"
           >
             Back to Home
-          </a>
-          <a
-            href="/my-appointments"
+          </Link>
+          <Link
+            to="/my-appointments"
             className="text-teal-600 hover:underline font-medium text-base"
           >
             My Appointments
-          </a>
+          </Link>
         </div>
       </div>
     </div>

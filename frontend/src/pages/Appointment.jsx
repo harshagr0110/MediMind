@@ -1,226 +1,182 @@
 // src/pages/Appointment.jsx
 
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AppContext } from '../context/AppContext';
-import { toast } from 'react-toastify';
 import axios from 'axios';
 import { FaMapMarkerAlt, FaUserMd, FaGraduationCap, FaMoneyBillWave } from 'react-icons/fa';
+import { Calendar, momentLocalizer } from 'react-big-calendar';
+import moment from 'moment';
+import 'react-big-calendar/lib/css/react-big-calendar.css';
+import Spinner from '../components/Spinner';
+import { toast } from 'react-toastify';
+
+const localizer = momentLocalizer(moment);
+
+const ALL_TIME_SLOTS = [
+    '09:00 AM', '09:30 AM', '10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM',
+    '02:00 PM', '02:30 PM', '03:00 PM', '03:30 PM', '04:00 PM', '04:30 PM'
+];
 
 const Appointment = () => {
-  const daysofweek = React.useMemo(() => ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"], []);
-  const { docId } = useParams();
-  const { doctors, backendurl, token } = useContext(AppContext);
+    const { id } = useParams();
+    const navigate = useNavigate();
+    const { token, backendurl, user } = useContext(AppContext);
 
-  const [docInfo, setDocInfo] = useState(null);
-  const [docSlots, setDocSlots] = useState([]);
-  const [groupedSlots, setGroupedSlots] = useState({});
-  const [selectedSlot, setSelectedSlot] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
+    const [doctor, setDoctor] = useState(null);
+    const [selectedDate, setSelectedDate] = useState(new Date());
+    const [selectedSlot, setSelectedSlot] = useState('');
+    const [bookedSlots, setBookedSlots] = useState([]);
+    const [availableSlots, setAvailableSlots] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [booking, setBooking] = useState(false);
 
-  const navigate = useNavigate();
+    useEffect(() => {
+        const getDoctorDetails = async () => {
+            try {
+                const { data } = await axios.get(`${backendurl}/api/doctor/${id}`);
+                if (data.success) {
+                    setDoctor(data.data);
+                }
+            } catch (error) {
+                console.error("Error fetching doctor details:", error);
+                toast.error("Failed to load doctor details.");
+            } finally {
+                setLoading(false);
+            }
+        };
+        getDoctorDetails();
+    }, [id, backendurl]);
 
-  // Fetch doctor info
-  useEffect(() => {
-    if (doctors.length > 0) {
-      const found = doctors.find(d => d._id === docId);
-      setDocInfo(found || null);
-    }
-  }, [doctors, docId]);
+    useEffect(() => {
+        const getAvailability = async () => {
+            if (!selectedDate) return;
+            try {
+                const dateStr = moment(selectedDate).format('YYYY-MM-DD');
+                const { data } = await axios.get(`${backendurl}/api/doctor/availability/${id}?date=${dateStr}`);
+                if (data.success) {
+                    setBookedSlots(data.data);
+                }
+            } catch (error) {
+                console.error("Error fetching availability:", error);
+                toast.error("Could not fetch availability for this date.");
+            }
+        };
+        getAvailability();
+    }, [selectedDate, id, backendurl]);
 
-  // Generate slots
-  useEffect(() => {
-    if (!docInfo) return;
+    useEffect(() => {
+        setAvailableSlots(ALL_TIME_SLOTS.filter(slot => !bookedSlots.includes(slot)));
+    }, [bookedSlots]);
 
-    const generateSlots = () => {
-      const allSlots = [];
-      const today = new Date();
-
-      for (let i = 0; i < 7; i++) {
-        const currDate = new Date(today);
-        currDate.setDate(currDate.getDate() + i);
-
-        const endTime = new Date(currDate);
-        endTime.setHours(21, 0, 0, 0);
-
-        if (currDate.toDateString() === today.toDateString()) {
-          const minutes = today.getMinutes();
-          if (minutes < 30) {
-            currDate.setHours(today.getHours(), 30, 0, 0);
-          } else {
-            currDate.setHours(today.getHours() + 1, 0, 0, 0);
-          }
-        } else {
-          currDate.setHours(10, 0, 0, 0);
+    const handleBooking = async () => {
+        if (!selectedSlot) {
+            return toast.error("Please select a time slot.");
         }
-
-        while (currDate < endTime) {
-          const timestr = currDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-          allSlots.push({
-            date: new Date(currDate),
-            time: timestr,
-          });
-          currDate.setMinutes(currDate.getMinutes() + 30);
+        if (!token) {
+            return toast.error("Please log in to book an appointment.", { onclose: () => navigate('/login') });
         }
-      }
-      return allSlots;
+        setBooking(true);
+        try {
+            const { data } = await axios.post(`${backendurl}/api/user/book-appointment`, {
+                docId: doctor._id,
+                userId: user._id,
+                slotDate: moment(selectedDate).format('YYYY-MM-DD'),
+                slotTime: selectedSlot,
+                amount: doctor.fees
+            });
+
+            if (data.success) {
+                toast.success(data.message);
+                navigate('/my-appointments');
+            } else {
+                toast.error(data.message);
+            }
+        } catch (error) {
+            toast.error("Booking failed. Please try again.");
+            console.error("Booking Error:", error);
+        } finally {
+            setBooking(false);
+        }
     };
 
-    setDocSlots(generateSlots());
-  }, [docInfo]);
-
-  // Group slots by date
-  useEffect(() => {
-    if (docSlots.length === 0) {
-      setGroupedSlots({});
-      return;
-    }
-    const groups = {};
-    docSlots.forEach((slot) => {
-      const year = slot.date.getFullYear();
-      const month = (slot.date.getMonth() + 1).toString().padStart(2, '0');
-      const day = slot.date.getDate().toString().padStart(2, '0');
-      const key = `${year}-${month}-${day}`;
-      if (!groups[key]) {
-        const dayLabel = daysofweek[slot.date.getDay()];
-        const monthName = slot.date.toLocaleString('default', { month: 'short' });
-        const dateLabel = `${dayLabel}, ${monthName} ${slot.date.getDate()}`;
-        groups[key] = { label: dateLabel, slots: [] };
-      }
-      groups[key].slots.push(slot);
+    if (loading) return <Spinner />;
+    if (!doctor) return <div className="text-center p-8">Doctor not found.</div>;
+    
+    const calendarEvents = bookedSlots.map(slot => {
+        const timeParts = moment(slot, 'hh:mm A').toObject();
+        const start = moment(selectedDate).set({ hours: timeParts.hours, minutes: timeParts.minutes }).toDate();
+        const end = moment(start).add(30, 'minutes').toDate();
+        return { title: 'Booked', start, end };
     });
-    setGroupedSlots(groups);
-  }, [docSlots, daysofweek]);
 
-  if (!docInfo) return (
-    <div className="flex justify-center items-center min-h-[60vh]">
-      <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-teal-400"></div>
-    </div>
-  );
-
-  const bookAppointment = async () => {
-    if (!selectedSlot) {
-      toast.info("Please select a slot");
-      return;
-    }
-    if (!token) {
-      toast.warning("Please login to book an appointment");
-      return navigate("/login");
-    }
-    setIsLoading(true);
-    try {
-      const { data } = await axios.post(`${backendurl}/api/user/book-appointment`, {
-        docId,
-        slotDate: selectedSlot.date.toISOString(),
-        slotTime: selectedSlot.time
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      if (data.success) {
-        toast.success("Appointment Booked Successfully!");
-        navigate("/my-appointments");
-      } else {
-        toast.error(data.message);
-      }
-    } catch (err) {
-      toast.error(err?.response?.data?.message || "An error occurred while booking.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 flex flex-col items-center w-full">
-      {/* Doctor Info */}
-      <div className="w-full max-w-4xl flex flex-col md:flex-row items-center md:items-start gap-8 p-8 mt-10 bg-white rounded-2xl shadow-2xl border border-blue-100">
-        <img
-          src={docInfo.image}
-          alt={docInfo.name}
-          className="w-40 h-40 rounded-full object-cover border-4 border-teal-200 shadow-lg mx-auto md:mx-0"
-        />
-        <div className="flex-1 flex flex-col items-center md:items-start">
-          <h1 className="text-3xl md:text-4xl font-bold text-blue-900 mb-1">{docInfo.fullName}</h1>
-          <div className="flex items-center gap-2 text-lg mb-2">
-            <FaUserMd className="text-teal-500" />
-            <span className="text-teal-700 font-medium">{docInfo.speciality}</span>
-          </div>
-          <div className="flex items-center gap-2 text-gray-700 mb-1">
-            <FaGraduationCap className="text-blue-400" />
-            <span>{docInfo.degree} • {docInfo.experience}</span>
-          </div>
-          <div className="flex items-center gap-2 text-gray-700 mb-1">
-            <FaMoneyBillWave className="text-orange-400" />
-            <span className="font-semibold text-orange-600">₹{docInfo.fees} Consultation Fee</span>
-          </div>
-          <div className="flex items-center gap-2 text-gray-600 mt-2">
-            <FaMapMarkerAlt className="text-blue-400" />
-            <span>
-              {docInfo.address}
-            </span>
-          </div>
-          <div className="mt-4 text-sm text-gray-700 italic text-center md:text-left">
-            {docInfo.about}
-          </div>
-        </div>
-      </div>
-
-      {/* Slots Section */}
-      <div className="w-full max-w-4xl mt-8 p-8 bg-blue-50 rounded-2xl shadow-xl border border-blue-100">
-        <h2 className="text-2xl font-bold text-teal-700 mb-6 text-center">Available Slots</h2>
-        {Object.keys(groupedSlots).length === 0 ? (
-          <p className="text-gray-500 text-center">No slots available.</p>
-        ) : (
-          <div className="flex flex-col gap-8">
-            {Object.entries(groupedSlots).map(([dateKey, info]) => (
-              <div key={dateKey}>
-                <h3 className="mb-3 text-blue-700 font-semibold text-lg text-center">{info.label}</h3>
-                <div className="flex flex-wrap justify-center gap-3">
-                  {info.slots.map((slotObj) => {
-                    const slotIdentifier = `${dateKey}-${slotObj.time}`;
-                    const isSelected =
-                      selectedSlot &&
-                      selectedSlot.date.toDateString() === slotObj.date.toDateString() &&
-                      selectedSlot.time === slotObj.time;
-                    return (
-                      <button
-                        key={slotIdentifier}
-                        onClick={() => setSelectedSlot(slotObj)}
-                        className={`px-5 py-2 rounded-lg font-semibold shadow transition border-2 text-base
-                          ${isSelected ? 'bg-teal-500 text-white border-teal-600 scale-105' : 'bg-white text-blue-700 border-blue-200 hover:bg-blue-100 hover:border-blue-400'}
-                        `}
-                      >
-                        {slotObj.time}
-                      </button>
-                    );
-                  })}
+    return (
+        <div className="container mx-auto p-4 md:p-8">
+            <div className="bg-white shadow-xl rounded-lg overflow-hidden md:flex">
+                <div className="md:w-1/3 p-6 bg-gradient-to-r from-blue-500 to-teal-400 text-white">
+                    <img src={doctor.image} alt={doctor.fullName} className="w-32 h-32 rounded-full mx-auto border-4 border-white shadow-lg" />
+                    <h1 className="text-3xl font-bold text-center mt-4">{doctor.fullName}</h1>
+                    <p className="text-center text-blue-100">{doctor.specialization}</p>
+                    <div className="mt-6 space-y-3">
+                        <p className="flex items-center"><FaGraduationCap className="mr-3" /> {doctor.degree}</p>
+                        <p className="flex items-center"><FaUserMd className="mr-3" /> {doctor.experience} years of experience</p>
+                        <p className="flex items-center"><FaMapMarkerAlt className="mr-3" /> {doctor.address}</p>
+                        <p className="flex items-center text-2xl font-bold"><FaMoneyBillWave className="mr-3" /> ₹{doctor.fees} per session</p>
+                    </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
 
-      {/* Selected Slot Summary & Book Button */}
-      <div className="w-full max-w-4xl mt-8 flex flex-col md:flex-row items-center gap-6">
-        {selectedSlot && (
-          <div className="flex-1 bg-white rounded-xl shadow-lg border border-teal-100 p-6 flex flex-col items-center md:items-start">
-            <h3 className="text-lg font-bold text-teal-700 mb-2">Selected Slot</h3>
-            <div className="text-blue-800 font-semibold text-base mb-1">
-              {selectedSlot.date.toLocaleDateString()} at {selectedSlot.time}
+                <div className="md:w-2/3 p-6">
+                    <h2 className="text-2xl font-bold mb-4 text-gray-800">Book Your Slot</h2>
+                    
+                    <div style={{ height: '500px' }}>
+                        <Calendar
+                            localizer={localizer}
+                            events={calendarEvents}
+                            startAccessor="start"
+                            endAccessor="end"
+                            defaultView="month"
+                            views={['month', 'week', 'day']}
+                            onNavigate={date => setSelectedDate(date)}
+                            onSelectSlot={({ start }) => setSelectedDate(start)}
+                            selectable
+                            min={new Date()} // Prevent booking past dates
+                        />
+                    </div>
+
+                    <div className="mt-6">
+                        <h3 className="text-xl font-semibold text-gray-700 mb-3">
+                            Available Slots for <span className="text-blue-600">{moment(selectedDate).format('MMMM Do, YYYY')}</span>
+                        </h3>
+                        {availableSlots.length > 0 ? (
+                            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+                                {availableSlots.map(slot => (
+                                    <button
+                                        key={slot}
+                                        onClick={() => setSelectedSlot(slot)}
+                                        className={`p-2 rounded-lg text-center font-semibold transition-all duration-200 ${selectedSlot === slot ? 'bg-blue-600 text-white shadow-lg' : 'bg-gray-200 text-gray-800 hover:bg-blue-200'}`}
+                                    >
+                                        {slot}
+                                    </button>
+                                ))}
+                            </div>
+                        ) : (
+                            <p className="text-gray-500">No available slots for this day. Please select another date.</p>
+                        )}
+                    </div>
+                    
+                    <div className="mt-8 text-center">
+                        <button
+                            onClick={handleBooking}
+                            disabled={booking || !selectedSlot}
+                            className="w-full md:w-auto bg-green-500 text-white font-bold py-3 px-12 rounded-lg hover:bg-green-600 disabled:bg-gray-400 transition-colors duration-300"
+                        >
+                            {booking ? 'Booking...' : 'Confirm Appointment'}
+                        </button>
+                    </div>
+                </div>
             </div>
-          </div>
-        )}
-        <button
-          onClick={bookAppointment}
-          disabled={isLoading}
-          className="px-10 py-4 bg-orange-500 text-white rounded-xl font-bold shadow-lg hover:bg-orange-600 transition text-xl w-full md:w-auto disabled:bg-gray-400 disabled:cursor-not-allowed"
-        >
-          {isLoading ? 'Booking...' : 'Book Appointment'}
-        </button>
-      </div>
-    </div>
-  );
+        </div>
+    );
 };
 
 export default Appointment;

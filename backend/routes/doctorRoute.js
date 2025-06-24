@@ -1,22 +1,39 @@
 import express from 'express';
-import { doctorList } from '../controllers/doctorController.js';
-import { loginDoctor } from '../controllers/doctorController.js';
-import { appointmentsDoctor } from '../controllers/doctorController.js';
 import authDoctor from '../middleware/authDoctor.js';
-import { cancelappointment } from '../controllers/doctorController.js';
-import { appointmentcomplete } from '../controllers/doctorController.js';
-import { getDoctorProfile } from '../controllers/doctorController.js';
-import { updateDoctorAvailability,updateDoctorProfile } from '../controllers/doctorController.js';
-const DoctorRouter = express.Router();
+import authUser from '../middleware/authUser.js';
+import {
+    getDoctor,
+    getDoctors,
+    updateProfile,
+    getAppointments,
+    updateAppointmentStatus,
+    getAvailability,
+    getDoctorProfile,
+    updateDoctorAvailability,
+    updateDoctorProfile,
+    getDoctorDashboardData,
+} from '../controllers/doctorController.js';
 
-DoctorRouter.get('/list', doctorList);
-DoctorRouter.post('/login', loginDoctor);
-DoctorRouter.get('/appointments',authDoctor, appointmentsDoctor);
-DoctorRouter.post('/cancel-appointment',authDoctor, cancelappointment);
-DoctorRouter.post('/complete-appointment',authDoctor, appointmentcomplete);
-DoctorRouter.get('/profile',authDoctor, getDoctorProfile);
-DoctorRouter.post('/update-profile',authDoctor, updateDoctorProfile);
-DoctorRouter.post('/update-availability',authDoctor, updateDoctorAvailability);
+const router = express.Router();
 
+// GET all doctors
+router.get('/list', getDoctors);
 
-export default DoctorRouter;
+// GET single doctor by id
+router.get('/:id', getDoctor);
+
+// DOCTOR-SPECIFIC ROUTES (require doctor authentication)
+router.get('/profile/:id', authDoctor, getDoctorProfile);
+router.post('/update-profile', authDoctor, updateDoctorProfile);
+router.post('/update-availability', authDoctor, updateDoctorAvailability);
+
+router.get('/appointments', authDoctor, getAppointments);
+router.post('/update-appointment-status', authDoctor, updateAppointmentStatus);
+
+// New route for fetching availability (can be called by authenticated users)
+router.get('/availability/:id', authUser, getAvailability);
+
+// New route for doctor-specific dashboard data
+router.get('/dashboard', authDoctor, getDoctorDashboardData);
+
+export default router;

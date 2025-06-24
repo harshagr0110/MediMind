@@ -8,6 +8,10 @@ import DoctorRouter from './routes/doctorRoute.js';
 import userRouter from './routes/userRoute.js';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import articleRouter from './routes/articleRoute.js';
+import { createArticle, getArticles, getArticleById } from './controllers/articleController.js';
+import authAll from './middleware/authAll.js';
+import upload from './middleware/multer.js';
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -23,6 +27,12 @@ app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }));
 app.use('/api/admin', adminRouter);
 app.use('/api/doctor', DoctorRouter);
 app.use('/api/user', userRouter);
+app.use('/api/articles', articleRouter);
+
+// Article API routes defined directly as a workaround
+app.get('/api/articles', getArticles);
+app.get('/api/articles/:id', getArticleById);
+app.post('/api/articles', authAll, upload.single('image'), createArticle);
 
 // Move root route here
 app.get('/', (req, res) => {

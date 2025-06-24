@@ -1,86 +1,90 @@
-import React, { useContext, useEffect } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
+import axios from 'axios';
 import { DoctorContext } from '../../context/Doctorcontext';
+import Spinner from '../../components/Spinner';
+import { toast } from 'react-toastify';
+import { FaUserInjured, FaCalendarCheck, FaRupeeSign } from 'react-icons/fa';
+
+const StatCard = ({ icon, title, value, color }) => (
+    <div className={`bg-white p-6 rounded-lg shadow-lg flex items-center space-x-4 border-l-4 ${color}`}>
+        <div className="text-3xl">{icon}</div>
+        <div>
+            <p className="text-gray-500 text-sm font-medium">{title}</p>
+            <p className="text-2xl font-bold text-gray-800">{value}</p>
+        </div>
+    </div>
+);
 
 const DoctorDashboard = () => {
-  const { dToken, appointments, getAppointments } = useContext(DoctorContext);
+    const { backendurl } = useContext(DoctorContext);
+    const [dashboardData, setDashboardData] = useState(null);
+    const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (dToken) {
-      getAppointments();
-    }
-  }, [dToken]);
+    useEffect(() => {
+        const fetchDashboardData = async () => {
+            try {
+                const { data } = await axios.get(`${backendurl}/api/doctor/dashboard`);
+                if (data.success) {
+                    setDashboardData(data.data);
+                } else {
+                    toast.error("Failed to fetch dashboard data.");
+                }
+            } catch (error) {
+                toast.error("An error occurred while fetching dashboard data.");
+                console.error(error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchDashboardData();
+    }, [backendurl]);
 
-  const total = appointments.length;
-  const completed = appointments.filter((a) => a.isCompleted).length;
-  const cancelled = appointments.filter((a) => a.cancelled).length;
-  const pending = total - completed - cancelled;
+    if (loading) return <Spinner />;
+    if (!dashboardData) return <div className="p-8 text-center">Could not load dashboard data.</div>;
 
-  const latest = [...appointments]
-    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-    .slice(0, 5);
+    const { totalAppointments, totalPatients, totalEarnings, upcomingAppointments } = dashboardData;
 
-  return (
-    <div className="p-6 md:p-10 min-h-screen bg-blue-50 pt-28">
-      <h1 className="text-4xl font-extrabold mb-8 text-blue-800">Doctor Dashboard</h1>
+    return (
+        <div className="p-4 md:p-8 bg-gray-50 min-h-screen">
+            <h1 className="text-3xl font-bold text-gray-800 mb-8">My Dashboard</h1>
 
-      {/* Stats Overview */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-8 mb-10">
-        <StatCard label="Total Appointments" value={total} color="text-blue-700" border="border-blue-200" />
-        <StatCard label="Completed" value={completed} color="text-teal-700" border="border-teal-200" />
-        <StatCard label="Pending" value={pending} color="text-blue-400" border="border-blue-100" />
-        <StatCard label="Cancelled" value={cancelled} color="text-red-500" border="border-red-200" />
-      </div>
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                <StatCard icon={<FaCalendarCheck className="text-blue-500"/>} title="Total Appointments" value={totalAppointments} color="border-blue-500" />
+                <StatCard icon={<FaUserInjured className="text-green-500"/>} title="Total Patients" value={totalPatients} color="border-green-500" />
+                <StatCard icon={<FaRupeeSign className="text-red-500"/>} title="Total Earnings" value={`₹${totalEarnings.toFixed(2)}`} color="border-red-500" />
+            </div>
 
-      {/* Recent Appointments */}
-      <div>
-        <h2 className="text-2xl font-semibold mb-4 text-blue-700">Recent Appointments</h2>
-        {latest.length === 0 ? (
-          <p className="text-gray-500">No recent appointments found.</p>
-        ) : (
-          <div className="space-y-4">
-            {latest.map((app) => (
-              <div
-                key={app._id}
-                className="p-4 bg-white rounded-2xl shadow flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border border-blue-100 hover:shadow-lg transition"
-              >
-                <div className="flex items-center gap-4">
-                  <img
-                    src={app.userData?.image}
-                    alt={app.userData?.fullName}
-                    className="w-12 h-12 rounded-full object-cover border-2 border-teal-100"
-                  />
-                  <div>
-                    <p className="font-medium text-blue-900">{app.userData?.fullName}</p>
-                    <p className="text-sm text-blue-600">{app.slotDate} at {app.slotTime}</p>
-                  </div>
-                </div>
-
-                <div className="text-sm font-medium">
-                  <span
-                    className={`px-3 py-1 rounded-full border text-xs font-semibold
-                      ${app.cancelled ? 'bg-red-50 text-red-500 border-red-200' : app.isCompleted ? 'bg-teal-50 text-teal-700 border-teal-200' : 'bg-blue-50 text-blue-700 border-blue-100'}`}
-                  >
-                    {app.cancelled
-                      ? 'Cancelled'
-                      : app.isCompleted
-                      ? 'Completed'
-                      : 'Pending'}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
+            {/* Upcoming Appointments */}
+            <div className="bg-white p-6 rounded-lg shadow-lg">
+                <h2 className="text-xl font-bold text-gray-700 mb-4">Upcoming Appointments</h2>
+                {upcomingAppointments.length > 0 ? (
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full text-left">
+                            <thead>
+                                <tr className="bg-gray-100">
+                                    <th className="p-3">Patient Name</th>
+                                    <th className="p-3">Date</th>
+                                    <th className="p-3">Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {upcomingAppointments.map((app, index) => (
+                                    <tr key={index} className="border-b hover:bg-gray-50">
+                                        <td className="p-3">{app.patientName}</td>
+                                        <td className="p-3">{app.date}</td>
+                                        <td className="p-3">{app.time}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                ) : (
+                    <p className="text-gray-500">No upcoming appointments.</p>
+                )}
+            </div>
+        </div>
+    );
 };
-
-const StatCard = ({ label, value, color, border }) => (
-  <div className={`rounded-xl p-4 shadow bg-white flex flex-col items-center justify-center border-2 ${border}`}>
-    <p className={`text-2xl font-bold mb-1 ${color}`}>{value}</p>
-    <p className="text-sm text-blue-700">{label}</p>
-  </div>
-);
 
 export default DoctorDashboard;

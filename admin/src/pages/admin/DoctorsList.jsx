@@ -1,123 +1,122 @@
-import React, { useContext, useEffect, useState } from 'react';
 import axios from 'axios';
-import toast, { Toaster } from 'react-hot-toast';
+import React, { useContext, useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 import { AdminContext } from '../../context/Admincontext';
+import Spinner from '../../components/Spinner';
 
 const DoctorsList = () => {
-  const { aToken, backendurl, doctors, getAllDoctors, changeAvailability, removeDoctor } = useContext(AdminContext);
-  const [availability, setAvailability] = useState({});
+    const { backendurl } = useContext(AdminContext);
+    const [doctors, setDoctors] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (aToken) {
-      getAllDoctors();
+    const getAllDoctors = async () => {
+        try {
+            setLoading(true);
+            const response = await axios.get(`${backendurl}/api/admin/all-doctors`);
+            if (response.data.success) {
+                setDoctors(response.data.data);
+            } else {
+                toast.error(response.data.message);
+            }
+        } catch (error) {
+            console.error("Error fetching doctors:", error);
+            toast.error('Error fetching doctors list.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleDoctorStatus = async (doctorId, status) => {
+        try {
+            const response = await axios.post(`${backendurl}/api/admin/update-doctor-status`, { doctorId, status });
+            if (response.data.success) {
+                toast.success(response.data.message);
+                getAllDoctors(); // Refresh the list
+            } else {
+                toast.error(response.data.message);
+            }
+        } catch (error) {
+            console.error("Error updating doctor status:", error);
+            toast.error('Error updating doctor status.');
+        }
+    };
+
+    const handleDeleteDoctor = async (id) => {
+        if (window.confirm("Are you sure you want to delete this doctor? This action cannot be undone.")) {
+            try {
+                const response = await axios.delete(`${backendurl}/api/admin/delete-doctor/${id}`);
+                if (response.data.success) {
+                    toast.success('Doctor deleted successfully!');
+                    getAllDoctors(); // Refresh the list
+                } else {
+                    toast.error(response.data.message);
+                }
+            } catch (error) {
+                console.error("Error deleting doctor:", error);
+                toast.error('Failed to delete doctor.');
+            }
+        }
+    };
+
+    useEffect(() => {
+        getAllDoctors();
+    }, [backendurl]);
+
+    if (loading) {
+        return <Spinner />;
     }
-  }, [aToken, getAllDoctors]);
 
-  useEffect(() => {
-    if (doctors && doctors.length > 0) {
-      const initialState = {};
-      doctors.forEach((doc) => {
-        initialState[doc._id] = doc.available;
-      });
-      setAvailability(initialState);
-    }
-  }, [doctors]);
-
-  const toggleAvailability = async (id) => {
-    try {
-      // Call context function
-      await changeAvailability(id);
-      // Optimistically update local state
-      setAvailability((prev) => ({
-        ...prev,
-        [id]: !prev[id],
-      }));
-      toast.success('Availability updated!', {
-        style: {
-          border: '1px solid #22c55e',
-          padding: '8px 16px',
-          color: '#166534',
-          background: '#f0fdf4',
-        },
-        iconTheme: {
-          primary: '#22c55e',
-          secondary: '#f0fdf4',
-        },
-      });
-    } catch (error) {
-      toast.error('Failed to update availability.', {
-        style: {
-          border: '1px solid #ef4444',
-          padding: '8px 16px',
-          color: '#991b1b',
-          background: '#fef2f2',
-        },
-        iconTheme: {
-          primary: '#ef4444',
-          secondary: '#fef2f2',
-        },
-      });
-    }
-  };
-
-  return (
-    <div className="p-8 min-h-screen bg-blue-50 text-gray-900 pt-24">
-      <Toaster position="top-center" />
-      <h2 className="text-3xl font-bold mb-8 text-center text-blue-800">Doctors List</h2>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-        {doctors && doctors.length > 0 ? (
-          doctors.map((doctor) => (
-            <div
-              key={doctor._id}
-              className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-shadow p-6 flex flex-col items-center text-center border border-blue-100"
-            >
-              <img
-                src={doctor.image}
-                alt={doctor.fullName}
-                className="w-full h-40 object-cover object-top rounded-xl mb-4 border-2 border-teal-100 shadow"
-              />
-
-              <h3 className="text-lg font-semibold text-blue-800">{doctor.fullName}</h3>
-              <p className="text-teal-600 font-medium">{doctor.speciality}</p>
-              <p className="text-sm text-gray-500">Degree: {doctor.degree}</p>
-              <p className="text-sm text-gray-500">Experience: {doctor.experience} years</p>
-              <p className="text-sm text-gray-500">
-                Fees: <span className="text-blue-700 font-semibold">	{doctor.fees}</span>
-              </p>
-              <p className="text-sm text-gray-500">Email: {doctor.email}</p>
-              <p className="text-sm text-gray-500">Address: {doctor.address}</p>
-
-              <div className="mt-3 flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  checked={availability[doctor._id] || false}
-                  onChange={() => toggleAvailability(doctor._id)}
-                  className="h-5 w-5 text-teal-600 focus:ring-teal-500 border-blue-200 rounded"
-                />
-                <label className={`text-sm font-medium ${availability[doctor._id] ? 'text-teal-700' : 'text-gray-400'}`}>
-                  {availability[doctor._id] ? 'Available' : 'Not Available'}
-                </label>
-                <button
-                  className="ml-4 px-3 py-1 rounded-lg bg-red-500 text-white text-xs font-semibold shadow hover:bg-red-600 transition"
-                  onClick={() => {
-                    if (window.confirm('Are you sure you want to remove this doctor?')) {
-                      removeDoctor(doctor._id);
-                    }
-                  }}
-                  title="Remove Doctor"
-                >
-                  Remove
-                </button>
-              </div>
+    return (
+        <div className="container mx-auto p-4">
+            <h1 className="text-2xl font-bold mb-4">Doctors List</h1>
+            <div className="overflow-x-auto">
+                <table className="min-w-full bg-white border">
+                    <thead>
+                        <tr>
+                            <th className="py-2 px-4 border-b">Name</th>
+                            <th className="py-2 px-4 border-b">Email</th>
+                            <th className="py-2 px-4 border-b">Specialization</th>
+                            <th className="py-2 px-4 border-b">Status</th>
+                            <th className="py-2 px-4 border-b">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {doctors.map((doctor) => (
+                            <tr key={doctor._id}>
+                                <td className="py-2 px-4 border-b">{doctor.fullName}</td>
+                                <td className="py-2 px-4 border-b">{doctor.email}</td>
+                                <td className="py-2 px-4 border-b">{doctor.specialization}</td>
+                                <td className="py-2 px-4 border-b">{doctor.status}</td>
+                                <td className="py-2 px-4 border-b">
+                                    {doctor.status === 'pending' ? (
+                                        <button
+                                            onClick={() => handleDoctorStatus(doctor._id, 'approved')}
+                                            className="bg-green-500 text-white px-3 py-1 rounded mr-2"
+                                        >
+                                            Approve
+                                        </button>
+                                    ) : (
+                                        <button
+                                            onClick={() => handleDoctorStatus(doctor._id, 'rejected')}
+                                            className="bg-yellow-500 text-white px-3 py-1 rounded mr-2"
+                                        >
+                                            Reject
+                                        </button>
+                                    )}
+                                    <button
+                                        onClick={() => handleDeleteDoctor(doctor._id)}
+                                        className="bg-red-500 text-white px-3 py-1 rounded"
+                                    >
+                                        Delete
+                                    </button>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
             </div>
-          ))
-        ) : (
-          <div className="col-span-full text-center text-gray-500">No doctors found.</div>
-        )}
-      </div>
-    </div>
-  );
+        </div>
+    );
 };
 
 export default DoctorsList;

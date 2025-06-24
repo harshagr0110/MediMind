@@ -1,11 +1,22 @@
-import React, { useRef } from 'react';
+import React, { useState } from 'react';
 
 const Contact = () => {
-  const formRef = useRef();
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    message: '',
+  });
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    formRef.current.reset();
+    // In a real app, you would send the formData to a server here.
+    console.log(formData);
+    setFormData({ name: '', email: '', phone: '', message: '' });
   };
 
   return (
@@ -20,28 +31,39 @@ const Contact = () => {
               Have questions about disease detection or want to book an appointment? Fill out the form or reach us directly!
             </p>
             <form
-              ref={formRef}
               onSubmit={handleSubmit}
               className="flex flex-col gap-4 w-full max-w-md"
             >
               <input
                 type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
                 placeholder="Your Name"
                 required
                 className="p-3 rounded-xl border border-blue-200 bg-blue-50 text-base focus:outline-none focus:ring-2 focus:ring-blue-300 transition"
               />
               <input
                 type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
                 placeholder="Your Email"
                 required
                 className="p-3 rounded-xl border border-blue-200 bg-white text-base focus:outline-none focus:ring-2 focus:ring-teal-300 transition"
               />
               <input
                 type="tel"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
                 placeholder="Phone Number"
                 className="p-3 rounded-xl border border-blue-200 bg-blue-50 text-base focus:outline-none focus:ring-2 focus:ring-blue-200 transition"
               />
               <textarea
+                name="message"
+                value={formData.message}
+                onChange={handleChange}
                 placeholder="How can we help you?"
                 rows={4}
                 required
