@@ -24,6 +24,11 @@ app.use('/api/admin', adminRouter);
 app.use('/api/doctor', DoctorRouter);
 app.use('/api/user', userRouter);
 
+// Move root route here
+app.get('/', (req, res) => {
+    res.send('api working')
+})
+
 // 404 handler
 app.use((req, res, next) => {
     res.status(404).json({ message: 'Route not found' });
@@ -34,10 +39,6 @@ app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).json({ message: 'Internal Server Error', error: err.message });
 });
-
-app.get('/', (req, res) => {
-    res.send('api working')
-})
 
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`)
