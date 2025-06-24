@@ -53,7 +53,7 @@ const DiseasePrediction = () => {
   const {backendurl}=useContext(AppContext);
   const [prompt, setPrompt] = useState("");
   const [selectedImages, setSelectedImages] = useState([]); // File objects
-  const [base64Images, setBase64Images] = useState([]); // Base64 strings for API
+  // const [base64Images, setBase64Images] = useState([]); // Base64 strings for API
   const [diseaseInfo, setDiseaseInfo] = useState(null);
   const [specialistResult, setSpecialistResult] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -62,44 +62,18 @@ const DiseasePrediction = () => {
 
   // State to manage current view: 'prediction' or 'doctorList' or 'doctorDetail'
   const [currentPage, setCurrentPage] = useState('prediction');
-  const [selectedDoctor, setSelectedDoctor] = useState(null);
 
   // Handles image file selection and conversion to Base64
   const handleImageChange = async (event) => {
     const files = Array.from(event.target.files);
     if (files.length === 0) return;
 
-    // Convert all files to base64
-    const base64Promises = files.map(file => {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const base64String = reader.result.split(',')[1];
-          resolve({
-            inlineData: {
-              mimeType: file.type,
-              data: base64String
-            }
-          });
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-    });
-
-    try {
-      const base64Results = await Promise.all(base64Promises);
-      setSelectedImages(prev => [...prev, ...files]);
-      setBase64Images(prev => [...prev, ...base64Results]);
-    } catch (err) {
-      setError("Failed to process images. Please try again.");
-    }
+    setSelectedImages(prev => [...prev, ...files]);
   };
 
   // Removes a selected image by index
   const removeImage = (index) => {
     setSelectedImages(prev => prev.filter((_, i) => i !== index));
-    setBase64Images(prev => prev.filter((_, i) => i !== index));
     if (fileInputRef.current) {
       fileInputRef.current.value = null;
     }
@@ -293,7 +267,6 @@ const DiseasePrediction = () => {
   return (
     <div className="min-h-screen w-full flex items-center justify-center p-4 bg-blue-50 font-inter">
       {currentPage === 'prediction' && renderPredictionForm()}
-      {currentPage === 'doctorList' && renderDoctorListPage()}
     </div>
   );
 };
