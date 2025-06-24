@@ -17,7 +17,7 @@ import DiseasePrediction from './pages/DiseasePrediction'
 
 function App() {
   return (
-    <div className="app-bg min-h-screen flex flex-col">
+    <div className="min-h-screen bg-background text-primary flex flex-col">
       <ToastContainer
         position="top-center"
         autoClose={3000}

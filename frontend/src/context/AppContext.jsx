@@ -11,6 +11,25 @@ const AppContextProvider = ({ children }) => {
   const [userId, setUserId] = useState(localStorage.getItem('userId') || '');
   const [userData, setUserData] = useState(null);
 
+  // Axios interceptor for global 401 handling
+  useEffect(() => {
+    const interceptor = axios.interceptors.response.use(
+      response => response,
+      error => {
+        if (error.response && error.response.status === 401) {
+          setToken('');
+          setUserId('');
+          setUserData(null);
+          localStorage.removeItem('token');
+          localStorage.removeItem('userId');
+          toast.error('Session expired, please log in again.', { position: 'top-center' });
+        }
+        return Promise.reject(error);
+      }
+    );
+    return () => axios.interceptors.response.eject(interceptor);
+  }, []);
+
   useEffect(() => {
     if (token) {
       localStorage.setItem('token', token);
@@ -45,25 +64,50 @@ const AppContextProvider = ({ children }) => {
   const getUserProfileData = async () => {
     try {
       const { data } = await axios.get(`${backendurl}/api/user/get-profile`, { headers: { Authorization: `Bearer ${token}` } });
-    console.log(data);
       if (data.success) setUserData(data.userData);
-      else toast.error(data.message);
-    } catch {
-      toast.error("Something went wrong");
+      else {
+        setUserData(null);
+        toast.error(data.message);
+      }
+    } catch (err) {
+      setUserData(null);
+      // If 401, interceptor will handle logout and toast
+      if (!err.response || err.response.status !== 401) {
+        toast.error("Something went wrong");
+      }
     }
   };
 
   useEffect(() =>  {
-    //console.log(token);
     if (token) getUserProfileData();
     else setUserData(null);
   }, [token]);
+
+  // Remove appointment by ID
+  const removeAppointment = async (id) => {
+    try {
+      const { data } = await axios.delete(`${backendurl}/api/user/delete-appointment/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (data.success) {
+        toast.success('Appointment removed successfully');
+        return true;
+      } else {
+        toast.error(data.message || 'Failed to remove appointment');
+        return false;
+      }
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Failed to remove appointment');
+      return false;
+    }
+  };
 
   return (
     <AppContext.Provider value={{
       backendurl, doctors, getDoctorsData,
       token, setToken, userId, setUserId,
-      userData,setUserData
+      userData,setUserData,
+      removeAppointment
     }}>
       {children}
     </AppContext.Provider>

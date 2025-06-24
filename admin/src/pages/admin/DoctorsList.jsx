@@ -4,7 +4,7 @@ import toast, { Toaster } from 'react-hot-toast';
 import { AdminContext } from '../../context/Admincontext';
 
 const DoctorsList = () => {
-  const { aToken, backendurl, doctors, getAllDoctors, changeAvailability } = useContext(AdminContext);
+  const { aToken, backendurl, doctors, getAllDoctors, changeAvailability, removeDoctor } = useContext(AdminContext);
   const [availability, setAvailability] = useState({});
 
   useEffect(() => {
@@ -61,43 +61,54 @@ const DoctorsList = () => {
   };
 
   return (
-    <div className="p-4 min-h-screen bg-white">
+    <div className="p-8 min-h-screen bg-blue-50 text-gray-900 pt-24">
       <Toaster position="top-center" />
-      <h2 className="text-2xl font-bold mb-6 text-center text-green-700">Doctors List</h2>
+      <h2 className="text-3xl font-bold mb-8 text-center text-blue-800">Doctors List</h2>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
         {doctors && doctors.length > 0 ? (
           doctors.map((doctor) => (
             <div
               key={doctor._id}
-              className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow p-4 flex flex-col items-center text-center border border-green-100"
+              className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-shadow p-6 flex flex-col items-center text-center border border-blue-100"
             >
               <img
                 src={doctor.image}
                 alt={doctor.fullName}
-                className="w-full h-48 object-cover object-top rounded-md mb-4 border border-green-200"
+                className="w-full h-40 object-cover object-top rounded-xl mb-4 border-2 border-teal-100 shadow"
               />
 
-              <h3 className="text-lg font-semibold text-blue-900">{doctor.fullName}</h3>
-              <p className="text-green-700 font-medium">{doctor.speciality}</p>
-              <p className="text-sm text-gray-600">Degree: {doctor.degree}</p>
-              <p className="text-sm text-gray-600">Experience: {doctor.experience} years</p>
-              <p className="text-sm text-gray-600">
-                Fees: <span className="text-green-700 font-semibold">₹{doctor.fees}</span>
+              <h3 className="text-lg font-semibold text-blue-800">{doctor.fullName}</h3>
+              <p className="text-teal-600 font-medium">{doctor.speciality}</p>
+              <p className="text-sm text-gray-500">Degree: {doctor.degree}</p>
+              <p className="text-sm text-gray-500">Experience: {doctor.experience} years</p>
+              <p className="text-sm text-gray-500">
+                Fees: <span className="text-blue-700 font-semibold">	{doctor.fees}</span>
               </p>
-              <p className="text-sm text-gray-600">Email: {doctor.email}</p>
-              <p className="text-sm text-gray-600">Address: {doctor.address}</p>
+              <p className="text-sm text-gray-500">Email: {doctor.email}</p>
+              <p className="text-sm text-gray-500">Address: {doctor.address}</p>
 
               <div className="mt-3 flex items-center space-x-2">
                 <input
                   type="checkbox"
                   checked={availability[doctor._id] || false}
                   onChange={() => toggleAvailability(doctor._id)}
-                  className="h-5 w-5 text-green-600 focus:ring-green-500 border-green-300 rounded"
+                  className="h-5 w-5 text-teal-600 focus:ring-teal-500 border-blue-200 rounded"
                 />
-                <label className={`text-sm font-medium ${availability[doctor._id] ? 'text-green-700' : 'text-gray-500'}`}>
+                <label className={`text-sm font-medium ${availability[doctor._id] ? 'text-teal-700' : 'text-gray-400'}`}>
                   {availability[doctor._id] ? 'Available' : 'Not Available'}
                 </label>
+                <button
+                  className="ml-4 px-3 py-1 rounded-lg bg-red-500 text-white text-xs font-semibold shadow hover:bg-red-600 transition"
+                  onClick={() => {
+                    if (window.confirm('Are you sure you want to remove this doctor?')) {
+                      removeDoctor(doctor._id);
+                    }
+                  }}
+                  title="Remove Doctor"
+                >
+                  Remove
+                </button>
               </div>
             </div>
           ))

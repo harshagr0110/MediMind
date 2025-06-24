@@ -72,16 +72,16 @@ const DoctorProfile = () => {
     }
   }, [dToken]);
 
-  if (!doctor) return <p className="p-6">Loading profile...</p>;
+  if (!doctor) return <p className="p-6 pt-24">Loading profile...</p>;
 
   return (
-    <div className="min-h-screen bg-white py-12 px-4 md:px-20 flex justify-center items-start">
-      <div className="w-full max-w-6xl bg-white shadow-2xl rounded-3xl p-10 flex flex-col md:flex-row gap-10 border border-black">
+    <div className="min-h-screen bg-blue-50 py-12 px-4 md:px-20 flex justify-center items-start pt-28">
+      <div className="w-full max-w-6xl bg-white shadow-2xl rounded-3xl p-10 flex flex-col md:flex-row gap-10 border border-blue-100">
         <div className="flex flex-col items-center md:items-start md:w-1/3">
           <img
             src={doctor.image}
             alt={doctor.fullName}
-            className="w-64 h-64 rounded-2xl object-cover border-4 border-blue-200 shadow-lg"
+            className="w-64 h-64 rounded-2xl object-cover border-4 border-teal-100 shadow-lg"
             onError={(e) => {
               e.target.src = '/default-doctor.png';
             }}
@@ -91,11 +91,8 @@ const DoctorProfile = () => {
           <div className="mt-4">
             <button
               onClick={toggleAvailability}
-              className={`px-5 py-2 rounded-full text-sm font-semibold shadow transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400 ${
-                doctor.available
-                  ? 'bg-gradient-to-r from-green-300 to-blue-300 text-green-900 hover:from-green-400 hover:to-blue-400'
-                  : 'bg-gradient-to-r from-red-200 to-blue-200 text-red-700 hover:from-red-300 hover:to-blue-300'
-              }`}
+              className={`px-5 py-2 rounded-full text-sm font-semibold shadow transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400
+                ${doctor.available ? 'bg-teal-100 text-teal-700 hover:bg-teal-200' : 'bg-red-100 text-red-700 hover:bg-red-200'}`}
             >
               {doctor.available ? 'Available' : 'Not Available'}
             </button>
@@ -109,7 +106,7 @@ const DoctorProfile = () => {
                 name="speciality" 
                 value={formData.speciality || ''} 
                 onChange={handleChange} 
-                className="input border border-blue-300 rounded p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-400" 
+                className="input border border-blue-200 rounded p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-400" 
               />
             ) : doctor.speciality} />
             
@@ -118,7 +115,7 @@ const DoctorProfile = () => {
                 name="degree" 
                 value={formData.degree || ''} 
                 onChange={handleChange} 
-                className="input border border-blue-300 rounded p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-400" 
+                className="input border border-blue-200 rounded p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-400" 
               />
             ) : doctor.degree} />
             
@@ -128,7 +125,7 @@ const DoctorProfile = () => {
                 type="number" 
                 value={formData.experience || ''} 
                 onChange={handleChange} 
-                className="input border border-blue-300 rounded p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-400" 
+                className="input border border-blue-200 rounded p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-400" 
               />
             ) : `${doctor.experience} years`} />
             
@@ -138,7 +135,7 @@ const DoctorProfile = () => {
                 type="number" 
                 value={formData.fees || ''} 
                 onChange={handleChange} 
-                className="input border border-blue-300 rounded p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-400" 
+                className="input border border-blue-200 rounded p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-400" 
               />
             ) : `₹${doctor.fees}`} />
             
@@ -147,7 +144,7 @@ const DoctorProfile = () => {
                 name="address" 
                 value={formData.address || ''} 
                 onChange={handleChange} 
-                className="input border border-blue-300 rounded p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-400" 
+                className="input border border-blue-200 rounded p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-400" 
               />
             ) : doctor.address} />
           </div>
@@ -159,11 +156,11 @@ const DoctorProfile = () => {
                 name="about" 
                 value={formData.about || ''} 
                 onChange={handleChange} 
-                className="w-full border border-blue-300 rounded-lg p-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400" 
+                className="w-full border border-blue-200 rounded-lg p-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400" 
                 rows="5" 
               />
             ) : (
-              <p className="text-gray-700 text-lg leading-relaxed bg-gradient-to-r from-blue-50 via-green-50 to-blue-100 rounded-xl p-5 shadow-inner">
+              <p className="text-gray-700 text-lg leading-relaxed bg-blue-50 rounded-xl p-5 shadow-inner">
                 {doctor.about}
               </p>
             )}
@@ -174,7 +171,7 @@ const DoctorProfile = () => {
               <div className="flex gap-4">
                 <button 
                   onClick={handleUpdate} 
-                  className="bg-gradient-to-r from-blue-500 to-green-400 text-white px-6 py-2 rounded-lg shadow hover:from-blue-600 hover:to-green-500 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  className="bg-blue-600 text-white px-6 py-2 rounded-lg shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
                 >
                   Save Changes
                 </button>
@@ -183,7 +180,7 @@ const DoctorProfile = () => {
                     setEditing(false);
                     setFormData(doctor);
                   }} 
-                  className="bg-gradient-to-r from-gray-200 to-blue-100 text-gray-800 px-6 py-2 rounded-lg shadow hover:from-gray-300 hover:to-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  className="bg-gray-200 text-gray-800 px-6 py-2 rounded-lg shadow hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
                 >
                   Cancel
                 </button>
@@ -191,7 +188,7 @@ const DoctorProfile = () => {
             ) : (
               <button 
                 onClick={() => setEditing(true)} 
-                className="bg-gradient-to-r from-blue-100 to-green-100 text-blue-800 px-6 py-2 rounded-lg shadow hover:from-blue-200 hover:to-green-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className="bg-blue-100 text-blue-800 px-6 py-2 rounded-lg shadow hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
               >
                 Edit Profile
               </button>

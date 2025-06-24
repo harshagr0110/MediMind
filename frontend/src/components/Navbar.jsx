@@ -24,22 +24,21 @@ const Navbar = () => {
     { name: 'All Doctors', to: '/doctors' },
     { name: 'About', to: '/about' },
     { name: 'Contact', to: '/contact' },
-    { name: 'Admin/Doctor', to: '/admin' },
   ];
 
   return (
-    <nav className="w-full shadow-lg fixed top-0 z-50 bg-blue-100">
-      <div className="max-w-7xl mx-auto px-4 flex items-center justify-between h-20">
+    <nav className="w-full bg-white border-b border-blue-100 shadow-sm fixed top-0 z-50">
+      <div className="w-full max-w-none px-6 flex items-center justify-between h-20">
         {/* Logo */}
         <div className="flex items-center space-x-3">
           <img 
             src={assets.logo} 
             alt="Logo" 
-            className="h-12 w-12 rounded-full border-2 border-green-400 shadow cursor-pointer"
+            className="h-14 w-14 rounded-full border-2 border-blue-200 shadow cursor-pointer transition-transform duration-200 hover:scale-105"
             onClick={() => navigate('/')} 
           />
           <span 
-            className="font-bold text-3xl text-blue-800 tracking-wide hidden sm:block cursor-pointer"
+            className="font-bold text-3xl text-blue-700 tracking-wide hidden sm:block cursor-pointer"
             onClick={() => navigate('/')}
           >
             MEDIMIND
@@ -53,10 +52,10 @@ const Navbar = () => {
               key={link.name}
               to={link.to}
               className={({ isActive }) =>
-                `px-4 py-2 rounded-full text-lg font-semibold transition-all duration-200 flex items-center gap-2 shadow-sm ${
+                `px-4 py-2 rounded-lg text-lg font-semibold transition-all duration-200 flex items-center gap-2 shadow-sm ${
                   isActive
-                    ? 'text-blue-700 bg-blue-100 ring-2 ring-blue-200'
-                    : 'text-gray-700 hover:text-green-700 hover:bg-green-100 hover:ring-2 hover:ring-green-200'
+                    ? 'text-blue-700 bg-blue-50 ring-2 ring-blue-200'
+                    : 'text-gray-700 hover:text-blue-700 hover:bg-blue-50 hover:ring-2 hover:ring-blue-200'
                 }`
               }
               end
@@ -64,6 +63,15 @@ const Navbar = () => {
               {link.name}
             </NavLink>
           ))}
+          {/* Admin/Doctor Login Button */}
+          <a
+            href="http://localhost:5174/login"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-4 py-2 rounded-lg text-lg font-semibold transition-all duration-200 flex items-center gap-2 shadow-sm text-white bg-blue-600 hover:bg-blue-700"
+          >
+            Admin/Doctor Login
+          </a>
         </div>
 
         {/* Auth Buttons / Profile */}
@@ -71,7 +79,7 @@ const Navbar = () => {
           {!token ? (
             <button
               onClick={() => navigate('/login')}
-              className="bg-gradient-to-r from-green-400 to-blue-400 text-white px-6 py-2 rounded-full font-semibold shadow hover:from-green-500 hover:to-blue-500 transition-all"
+              className="bg-orange-400 text-white px-6 py-2 rounded-lg font-semibold shadow hover:bg-orange-500 transition-all"
             >
               Create Account
             </button>
@@ -102,7 +110,7 @@ const Navbar = () => {
                   </button>
                   <button 
                     onClick={handleLogout} 
-                    className="block w-full px-5 py-3 text-left text-red-600 hover:bg-green-50 rounded-xl font-medium"
+                    className="block w-full px-5 py-3 text-left text-red-600 hover:bg-orange-50 rounded-xl font-medium"
                   >
                     Logout
                   </button>
@@ -117,9 +125,9 @@ const Navbar = () => {
           <button 
             onClick={() => setSidebar(true)} 
             aria-label="Open menu" 
-            className="p-2 rounded-full bg-green-100 hover:bg-green-200 transition"
+            className="p-2 rounded-full bg-blue-50 hover:bg-blue-100 transition"
           >
-            <Menu className="w-7 h-7 text-green-700" />
+            <Menu className="w-7 h-7 text-blue-700" />
           </button>
         </div>
       </div>
@@ -133,18 +141,18 @@ const Navbar = () => {
                 <img 
                   src={assets.logo} 
                   alt="Logo" 
-                  className="h-10 w-10 rounded-full border-2 border-green-400 cursor-pointer"
+                  className="h-12 w-12 rounded-full border-2 border-blue-200 shadow cursor-pointer transition-transform duration-200 hover:scale-105"
                   onClick={() => {
                     navigate('/');
                     setSidebar(false);
                   }}
                 />
-                <span className="font-bold text-xl text-green-700">MEDIMIND</span>
+                <span className="font-bold text-xl text-blue-700">MEDIMIND</span>
               </div>
               <button 
                 onClick={() => setSidebar(false)} 
                 aria-label="Close menu" 
-                className="p-2 rounded-full bg-blue-100 hover:bg-blue-200 transition"
+                className="p-2 rounded-full bg-blue-50 hover:bg-blue-100 transition"
               >
                 <X className="w-6 h-6 text-blue-700" />
               </button>
@@ -156,10 +164,10 @@ const Navbar = () => {
                   to={link.to}
                   onClick={() => setSidebar(false)}
                   className={({ isActive }) =>
-                    `px-4 py-3 rounded-full text-base font-semibold transition-all duration-200 flex items-center gap-2 ${
+                    `px-4 py-3 rounded-lg text-base font-semibold transition-all duration-200 flex items-center gap-2 ${
                       isActive
-                        ? 'text-blue-700 bg-blue-100 ring-2 ring-blue-200'
-                        : 'text-gray-700 hover:text-green-700 hover:bg-green-100 hover:ring-2 hover:ring-green-200'
+                        ? 'text-blue-700 bg-blue-50 ring-2 ring-blue-200'
+                        : 'text-gray-700 hover:text-blue-700 hover:bg-blue-50 hover:ring-2 hover:ring-blue-200'
                     }`
                   }
                   end
@@ -167,6 +175,15 @@ const Navbar = () => {
                   {link.name}
                 </NavLink>
               ))}
+              <a
+                href="http://localhost:5174/login"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full px-4 py-3 rounded-lg text-base font-semibold transition-all duration-200 flex items-center gap-2 text-white bg-blue-600 hover:bg-blue-700"
+                onClick={() => setSidebar(false)}
+              >
+                Admin/Doctor Login
+              </a>
               <div className="mt-6">
                 {!token ? (
                   <button
@@ -174,7 +191,7 @@ const Navbar = () => {
                       navigate('/login');
                       setSidebar(false);
                     }}
-                    className="w-full bg-gradient-to-r from-green-400 to-blue-400 text-white px-6 py-3 rounded-full font-semibold shadow hover:from-green-500 hover:to-blue-500 transition-all"
+                    className="w-full bg-orange-400 text-white px-6 py-3 rounded-lg font-semibold shadow hover:bg-orange-500 transition-all"
                   >
                     Create Account
                   </button>
@@ -203,7 +220,7 @@ const Navbar = () => {
                         handleLogout(); 
                         setSidebar(false); 
                       }} 
-                      className="w-full text-left px-5 py-3 text-red-600 hover:bg-green-50 rounded-xl font-medium"
+                      className="w-full text-left px-5 py-3 text-red-600 hover:bg-orange-50 rounded-xl font-medium"
                     >
                       Logout
                     </button>

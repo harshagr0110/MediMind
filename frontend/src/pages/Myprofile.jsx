@@ -2,19 +2,7 @@ import React, { useState, useContext, useEffect } from "react";
 import axios from "axios";
 import { assets } from "../assets/assets";
 import { AppContext } from "../context/AppContext";
-import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
-// Enhanced theme colors and styles
-const theme = {
-  primary: "bg-gradient-to-br from-green-100 via-blue-50 to-blue-100",
-  card: "bg-white/90 backdrop-blur-lg border border-green-200 shadow-2xl",
-  accent: "text-green-700",
-  button: "bg-gradient-to-r from-green-400 to-blue-400",
-  buttonHover: "hover:from-green-500 hover:to-blue-500",
-  input: "border-green-200 focus:ring-green-300",
-  label: "text-green-700 font-medium",
-};
 
 const Myprofile = () => {
   const { userData, setUserData, backendurl, token } = useContext(AppContext);
@@ -79,12 +67,9 @@ const Myprofile = () => {
       if (response.data.success) {
         setUserData(response.data.userData);
         setEditMode(false);
-        toast.success("Profile updated successfully!", { position: "top-center" });
-      } else {
-        toast.error(response.data.message || "Update failed", { position: "top-center" });
       }
     } catch (err) {
-      toast.error("Profile Update Error", { position: "top-center" });
+      console.error("Profile Update Error", err);
     }
   };
 
@@ -97,24 +82,18 @@ const Myprofile = () => {
   if (!userData) return null;
 
   return (
-    <div className={`${theme.primary} min-h-screen flex flex-col items-center justify-center py-12 px-4`}>
-      <ToastContainer />
-      <div
-        className={`${theme.card} w-full max-w-4xl mx-auto rounded-3xl p-12 flex flex-col md:flex-row items-center gap-12 transition-all duration-300`}
-        style={{
-          minHeight: "600px",
-        }}
-      >
+    <div className="min-h-screen bg-blue-50 flex flex-col items-center w-full py-8">
+      <div className="w-full max-w-4xl bg-white rounded-2xl shadow-2xl p-8 border border-blue-100 flex flex-col md:flex-row items-center gap-12">
         {/* Profile Image Section */}
         <div className="flex flex-col items-center w-full md:w-1/3">
           <div className="relative">
             <img
               src={profile.profileImage}
               alt="Profile"
-              className="w-40 h-40 rounded-full object-cover border-4 border-green-300 shadow-xl"
+              className="w-40 h-40 rounded-full object-cover border-4 border-teal-200 shadow-xl"
             />
             {editMode && (
-              <label className="absolute bottom-2 right-2 bg-green-500 rounded-full p-2 cursor-pointer shadow-lg hover:bg-green-600 transition">
+              <label className="absolute bottom-2 right-2 bg-teal-500 rounded-full p-2 cursor-pointer shadow-lg hover:bg-teal-600 transition">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536M9 13l6-6m2 2l-6 6m-2 2H7a2 2 0 01-2-2v-2a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2z" />
                 </svg>
@@ -135,14 +114,14 @@ const Myprofile = () => {
         <form className="w-full md:w-2/3 flex flex-col gap-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className={`${theme.label} mb-1 block`}>Full Name:</label>
+              <label className="text-blue-700 font-medium mb-1 block">Full Name:</label>
               {editMode ? (
                 <input
                   type="text"
                   name="fullName"
                   value={profile.fullName}
                   onChange={handleChange}
-                  className={`w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 ${theme.input} transition`}
+                  className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 border-blue-200 focus:ring-blue-300 transition"
                   autoComplete="off"
                 />
               ) : (
@@ -150,18 +129,18 @@ const Myprofile = () => {
               )}
             </div>
             <div>
-              <label className={`${theme.label} mb-1 block`}>Email:</label>
+              <label className="text-blue-700 font-medium mb-1 block">Email:</label>
               <div className="text-gray-900 font-semibold">{profile.email}</div>
             </div>
             <div>
-              <label className={`${theme.label} mb-1 block`}>Phone:</label>
+              <label className="text-blue-700 font-medium mb-1 block">Phone:</label>
               {editMode ? (
                 <input
                   type="text"
                   name="phone"
                   value={profile.phone}
                   onChange={handleChange}
-                  className={`w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 ${theme.input} transition`}
+                  className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 border-blue-200 focus:ring-blue-300 transition"
                   autoComplete="off"
                 />
               ) : (
@@ -169,14 +148,14 @@ const Myprofile = () => {
               )}
             </div>
             <div>
-              <label className={`${theme.label} mb-1 block`}>Address:</label>
+              <label className="text-blue-700 font-medium mb-1 block">Address:</label>
               {editMode ? (
                 <input
                   type="text"
                   name="address"
                   value={profile.address}
                   onChange={handleChange}
-                  className={`w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 ${theme.input} transition`}
+                  className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 border-blue-200 focus:ring-blue-300 transition"
                   autoComplete="off"
                 />
               ) : (
@@ -184,13 +163,13 @@ const Myprofile = () => {
               )}
             </div>
             <div>
-              <label className={`${theme.label} mb-1 block`}>Gender:</label>
+              <label className="text-blue-700 font-medium mb-1 block">Gender:</label>
               {editMode ? (
                 <select
                   name="gender"
                   value={profile.gender}
                   onChange={handleChange}
-                  className={`w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 ${theme.input} transition`}
+                  className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 border-blue-200 focus:ring-blue-300 transition"
                 >
                   <option>Male</option>
                   <option>Female</option>
@@ -201,55 +180,50 @@ const Myprofile = () => {
               )}
             </div>
             <div>
-              <label className={`${theme.label} mb-1 block`}>Date of Birth:</label>
+              <label className="text-blue-700 font-medium mb-1 block">Date of Birth:</label>
               {editMode ? (
                 <input
                   type="date"
                   name="dob"
                   value={profile.dob}
                   onChange={handleChange}
-                  className={`w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 ${theme.input} transition`}
+                  className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 border-blue-200 focus:ring-blue-300 transition"
                 />
               ) : (
                 <div className="text-gray-900 font-semibold">{profile.dob}</div>
               )}
             </div>
           </div>
-          <div className="flex gap-4 mt-8 w-full justify-center">
+          <div className="flex gap-4 mt-8">
             {editMode ? (
               <>
                 <button
-                  onClick={handleSave}
                   type="button"
-                  className={`flex-1 ${theme.button} ${theme.buttonHover} text-white py-2 rounded-xl font-semibold shadow-md transition`}
+                  onClick={handleSave}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold shadow hover:bg-blue-700 transition"
                 >
                   Save
                 </button>
                 <button
-                  onClick={handleCancel}
                   type="button"
-                  className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-xl font-semibold shadow-md hover:bg-gray-300 transition"
+                  onClick={handleCancel}
+                  className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold shadow hover:bg-gray-300 transition"
                 >
                   Cancel
                 </button>
               </>
             ) : (
               <button
-                onClick={handleEdit}
                 type="button"
-                className={`flex-1 ${theme.button} ${theme.buttonHover} text-white py-2 rounded-xl font-semibold shadow-md transition`}
+                onClick={handleEdit}
+                className="px-6 py-2 bg-teal-500 text-white rounded-lg font-semibold shadow hover:bg-teal-600 transition"
               >
-                Edit
+                Edit Profile
               </button>
             )}
           </div>
         </form>
       </div>
-      <style>{`
-        body {
-          background: linear-gradient(135deg, #e0f7fa 0%, #e8f5e9 100%);
-        }
-      `}</style>
     </div>
   );
 };

@@ -93,7 +93,7 @@ const Appointment = () => {
 
   if (!docInfo) return (
     <div className="flex justify-center items-center min-h-[60vh]">
-      <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-green-400"></div>
+      <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-teal-400"></div>
     </div>
   );
 
@@ -129,42 +129,28 @@ const Appointment = () => {
     }
   };
 
-  // Custom theme colors
-  const theme = {
-    primary: "bg-gradient-to-br from-green-100 via-blue-100 to-white",
-    card: "bg-white border border-blue-100 shadow-lg rounded-2xl",
-    accent: "text-green-700",
-    accentBg: "bg-green-100",
-    button: "bg-gradient-to-r from-green-400 to-blue-400 hover:from-green-500 hover:to-blue-500 text-white",
-    slot: "bg-blue-50 border-blue-200 text-blue-900 hover:bg-green-100 hover:text-green-900",
-    slotSelected: "bg-gradient-to-r from-green-400 to-blue-400 text-white border-green-500",
-    slotDisabled: "bg-gray-200 text-gray-400 cursor-not-allowed",
-    label: "text-blue-700 font-semibold",
-    section: "mb-10",
-  };
-
   return (
-    <div className={`min-h-screen ${theme.primary} py-10 px-2 flex flex-col items-center`}>
+    <div className="min-h-screen bg-blue-50 py-10 px-2 flex flex-col items-center w-full">
       {/* Doctor Info */}
-      <div className={`${theme.card} w-full max-w-4xl flex flex-col md:flex-row items-center md:items-start gap-8 p-8 mt-10`}>
+      <div className="w-full max-w-4xl flex flex-col md:flex-row items-center md:items-start gap-8 p-8 mt-10 bg-white rounded-2xl shadow-2xl border border-blue-100">
         <img
           src={docInfo.image}
           alt={docInfo.name}
-          className="w-40 h-40 rounded-full object-cover border-4 border-green-200 shadow-lg mx-auto md:mx-0"
+          className="w-40 h-40 rounded-full object-cover border-4 border-teal-200 shadow-lg mx-auto md:mx-0"
         />
         <div className="flex-1 flex flex-col items-center md:items-start">
           <h1 className="text-3xl md:text-4xl font-bold text-blue-900 mb-1">{docInfo.fullName}</h1>
           <div className="flex items-center gap-2 text-lg mb-2">
-            <FaUserMd className="text-green-500" />
-            <span className="text-green-700 font-medium">{docInfo.speciality}</span>
+            <FaUserMd className="text-teal-500" />
+            <span className="text-teal-700 font-medium">{docInfo.speciality}</span>
           </div>
           <div className="flex items-center gap-2 text-gray-700 mb-1">
             <FaGraduationCap className="text-blue-400" />
             <span>{docInfo.degree} • {docInfo.experience}</span>
           </div>
           <div className="flex items-center gap-2 text-gray-700 mb-1">
-            <FaMoneyBillWave className="text-green-400" />
-            <span className="font-semibold text-blue-700">₹{docInfo.fees} Consultation Fee</span>
+            <FaMoneyBillWave className="text-orange-400" />
+            <span className="font-semibold text-orange-600">₹{docInfo.fees} Consultation Fee</span>
           </div>
           <div className="flex items-center gap-2 text-gray-600 mt-2">
             <FaMapMarkerAlt className="text-blue-400" />
@@ -179,15 +165,15 @@ const Appointment = () => {
       </div>
 
       {/* Slots Section */}
-      <div className={`${theme.card} w-full max-w-4xl mt-8 p-8 ${theme.section}`}>
-        <h2 className="text-2xl font-bold text-green-700 mb-6 text-center">Available Slots</h2>
+      <div className="w-full max-w-4xl mt-8 p-8 bg-blue-50 rounded-2xl shadow-xl border border-blue-100">
+        <h2 className="text-2xl font-bold text-teal-700 mb-6 text-center">Available Slots</h2>
         {Object.keys(groupedSlots).length === 0 ? (
           <p className="text-gray-500 text-center">No slots available.</p>
         ) : (
           <div className="flex flex-col gap-8">
             {Object.entries(groupedSlots).map(([dateKey, info]) => (
               <div key={dateKey}>
-                <h3 className={`mb-3 ${theme.label} text-lg text-center`}>{info.label}</h3>
+                <h3 className="mb-3 text-blue-700 font-semibold text-lg text-center">{info.label}</h3>
                 <div className="flex flex-wrap justify-center gap-3">
                   {info.slots.map((slotObj, idx) => {
                     const slotIdentifier = `${dateKey}-${slotObj.time}`;
@@ -198,16 +184,9 @@ const Appointment = () => {
                     return (
                       <button
                         key={slotIdentifier}
-                        onClick={() =>
-                          setSelectedSlot({
-                            date: new Date(slotObj.date),
-                            time: slotObj.time,
-                          })
-                        }
-                        className={`
-                          px-4 py-2 rounded-xl border font-semibold transition-all duration-150
-                          ${isSelected ? theme.slotSelected : theme.slot}
-                          focus:outline-none
+                        onClick={() => setSelectedSlot(slotObj)}
+                        className={`px-5 py-2 rounded-lg font-semibold shadow transition border-2 text-base
+                          ${isSelected ? 'bg-teal-500 text-white border-teal-600 scale-105' : 'bg-white text-blue-700 border-blue-200 hover:bg-blue-100 hover:border-blue-400'}
                         `}
                       >
                         {slotObj.time}
@@ -221,31 +200,23 @@ const Appointment = () => {
         )}
       </div>
 
-      {/* Selected Slot & Confirmation */}
-      {selectedSlot && (
-        <div className={`${theme.card} w-full max-w-2xl mt-6 p-6 flex flex-col items-center`}>
-          <h4 className="text-lg font-bold text-blue-800 mb-2">Selected Appointment</h4>
-          <div className="flex flex-col md:flex-row gap-4 items-center mb-2">
-            <span className="text-green-700 font-semibold">
-              {selectedSlot.date.toLocaleDateString([], {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric',
-              })}
-            </span>
-            <span className="text-blue-700 font-semibold">
-              {selectedSlot.time}
-            </span>
+      {/* Selected Slot Summary & Book Button */}
+      <div className="w-full max-w-4xl mt-8 flex flex-col md:flex-row items-center gap-6">
+        {selectedSlot && (
+          <div className="flex-1 bg-white rounded-xl shadow-lg border border-teal-100 p-6 flex flex-col items-center md:items-start">
+            <h3 className="text-lg font-bold text-teal-700 mb-2">Selected Slot</h3>
+            <div className="text-blue-800 font-semibold text-base mb-1">
+              {selectedSlot.date.toLocaleDateString()} at {selectedSlot.time}
+            </div>
           </div>
-          <button
-            className={`mt-4 px-8 py-3 rounded-xl font-bold shadow-md ${theme.button} transition-all duration-150`}
-            onClick={bookAppointment}
-          >
-            Confirm Appointment
-          </button>
-        </div>
-      )}
+        )}
+        <button
+          onClick={bookAppointment}
+          className="px-10 py-4 bg-orange-500 text-white rounded-xl font-bold shadow-lg hover:bg-orange-600 transition text-xl w-full md:w-auto"
+        >
+          Book Appointment
+        </button>
+      </div>
     </div>
   );
 };

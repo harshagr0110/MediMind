@@ -49,10 +49,42 @@ const AdminContextProvider = ({ children }) => {
     }
   };
 
+  // Remove doctor by ID
+  const removeDoctor = async (id) => {
+    try {
+      const { data } = await axios.delete(`${backendurl}/api/admin/delete-doctor/${id}`, {
+        headers: { Authorization: `Bearer ${aToken}` },
+      });
+      if (data.success) {
+        toast.success('Doctor removed successfully');
+        getAllDoctors();
+      } else {
+        toast.error(data.message || 'Failed to remove doctor');
+      }
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Failed to remove doctor');
+    }
+  };
+
   // Fetch doctors on mount
   useEffect(() => {
     if (aToken) getAllDoctors();
   }, [aToken, getAllDoctors]);
+
+  useEffect(() => {
+    const interceptor = axios.interceptors.response.use(
+      response => response,
+      error => {
+        if (error.response && error.response.status === 401) {
+          setAToken('');
+          localStorage.removeItem('aToken');
+          toast.error('Session expired, please log in again.', { position: 'top-center' });
+        }
+        return Promise.reject(error);
+      }
+    );
+    return () => axios.interceptors.response.eject(interceptor);
+  }, []);
 
   const value = {
     aToken,
@@ -61,6 +93,7 @@ const AdminContextProvider = ({ children }) => {
     doctors,
     getAllDoctors,
     changeAvailability,
+    removeDoctor,
   };
 
   return (

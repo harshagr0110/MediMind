@@ -104,20 +104,15 @@ const AddDoctors = () => {
     }
   };
 
-  // Tailwind: blue with a hint of green (teal)
-  const mainColor = 'bg-teal-600 hover:bg-teal-700';
-  const accentColor = 'focus:ring-teal-500';
-
   return (
-    <div className="min-h-screen bg-white/90 flex items-center justify-center p-4">
-      <ToastContainer />
+    <div className="min-h-screen bg-blue-50 flex items-center justify-center p-8 pt-24">
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-2xl bg-white p-8 rounded-xl shadow-lg border border-teal-800"
+        className="w-full max-w-2xl bg-white p-10 rounded-2xl shadow-2xl border border-blue-100"
         encType="multipart/form-data"
       >
-        <h2 className="text-2xl font-bold text-center mb-6 text-teal-700">Add Doctor</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <h2 className="text-3xl font-bold text-center mb-8 text-blue-800">Add Doctor</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {[
             { name: 'fullName', label: 'Full Name' },
             { name: 'email', label: 'Email', type: 'email' },
@@ -129,7 +124,7 @@ const AddDoctors = () => {
             { name: 'address', label: 'Address' },
           ].map(({ name, label, type = 'text', ...rest }) => (
             <div key={name}>
-              <label className="block mb-1 text-sm font-semibold text-teal-700">
+              <label className="block mb-1 text-sm font-semibold text-blue-700">
                 {label}
               </label>
               <input
@@ -138,21 +133,21 @@ const AddDoctors = () => {
                 value={form[name] ?? ''}
                 onChange={handleChange}
                 required
-                className={`w-full border border-teal-900 px-3 py-2 rounded-md focus:outline-none focus:ring-2 ${accentColor} transition`}
+                className="w-full border border-blue-200 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
                 {...rest}
               />
             </div>
           ))}
 
           <div className="md:col-span-2">
-            <label className="block mb-1 text-sm font-semibold text-teal-700">About</label>
+            <label className="block mb-1 text-sm font-semibold text-blue-700">About</label>
             <textarea
               name="about"
               value={form.about}
               onChange={handleChange}
               required
               rows={3}
-              className={`w-full border border-teal-900 px-3 py-2 rounded-md focus:outline-none focus:ring-2 ${accentColor} transition`}
+              className="w-full border border-blue-200 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
             />
           </div>
 
@@ -162,20 +157,20 @@ const AddDoctors = () => {
               name="available"
               checked={form.available}
               onChange={handleCheckboxChange}
-              className="w-5 h-5 accent-teal-600"
+              className="w-5 h-5 text-blue-600 focus:ring-blue-400 border-blue-200 rounded"
             />
-            <label className="text-sm font-semibold text-teal-700">Available</label>
+            <label className="text-sm font-semibold text-blue-700">Available</label>
           </div>
 
           <div className="md:col-span-2">
-            <label className="block mb-1 text-sm font-semibold text-teal-700">Image</label>
+            <label className="block mb-1 text-sm font-semibold text-blue-700">Image</label>
             <input
               type="file"
               name="image"
               accept="image/*"
               onChange={handleImageChange}
               required
-              className="w-full border border-teal-900 px-3 py-2 rounded-md file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100 transition"
+              className="w-full border border-blue-200 px-3 py-2 rounded-md file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition"
             />
           </div>
         </div>
@@ -183,7 +178,7 @@ const AddDoctors = () => {
         <button
           type="submit"
           disabled={loading}
-          className={`mt-6 w-full ${mainColor} text-white py-3 rounded-md font-semibold transition flex items-center justify-center`}
+          className="mt-8 w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-md font-semibold transition flex items-center justify-center text-lg shadow"
         >
           {loading ? (
             <svg className="animate-spin h-5 w-5 mr-2 text-white" viewBox="0 0 24 24">

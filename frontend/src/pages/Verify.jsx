@@ -4,15 +4,6 @@ import axios from 'axios';
 import { toast, ToastContainer, Slide } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-// Custom theme colors
-const COLORS = {
-  green: '#4ade80', // light green
-  blue: '#60a5fa',  // light blue
-  bg: '#f0fdf4',    // very light green background
-  card: '#e0f2fe',  // very light blue card
-  text: '#0f172a',  // dark text
-};
-
 const Verify = () => {
   const { search } = useLocation();
   const navigate = useNavigate();
@@ -46,7 +37,6 @@ const Verify = () => {
             draggable: true,
             progress: undefined,
             theme: "colored",
-            style: { background: COLORS.green, color: COLORS.text }
           });
           setTimeout(() => navigate('/my-appointments'), 3000);
         } else {
@@ -55,7 +45,6 @@ const Verify = () => {
             position: "top-center",
             autoClose: 3500,
             theme: "colored",
-            style: { background: COLORS.card, color: COLORS.text }
           });
         }
       } catch (err) {
@@ -64,7 +53,6 @@ const Verify = () => {
           position: "top-center",
           autoClose: 3500,
           theme: "colored",
-          style: { background: COLORS.card, color: COLORS.text }
         });
       }
     };
@@ -77,7 +65,6 @@ const Verify = () => {
         position: "top-center",
         autoClose: 3000,
         theme: "colored",
-        style: { background: COLORS.blue, color: COLORS.text }
       });
     } else {
       setStatus("invalid");
@@ -88,135 +75,84 @@ const Verify = () => {
     pending: {
       title: "Verifying your payment...",
       icon: "⏳",
-      className: "text-blue-500"
     },
     success: {
       title: "Payment Successful!",
       message: "Your appointment has been confirmed.",
       icon: "✅",
-      className: "text-green-600"
     },
     failed: {
       title: "Payment Verification Failed",
       message: "We could not verify your payment. Please contact support.",
       icon: "❌",
-      className: "text-red-600"
     },
     cancelled: {
       title: "Payment Cancelled",
       message: "You cancelled the payment. No appointment was booked.",
       icon: "⚠️",
-      className: "text-yellow-600"
     },
     invalid: {
       title: "Invalid Request",
       message: "Missing or invalid payment information.",
       icon: "🚫",
-      className: "text-gray-600"
     }
   };
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: `linear-gradient(135deg, ${COLORS.bg} 60%, ${COLORS.card} 100%)`,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontFamily: 'Inter, Arial, sans-serif',
-      }}
-    >
-      <ToastContainer transition={Slide} />
-      <div
-        style={{
-          background: COLORS.card,
-          borderRadius: '1.5rem',
-          boxShadow: '0 8px 32px 0 rgba(16, 185, 129, 0.15), 0 1.5px 8px 0 rgba(96, 165, 250, 0.10)',
-          padding: '2.5rem 2rem',
-          maxWidth: 400,
-          width: '100%',
-          textAlign: 'center',
-          border: `2px solid ${COLORS.green}`,
-        }}
-      >
-        <div
-          style={{
-            fontSize: '2.5rem',
-            marginBottom: '0.5rem',
-            color: status === "success" ? COLORS.green : status === "pending" ? COLORS.blue : status === "failed" ? "#f87171" : "#facc15"
-          }}
-        >
+    <div className="min-h-screen bg-blue-50 flex flex-col items-center w-full py-8">
+      <ToastContainer />
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8 border border-blue-100 flex flex-col items-center">
+        <div className={
+          status === "success"
+            ? "text-5xl mb-2 text-green-500"
+            : status === "pending"
+            ? "text-5xl mb-2 text-blue-500"
+            : status === "failed"
+            ? "text-5xl mb-2 text-red-500"
+            : status === "cancelled"
+            ? "text-5xl mb-2 text-yellow-500"
+            : "text-5xl mb-2 text-gray-500"
+        }>
           {statusMessages[status]?.icon}
         </div>
-        <h2
-          className={`text-2xl font-bold mb-2 ${statusMessages[status]?.className}`}
-          style={{
-            color:
-              status === "success"
-                ? COLORS.green
-                : status === "pending"
-                ? COLORS.blue
-                : status === "failed"
-                ? "#ef4444"
-                : status === "cancelled"
-                ? "#facc15"
-                : "#64748b"
-          }}
-        >
+        <h2 className={
+          status === "success"
+            ? "text-2xl font-bold mb-2 text-green-600"
+            : status === "pending"
+            ? "text-2xl font-bold mb-2 text-blue-600"
+            : status === "failed"
+            ? "text-2xl font-bold mb-2 text-red-600"
+            : status === "cancelled"
+            ? "text-2xl font-bold mb-2 text-yellow-600"
+            : "text-2xl font-bold mb-2 text-gray-600"
+        }>
           {statusMessages[status]?.title}
         </h2>
         {statusMessages[status]?.message && (
-          <p className="mt-4 text-base" style={{ color: COLORS.text }}>
+          <p className="mt-4 text-base text-gray-700">
             {statusMessages[status]?.message}
           </p>
         )}
         {status === "success" && (
-          <p className="mt-2 text-sm" style={{ color: "#64748b" }}>
+          <p className="mt-2 text-sm text-gray-500">
             You will be redirected to your appointments shortly...
           </p>
         )}
-        <div
-          style={{
-            marginTop: '2rem',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '0.5rem',
-            alignItems: 'center'
-          }}
-        >
+        <div className="mt-8 flex flex-col gap-2 items-center w-full">
           <a
             href="/"
-            style={{
-              color: COLORS.blue,
-              textDecoration: 'underline',
-              fontWeight: 500,
-              fontSize: '1rem'
-            }}
+            className="text-blue-600 hover:underline font-medium text-base"
           >
             Back to Home
           </a>
           <a
             href="/my-appointments"
-            style={{
-              color: COLORS.green,
-              textDecoration: 'underline',
-              fontWeight: 500,
-              fontSize: '1rem'
-            }}
+            className="text-teal-600 hover:underline font-medium text-base"
           >
             My Appointments
           </a>
         </div>
       </div>
-      <style>{`
-        @media (max-width: 600px) {
-          div[style*="max-width: 400px"] {
-            padding: 1.5rem 0.5rem !important;
-            max-width: 95vw !important;
-          }
-        }
-      `}</style>
     </div>
   );
 };

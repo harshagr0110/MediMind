@@ -7,48 +7,29 @@ const TopDoctors = () => {
     const { doctors } = useContext(AppContext);
 
     return (
-        <div className="bg-white/90 rounded-2xl shadow-2xl py-12 px-2 sm:px-8">
-            <div className="text-center mb-8">
-                <h1 className="text-4xl sm:text-5xl text-blue-800 font-extrabold mb-3 font-sans tracking-tight drop-shadow">
-                    Top Doctors to Book
-                </h1>
-                <p className="text-blue-700 font-serif text-lg">
-                    Browse our top doctors and book your appointment with ease
-                </p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 justify-items-center">
-                {doctors.slice(0, 10).map((doctor) => (
+        <div className="w-full bg-white rounded-2xl shadow-xl p-6 flex flex-col items-center">
+            <h2 className="text-2xl font-bold text-blue-700 mb-4">Top Doctors</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 w-full">
+                {doctors.map((doc) => (
                     <div
-                        key={doctor._id}
-                        onClick={() => navigate(`/appointment/${doctor._id}`)}
-                        className="bg-white/90 rounded-2xl shadow-lg flex flex-col items-center p-6 cursor-pointer transition-all hover:scale-105 hover:shadow-2xl border border-green-100 hover:border-green-300"
+                        key={doc._id}
+                        className="bg-blue-50 rounded-xl shadow p-6 flex flex-col items-center text-center border border-blue-100 hover:shadow-2xl hover:border-blue-300 transition-all duration-200 hover:-translate-y-2"
                     >
-                        <div className="relative mb-4">
-                            <img
-                                src={doctor.image}
-                                alt={doctor.name}
-                                className="w-28 h-28 object-cover rounded-full border-4 border-blue-200 shadow-lg"
-                            />
-                            <span className="absolute bottom-2 right-2 bg-green-400 border-2 border-white rounded-full w-4 h-4"></span>
-                        </div>
-                        <h2 className="text-xl font-bold text-green-800 text-center mb-1">{doctor.fullName}</h2>
-                        <p className="text-sm text-blue-700 font-medium text-center mb-1">{doctor.speciality}</p>
-                        <p className="text-xs text-gray-500 text-center">{doctor.location}</p>
+                        <img
+                            src={doc.image}
+                            alt={doc.fullName}
+                            className="w-20 h-20 object-cover rounded-full mb-3 border-2 border-teal-200 shadow"
+                        />
+                        <h3 className="text-lg font-semibold text-blue-800">{doc.fullName}</h3>
+                        <p className="text-teal-600 font-medium">{doc.speciality}</p>
+                        <button
+                            onClick={() => navigate(`/appointment/${doc._id}`)}
+                            className="mt-4 px-6 py-2 rounded-lg bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 transition-all"
+                        >
+                            Book Appointment
+                        </button>
                     </div>
                 ))}
-            </div>
-
-            <div className="text-center mt-10">
-                <button
-                    className="bg-gradient-to-r from-green-400 to-blue-400 hover:from-green-500 hover:to-blue-500 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-all text-lg"
-                    onClick={() => {
-                        navigate('/doctors');
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }}
-                >
-                    SHOW MORE
-                </button>
             </div>
         </div>
     );

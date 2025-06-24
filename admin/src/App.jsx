@@ -18,7 +18,7 @@ function App() {
   const { dToken } = useContext(DoctorContext);
 
   return (
-    <div className="min-h-screen ">
+    <div className="min-h-screen bg-background text-primary flex flex-col">
       <ToastContainer />
       {aToken ? (
         <>
@@ -41,7 +41,7 @@ function App() {
           <Navbar />
           <div className="flex items-start">
             <Sidebar />
-            <div className="flex-1 p-6">
+            <div className="flex-1 p-6 pt-28">
               <Routes>
                 <Route path="/" element={<Navigate to="/doctor-dashboard" />} />
                 <Route path="/doctor-dashboard" element={<DoctorDashboard />} />

@@ -54,15 +54,20 @@ const addDoctor = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-// ✅ Upload the file from local temp path to Cloudinary
-const cloudinaryUpload = await cloudinary.uploader.upload(req.file.path, {
-  folder: 'doctors', // Optional: create a folder in Cloudinary
-  resource_type: 'image',
-});
-
-// ✅ This is the Cloudinary image URL you’ll save in DB
-const imageUrl = cloudinaryUpload.secure_url;
-
+    // Upload the file buffer to Cloudinary using upload_stream
+    let imageUrl = '';
+    try {
+      imageUrl = await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream({ folder: 'doctors', resource_type: 'image' }, (err, result) => {
+          if (err) return reject(err);
+          resolve(result.secure_url);
+        });
+        stream.end(req.file.buffer);
+      });
+    } catch (uploadError) {
+      console.error('Cloudinary Upload Error:', uploadError);
+      return res.status(500).json({ success: false, message: 'Image upload failed' });
+    }
 
     const doctorData = {
       fullName,
@@ -128,4 +133,18 @@ export const dashboarddata=async(req,res)=>{
   }
 }
 
-export { addDoctor, adminLogin,allDoctors };
+// Delete doctor by ID
+const deleteDoctor = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deleted = await doctormodel.findByIdAndDelete(id);
+    if (!deleted) {
+      return res.status(404).json({ success: false, message: 'Doctor not found' });
+    }
+    return res.status(200).json({ success: true, message: 'Doctor deleted successfully' });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export { addDoctor, adminLogin, allDoctors, deleteDoctor };

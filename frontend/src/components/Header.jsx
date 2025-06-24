@@ -10,7 +10,7 @@ const Header = () => {
     };
 
     return (
-        <header className="bg-[#e0f7fa] w-full max-w-6xl mx-auto mt-16 md:mt-24 rounded-2xl shadow-lg border border-[#e0f7fa] ">
+        <header className="bg-secondary w-full max-w-6xl mx-auto mt-16 md:mt-24 rounded-2xl shadow-lg border border-secondary ">
             {/* Hero Section */}
             <section className="flex flex-col-reverse md:flex-row items-center justify-center px-6 md:px-12 py-10 gap-10">
                 <div className="flex-1 flex flex-col items-center md:items-start text-center md:text-left">
@@ -22,7 +22,7 @@ const Header = () => {
                     </p>
                     <button
                         onClick={handlePredictClick}
-                        className="inline-block bg-gradient-to-r cursor-pointer from-[#43e97b] to-[#38f9d7] text-white px-8 py-3 rounded-full font-semibold text-lg shadow-lg hover:from-[#38f9d7] hover:to-[#43e97b] transition-all duration-200 mt-2"
+                        className="inline-block bg-blue-600 cursor-pointer text-white px-8 py-3 rounded-full font-semibold text-lg shadow-lg hover:bg-blue-700 transition-all duration-200 mt-2"
                     >
                         Go to Disease Prediction
                     </button>

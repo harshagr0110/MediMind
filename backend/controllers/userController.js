@@ -114,10 +114,13 @@ export const updateProfile = async (req, res) => {
     // Handle image upload if provided
     if (req.file) {
       try {
-        const uploadRes = await cloudinary.uploader.upload(req.file.path, {
-          resource_type: "image",
+        updates.image = await new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream({ resource_type: "image" }, (err, result) => {
+            if (err) return reject(err);
+            resolve(result.secure_url);
+          });
+          stream.end(req.file.buffer);
         });
-        updates.image = uploadRes.secure_url;
       } catch (uploadError) {
         console.error("Cloudinary Upload Error:", uploadError);
         return res.status(500).json({ success: false, message: "Image upload failed" });
@@ -391,7 +394,38 @@ export const predict= async (req, res) => {
         return res.status(500).json({ error: 'Server configuration error: API Key missing.' });
     }
 
-    const { symptoms, images, specialitiesList } = req.body;
+    let symptoms = req.body.symptoms;
+    let specialitiesList = req.body.specialitiesList;
+    let images = [];
+
+    // If specialitiesList is a string (from FormData), parse it
+    if (typeof specialitiesList === 'string') {
+        try {
+            specialitiesList = JSON.parse(specialitiesList);
+        } catch (e) {
+            specialitiesList = [];
+        }
+    }
+
+    // If files are present (from multer), convert to Gemini inlineData
+    if (req.files && req.files.length > 0) {
+        images = req.files.map(file => ({
+            inlineData: {
+                mimeType: file.mimetype,
+                data: file.buffer.toString('base64')
+            }
+        }));
+    } else if (req.body.images) {
+        // If images are sent as JSON (base64), use them directly
+        images = req.body.images;
+        if (typeof images === 'string') {
+            try {
+                images = JSON.parse(images);
+            } catch (e) {
+                images = [];
+            }
+        }
+    }
 
     if (!symptoms && (!images || images.length === 0)) {
         return res.status(400).json({ error: 'Please provide symptoms or images.' });
@@ -445,4 +479,23 @@ export const predict= async (req, res) => {
         const errorMessage = error.response ? error.response.data.error?.message || error.response.data?.message : 'Internal Server Error';
         res.status(status).json({ error: errorMessage });
     }
+};
+
+// Delete appointment by ID
+export const deleteAppointment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    // Only allow user to delete their own appointment
+    const appointment = await appointmentModel.findById(id);
+    if (!appointment) {
+      return res.status(404).json({ success: false, message: 'Appointment not found' });
+    }
+    if (appointment.userId !== req.user.id) {
+      return res.status(403).json({ success: false, message: 'Unauthorized' });
+    }
+    await appointmentModel.findByIdAndDelete(id);
+    return res.status(200).json({ success: true, message: 'Appointment deleted successfully' });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
 };

@@ -120,19 +120,30 @@ const DiseasePrediction = () => {
     setSpecialistResult(null);
     setCurrentPage('prediction'); // Ensure we are on the prediction page view
 
-  
     try {
-      // Make a single call to your backend, which will handle both Gemini calls
-      const response = await axios.post(`${backendurl}/api/user/predict`,
-        { 
-          symptoms: prompt, 
-          images: base64Images,
-          // You might pass the list of specialities if your backend needs it,
-          // otherwise it can hardcode it as well.
-          specialitiesList: specialityData.map(d => d.speciality)
-        },
-        { headers: { "Content-Type": "application/json" } }
-      );
+      let response;
+      if (selectedImages.length > 0) {
+        // Use FormData for images
+        const formData = new FormData();
+        formData.append('symptoms', prompt);
+        selectedImages.forEach((file) => {
+          formData.append('images', file);
+        });
+        formData.append('specialitiesList', JSON.stringify(specialityData.map(d => d.speciality)));
+        response = await axios.post(`${backendurl}/api/user/predict`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+      } else {
+        // Use JSON for text-only
+        response = await axios.post(`${backendurl}/api/user/predict`,
+          {
+            symptoms: prompt,
+            images: [],
+            specialitiesList: specialityData.map(d => d.speciality)
+          },
+          { headers: { "Content-Type": "application/json" } }
+        );
+      }
 
       const { diseaseInfo: backendDiseaseInfo, specialistResult: backendSpecialistResult } = response.data;
 
@@ -145,8 +156,8 @@ const DiseasePrediction = () => {
         throw new Error("No specialist suggestion returned from backend.");
       }
       // Attempt to map the AI's response to an existing specialty for navigation
-      const matchedSpecialty = specialityData.find(s => 
-        backendSpecialistResult.trim().toLowerCase().includes(s.speciality.toLowerCase()) || 
+      const matchedSpecialty = specialityData.find(s =>
+        backendSpecialistResult.trim().toLowerCase().includes(s.speciality.toLowerCase()) ||
         s.speciality.toLowerCase().includes(backendSpecialistResult.trim().toLowerCase())
       );
       setSpecialistResult(matchedSpecialty ? matchedSpecialty.speciality : backendSpecialistResult.trim());
@@ -155,7 +166,7 @@ const DiseasePrediction = () => {
       console.error("Prediction error:", err);
       if (axios.isAxiosError(err)) {
         if (!err.response) {
-          setError('Network Error: Could not connect to the backend. Please ensure your backend server is running on ' + BACKEND_API_URL.split('/api')[0] + '.');
+          setError('Network Error: Could not connect to the backend. Please ensure your backend server is running.');
         } else if (err.response.status >= 400 && err.response.status < 500) {
           setError(`Backend Error ${err.response.status}: ${err.response.data?.error || err.response.data?.message || err.message}. Double check your API key in the backend's .env file.`);
         } else {
@@ -280,10 +291,9 @@ const DiseasePrediction = () => {
 
   // Main component render based on currentPage state
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-4 bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 font-inter">
+    <div className="min-h-screen w-full flex items-center justify-center p-4 bg-blue-50 font-inter">
       {currentPage === 'prediction' && renderPredictionForm()}
       {currentPage === 'doctorList' && renderDoctorListPage()}
-      
     </div>
   );
 };

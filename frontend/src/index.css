@@ -1,4 +1,18 @@
-@import "tailwindcss";
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+:root {
+  --color-primary: #555879;
+  --color-secondary: #98A1BC;
+  --color-accent: #DED3C4;
+  --color-background: #F4EBD3;
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-primary);
+}
 
 .no-scrollbar {
   -ms-overflow-style: none;  

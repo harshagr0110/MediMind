@@ -8,6 +8,7 @@ import { cancelAppointment } from '../controllers/userController.js';
 import { createStripeSession } from '../controllers/userController.js';
 import { verifyStripe } from '../controllers/userController.js';
 import { predict } from '../controllers/userController.js';
+import { deleteAppointment } from '../controllers/userController.js';
 
 const userRouter = express.Router();
 
@@ -21,6 +22,7 @@ userRouter.get('/appointments', userAuth, listAppointment);
 userRouter.post('/cancel-appointment', userAuth, cancelAppointment);
 userRouter.post("/create-stripe-session", userAuth, createStripeSession);
 userRouter.post("/verifystripe", verifyStripe); // No auth needed here
-userRouter.post("/predict", userAuth, predict);
+userRouter.post("/predict", userAuth, upload.array('images', 3), predict);
+userRouter.delete('/delete-appointment/:id', userAuth, deleteAppointment);
 
 export default userRouter;
