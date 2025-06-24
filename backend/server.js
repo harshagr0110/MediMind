@@ -40,6 +40,4 @@ app.use((err, req, res, next) => {
     res.status(500).json({ message: 'Internal Server Error', error: err.message });
 });
 
-app.listen(port, () => {
-    console.log(`Example app listening on port ${port}`)
-})
+export default app;
