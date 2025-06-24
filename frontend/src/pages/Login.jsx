@@ -1,15 +1,24 @@
 import React, { useState, useContext, useEffect } from "react";
 import axios from "axios";
 import { AppContext } from "../context/AppContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 
 const Login = () => {
   const [isRegister, setIsRegister] = useState(false);
   const [form, setForm] = useState({ email: "", fullName: "", password: "" });
   const { backendurl, token, setToken, setUserId } = useContext(AppContext);
   const navigate = useNavigate();
+  const location = useLocation();
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
+  useEffect(() => {
+    if (location.pathname === "/register") {
+      setIsRegister(true);
+    } else {
+      setIsRegister(false);
+    }
+  }, [location.pathname]);
 
   useEffect(() => {
     if (token) {
@@ -36,10 +45,16 @@ const Login = () => {
       const data = response?.data;
       if (data?.success) {
         setSuccess(data.message || "Success!");
-        setToken(data.token);
-        setUserId(data.userId);
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("userId", data.userId);
+        if (!isRegister) {
+          setToken(data.token);
+          setUserId(data.userId);
+          localStorage.setItem("token", data.token);
+          localStorage.setItem("userId", data.userId);
+        }
+        // Handle successful registration - maybe navigate to login or show message
+        if(isRegister) {
+          setTimeout(() => navigate('/login'), 2000);
+        }
       } else {
         setError(data?.message || "Operation failed");
       }
@@ -55,15 +70,32 @@ const Login = () => {
   return (
     <div className="min-h-screen bg-blue-50 flex items-center justify-center w-full py-8">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8 border border-blue-100 flex flex-col items-center">
-        <h1 className="text-3xl font-bold text-blue-700 mb-6">Login to MediMind</h1>
-        <form className="w-full flex flex-col gap-4">
+        <h1 className="text-3xl font-bold text-blue-700 mb-6">{isRegister ? "Create an Account" : "Login to MediMind"}</h1>
+        <form onSubmit={handleSubmit} className="w-full flex flex-col gap-4">
+          {isRegister && (
+            <input
+              name="fullName"
+              value={form.fullName}
+              onChange={handleChange}
+              type="text"
+              placeholder="Full Name"
+              required
+              className="p-3 rounded-xl border border-blue-200 bg-blue-50 text-base focus:outline-none focus:ring-2 focus:ring-blue-300 transition"
+            />
+          )}
           <input
+            name="email"
+            value={form.email}
+            onChange={handleChange}
             type="email"
             placeholder="Email"
             required
             className="p-3 rounded-xl border border-blue-200 bg-blue-50 text-base focus:outline-none focus:ring-2 focus:ring-blue-300 transition"
           />
           <input
+            name="password"
+            value={form.password}
+            onChange={handleChange}
             type="password"
             placeholder="Password"
             required
@@ -73,12 +105,16 @@ const Login = () => {
             type="submit"
             className="bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl text-lg font-bold mt-2 shadow-md transition-all"
           >
-            Login
+            {isRegister ? "Register" : "Login"}
           </button>
         </form>
+        {error && <p className="text-red-500 mt-4">{error}</p>}
+        {success && <p className="text-green-500 mt-4">{success}</p>}
         <div className="mt-6 text-gray-700 text-sm">
-          Don't have an account?{' '}
-          <a href="/register" className="text-blue-600 hover:underline font-semibold">Register</a>
+          {isRegister ? "Already have an account? " : "Don't have an account? "}
+          <Link to={isRegister ? "/login" : "/register"} className="text-blue-600 hover:underline font-semibold">
+            {isRegister ? "Login" : "Register"}
+          </Link>
         </div>
       </div>
     </div>
