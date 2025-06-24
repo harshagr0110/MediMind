@@ -89,7 +89,7 @@ const Appointment = () => {
       groups[key].slots.push(slot);
     });
     setGroupedSlots(groups);
-  }, [docSlots]);
+  }, [docSlots, daysofweek]);
 
   if (!docInfo) return (
     <div className="flex justify-center items-center min-h-[60vh]">
@@ -124,7 +124,7 @@ const Appointment = () => {
       } else {
         toast.error(data.message, { position: "top-center", theme: "colored" });
       }
-    } catch (err) {
+    } catch {
       toast.error("Oh no, something went wrong!", { position: "top-center", theme: "colored" });
     }
   };
@@ -175,7 +175,7 @@ const Appointment = () => {
               <div key={dateKey}>
                 <h3 className="mb-3 text-blue-700 font-semibold text-lg text-center">{info.label}</h3>
                 <div className="flex flex-wrap justify-center gap-3">
-                  {info.slots.map((slotObj, idx) => {
+                  {info.slots.map((slotObj) => {
                     const slotIdentifier = `${dateKey}-${slotObj.time}`;
                     const isSelected =
                       selectedSlot &&
