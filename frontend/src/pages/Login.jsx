@@ -2,6 +2,7 @@ import React, { useState, useContext, useEffect } from "react";
 import axios from "axios";
 import { AppContext } from "../context/AppContext";
 import { useNavigate, useLocation, Link } from "react-router-dom";
+import { jwtDecode } from 'jwt-decode';
 
 const Login = () => {
   const [isRegister, setIsRegister] = useState(false);
@@ -47,9 +48,16 @@ const Login = () => {
         setSuccess(data.message || "Success!");
         if (!isRegister) {
           setToken(data.token);
-          setUserId(data.userId);
+          let userId = data.userId;
+          if (!userId && data.token) {
+            try {
+              const decoded = jwtDecode(data.token);
+              userId = decoded.id;
+            } catch {}
+          }
+          setUserId(userId);
           localStorage.setItem("token", data.token);
-          localStorage.setItem("userId", data.userId);
+          localStorage.setItem("userId", userId);
         }
         // Handle successful registration - maybe navigate to login or show message
         if(isRegister) {

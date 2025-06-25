@@ -21,7 +21,7 @@ const ALL_TIME_SLOTS = [
 const Appointment = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { token, backendurl, user } = useContext(AppContext);
+    const { token, backendurl } = useContext(AppContext);
 
     const [doctor, setDoctor] = useState(null);
     const [selectedDate, setSelectedDate] = useState(new Date());
@@ -80,7 +80,6 @@ const Appointment = () => {
         try {
             const { data } = await axios.post(`${backendurl}/api/user/book-appointment`, {
                 docId: doctor._id,
-                userId: user._id,
                 slotDate: moment(selectedDate).format('YYYY-MM-DD'),
                 slotTime: selectedSlot,
                 amount: doctor.fees

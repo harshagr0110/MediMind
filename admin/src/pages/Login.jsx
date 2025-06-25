@@ -1,138 +1,174 @@
-import React, { useState, useContext } from "react";
-import axios from "axios";
-import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
-import { AdminContext } from "../context/Admincontext";
-import { DoctorContext } from "../context/Doctorcontext";
-import { assets } from "../assets/assets_admin/assets.js";
-import { FaUserShield, FaUserMd, FaEnvelope, FaLock } from 'react-icons/fa';
-import Spinner from "../components/Spinner";
+import React, { useState, useContext } from 'react';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import { AdminContext } from '../context/Admincontext';
+import { DoctorContext } from '../context/Doctorcontext';
+import logo from '../assets/assets_admin/admin_logo.svg';
 
-const Login = () => {
-    const { setAToken } = useContext(AdminContext);
-    const { setDToken } = useContext(DoctorContext);
-    const backendurl = import.meta.env.VITE_BACKEND_URL;
-    const navigate = useNavigate();
+const Login = ({ backendurl }) => {
+  const [tab, setTab] = useState('login'); // 'login' or 'register'
+  const [role, setRole] = useState('admin');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const { setAToken } = useContext(AdminContext);
+  const { setDToken } = useContext(DoctorContext);
+  const navigate = useNavigate();
 
-    const [form, setForm] = useState({ email: "", password: "" });
-    const [loginType, setLoginType] = useState("admin");
-    const [loading, setLoading] = useState(false);
-
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setForm((prev) => ({ ...prev, [name]: value }));
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-
-        const isDoctor = loginType === "doctor";
-        const url = isDoctor
-            ? `${backendurl}/api/doctor/login`
-            : `${backendurl}/api/admin/login`;
-
-        try {
-            const response = await axios.post(url, form);
-            if (response.data.success) {
-                toast.success(`Welcome, ${loginType}!`);
-                if (isDoctor) {
-                    localStorage.setItem("dToken", response.data.token);
-                    setDToken(response.data.token);
-                    navigate("/doctor/dashboard");
-                } else {
-                    localStorage.setItem("aToken", response.data.token);
-                    setAToken(response.data.token);
-                    navigate("/admin/dashboard");
-                }
-            } else {
-                toast.error(response.data.message || "Login failed.");
-            }
-        } catch (err) {
-            toast.error(err.response?.data?.message || "An error occurred during login.");
-        } finally {
-            setLoading(false);
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    try {
+      const endpoint = role === 'admin' ? '/api/admin/login' : '/api/doctor/login';
+      const { data } = await axios.post(`${backendurl}${endpoint}`, { email, password });
+      if (data.success && data.token) {
+        if (role === 'admin') {
+          setAToken(data.token);
+          localStorage.setItem('admin_token', data.token);
+          navigate('/admin-dashboard');
+        } else {
+          setDToken(data.token);
+          localStorage.setItem('doctor_token', data.token);
+          navigate('/doctor-dashboard');
         }
-    };
+      } else {
+        setError(data.message || 'Login failed');
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Login failed');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    return (
-        <div className="min-h-screen w-full bg-gray-100 flex justify-center items-center p-4">
-            <div className="w-full max-w-4xl flex flex-col md:flex-row bg-white rounded-2xl shadow-2xl overflow-hidden">
-                {/* Left Side - Branding */}
-                <div className="w-full md:w-1/2 p-8 md:p-12 text-white flex flex-col justify-center items-center text-center" style={{ background: 'linear-gradient(to right, #2563eb, #3b82f6)' }}>
-                    <img src={assets.logo} alt="MediMind Logo" className="w-32 mb-4 invert brightness-0" />
-                    <h1 className="text-4xl font-bold mb-2">MediMind</h1>
-                    <p className="text-lg text-blue-100">Management Portal</p>
-                    <p className="mt-6 text-blue-200 text-sm max-w-sm">
-                        Access the control panel for managing doctors, appointments, and content. Your central hub for platform administration.
-                    </p>
-                </div>
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+    setLoading(true);
+    try {
+      const endpoint = role === 'admin' ? '/api/admin/register' : '/api/doctor/register';
+      const payload = { email, password, fullName };
+      const { data } = await axios.post(`${backendurl}${endpoint}`, payload);
+      if (data.success) {
+        setSuccess('Registration successful! You can now log in.');
+        setTab('login');
+        setEmail('');
+        setPassword('');
+        setFullName('');
+      } else {
+        setError(data.message || 'Registration failed');
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Registration failed');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-                {/* Right Side - Form */}
-                <div className="w-full md:w-1/2 p-8 md:p-12">
-                    <h2 className="text-3xl font-bold text-gray-800 mb-2">Sign In</h2>
-                    <p className="text-gray-500 mb-8">Please select your role and enter your details.</p>
-
-                    <div className="flex border border-gray-300 rounded-lg p-1 mb-6">
-                        <button
-                            type="button"
-                            onClick={() => setLoginType("admin")}
-                            className={`w-1/2 p-2 rounded-md text-center font-semibold text-sm transition-all duration-300 flex items-center justify-center gap-2 ${loginType === 'admin' ? 'bg-blue-600 text-white shadow' : 'text-gray-500'}`}
-                        >
-                            <FaUserShield /> Admin
-                        </button>
-                        <button
-                             type="button"
-                            onClick={() => setLoginType("doctor")}
-                            className={`w-1/2 p-2 rounded-md text-center font-semibold text-sm transition-all duration-300 flex items-center justify-center gap-2 ${loginType === 'doctor' ? 'bg-blue-600 text-white shadow' : 'text-gray-500'}`}
-                        >
-                            <FaUserMd /> Doctor
-                        </button>
-                    </div>
-
-                    <form onSubmit={handleSubmit} className="space-y-5">
-                        <div className="relative">
-                            <FaEnvelope className="absolute top-1/2 left-4 -translate-y-1/2 text-gray-400" />
-                            <input
-                                type="email"
-                                name="email"
-                                value={form.email}
-                                onChange={handleChange}
-                                required
-                                className="w-full pl-12 pr-4 py-3 bg-gray-50 rounded-lg border border-gray-200 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="Email Address"
-                            />
-                        </div>
-                        <div className="relative">
-                            <FaLock className="absolute top-1/2 left-4 -translate-y-1/2 text-gray-400" />
-                            <input
-                                type="password"
-                                name="password"
-                                value={form.password}
-                                onChange={handleChange}
-                                required
-                                className="w-full pl-12 pr-4 py-3 bg-gray-50 rounded-lg border border-gray-200 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="Password"
-                            />
-                        </div>
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="w-full py-3.5 text-lg text-white font-bold rounded-lg transition-all shadow-md focus:outline-none focus:ring-4 focus:ring-opacity-50 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400"
-                        >
-                            {loading && <Spinner sm />}
-                            {loading ? "Signing In..." : "Sign In"}
-                        </button>
-                    </form>
-                    <div className="text-center mt-8">
-                        <p className="text-sm text-gray-500">
-                           Need assistance? <a href="#" className="font-semibold text-blue-600 hover:underline">Contact Support</a>
-                        </p>
-                    </div>
-                </div>
-            </div>
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-blue-200 to-blue-400">
+      <div className="bg-white shadow-2xl rounded-xl p-10 w-full max-w-md border border-blue-200 flex flex-col items-center">
+        <img src={logo} alt="MediMind Logo" className="w-16 h-16 mb-4" />
+        <h1 className="text-3xl font-extrabold text-blue-700 mb-2 text-center tracking-tight">MediMind Portal</h1>
+        <div className="flex w-full mb-8 mt-4">
+          <button
+            className={`flex-1 py-3 rounded-l-lg font-bold text-lg transition-all duration-200 ${tab === 'login' ? 'bg-blue-600 text-white shadow' : 'bg-blue-50 text-blue-700 border border-blue-200'}`}
+            onClick={() => { setTab('login'); setError(''); setSuccess(''); }}
+          >
+            Login
+          </button>
+          <button
+            className={`flex-1 py-3 rounded-r-lg font-bold text-lg transition-all duration-200 ${tab === 'register' ? 'bg-blue-600 text-white shadow' : 'bg-blue-50 text-blue-700 border border-blue-200'}`}
+            onClick={() => { setTab('register'); setError(''); setSuccess(''); }}
+          >
+            Register
+          </button>
         </div>
-    );
+        <div className="flex w-full mb-6">
+          <button
+            className={`flex-1 py-2 rounded-l-lg font-semibold text-base transition-all duration-200 ${role === 'admin' ? 'bg-blue-500 text-white' : 'bg-blue-50 text-blue-700 border border-blue-200'}`}
+            onClick={() => setRole('admin')}
+          >
+            Admin
+          </button>
+          <button
+            className={`flex-1 py-2 rounded-r-lg font-semibold text-base transition-all duration-200 ${role === 'doctor' ? 'bg-blue-500 text-white' : 'bg-blue-50 text-blue-700 border border-blue-200'}`}
+            onClick={() => setRole('doctor')}
+          >
+            Doctor
+          </button>
+        </div>
+        {tab === 'login' ? (
+          <form onSubmit={handleLogin} className="flex flex-col gap-5 w-full">
+            <input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              required
+              className="p-4 rounded-lg border border-blue-200 bg-blue-50 text-base focus:outline-none focus:ring-2 focus:ring-blue-400 transition shadow-sm"
+            />
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              required
+              className="p-4 rounded-lg border border-blue-200 bg-blue-50 text-base focus:outline-none focus:ring-2 focus:ring-blue-400 transition shadow-sm"
+            />
+            <button
+              type="submit"
+              className="bg-blue-700 hover:bg-blue-800 text-white py-4 rounded-lg text-lg font-bold mt-2 shadow-lg transition-all"
+              disabled={loading}
+            >
+              {loading ? 'Logging in...' : `Login as ${role.charAt(0).toUpperCase() + role.slice(1)}`}
+            </button>
+          </form>
+        ) : (
+          <form onSubmit={handleRegister} className="flex flex-col gap-5 w-full">
+            <input
+              type="text"
+              placeholder="Full Name"
+              value={fullName}
+              onChange={e => setFullName(e.target.value)}
+              required
+              className="p-4 rounded-lg border border-blue-200 bg-blue-50 text-base focus:outline-none focus:ring-2 focus:ring-blue-400 transition shadow-sm"
+            />
+            <input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              required
+              className="p-4 rounded-lg border border-blue-200 bg-blue-50 text-base focus:outline-none focus:ring-2 focus:ring-blue-400 transition shadow-sm"
+            />
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              required
+              className="p-4 rounded-lg border border-blue-200 bg-blue-50 text-base focus:outline-none focus:ring-2 focus:ring-blue-400 transition shadow-sm"
+            />
+            <button
+              type="submit"
+              className="bg-blue-700 hover:bg-blue-800 text-white py-4 rounded-lg text-lg font-bold mt-2 shadow-lg transition-all"
+              disabled={loading}
+            >
+              {loading ? 'Registering...' : `Register as ${role.charAt(0).toUpperCase() + role.slice(1)}`}
+            </button>
+          </form>
+        )}
+        {error && <p className="text-red-500 mt-6 text-center font-semibold">{error}</p>}
+        {success && <p className="text-green-600 mt-6 text-center font-semibold">{success}</p>}
+      </div>
+    </div>
+  );
 };
 
 export default Login;

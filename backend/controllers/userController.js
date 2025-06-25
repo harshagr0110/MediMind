@@ -54,7 +54,7 @@ export const loginUser = async (req, res) => {
 // --- User Profile ---
 export const getProfile = async (req, res) => {
     try {
-        const user = await User.findById(req.body.userId).select("-password");
+        const user = await User.findById(req.user.id).select("-password");
         if (!user) return res.status(404).json({ success: false, message: "User not found" });
         res.json({ success: true, data: user });
     } catch (err) {
@@ -76,7 +76,7 @@ export const updateProfile = async (req, res) => {
             updates.image = result.secure_url;
         }
 
-        const updatedUser = await User.findByIdAndUpdate(req.body.userId, updates, { new: true }).select("-password");
+        const updatedUser = await User.findByIdAndUpdate(req.user.id, updates, { new: true }).select("-password");
         if (!updatedUser) return res.status(404).json({ success: false, message: "User not found" });
 
         res.json({ success: true, message: "Profile updated successfully", data: updatedUser });
@@ -89,7 +89,7 @@ export const updateProfile = async (req, res) => {
 export const bookAppointment = async (req, res) => {
     try {
         const { docId, slotDate, slotTime, amount } = req.body;
-        const userId = req.body.userId;
+        const userId = req.user.id;
 
         const doctor = await Doctor.findById(docId);
         if (!doctor || !doctor.available) return res.status(404).json({ success: false, message: "Doctor not found or is unavailable" });
@@ -114,7 +114,7 @@ export const bookAppointment = async (req, res) => {
 
 export const listAppointment = async (req, res) => {
     try {
-        const appointments = await Appointment.find({ user: req.body.userId }).populate('doctor', 'fullName speciality image');
+        const appointments = await Appointment.find({ user: req.user.id }).populate('doctor', 'fullName speciality image');
         res.status(200).json({ success: true, data: appointments });
     } catch (error) {
         res.status(500).json({ success: false, message: "Server error while listing appointments" });

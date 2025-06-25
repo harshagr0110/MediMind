@@ -1,6 +1,6 @@
-import React, { useContext } from "react";
-import { AdminContext } from "./context/Admincontext";
-import { DoctorContext } from "./context/Doctorcontext";
+import React from "react";
+import AdminContextProvider from "./context/Admincontext";
+import DoctorContextProvider from "./context/Doctorcontext";
 import { ToastContainer } from "react-toastify";
 import { Routes, Route, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar";
@@ -12,8 +12,11 @@ import DoctorsList from "./pages/admin/DoctorsList";
 import DoctorDashboard from "./pages/doctor/DoctorDashboard";
 import DoctorProfile from "./pages/doctor/DoctorProfile";
 import DoctorAppointment from "./pages/doctor/DoctorAppointment";
+import { AdminContext } from "./context/Admincontext";
+import { DoctorContext } from "./context/Doctorcontext";
+import { useContext } from "react";
 
-function App() {
+function AppRoutes({ backendurl }) {
   const { aToken } = useContext(AdminContext);
   const { dToken } = useContext(DoctorContext);
 
@@ -54,13 +57,23 @@ function App() {
         </>
       ) : (
         <>
-          <Login />
+          <Login backendurl={backendurl} />
           <Routes>
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </>
       )}
     </div>
+  );
+}
+
+function App({ backendurl }) {
+  return (
+    <AdminContextProvider>
+      <DoctorContextProvider>
+        <AppRoutes backendurl={backendurl} />
+      </DoctorContextProvider>
+    </AdminContextProvider>
   );
 }
 

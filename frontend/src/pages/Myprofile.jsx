@@ -63,7 +63,7 @@ const Myprofile = () => {
       });
 
       if (response.data.success) {
-        setUserData(response.data.userData);
+        setUserData(response.data.data);
         setEditMode(false);
         toast.success("Profile updated successfully!");
       } else {

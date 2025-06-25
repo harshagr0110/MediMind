@@ -32,7 +32,7 @@ export const loginDoctor = async (req, res) => {
 // --- Dashboard ---
 export const getDoctorDashboard = async (req, res) => {
     try {
-        const doctorId = req.body.userId; // This ID comes from the authDoctor middleware
+        const doctorId = req.user.id; // This ID comes from the authDoctor middleware
 
         const totalAppointments = await Appointment.countDocuments({ doctor: doctorId });
         const uniquePatients = await Appointment.distinct('user', { doctor: doctorId });
@@ -73,7 +73,7 @@ export const getDoctorDashboard = async (req, res) => {
 // --- Profile & Details ---
 export const getDoctorDetails = async (req, res) => {
     try {
-        const doctor = await Doctor.findById(req.body.userId).select('-password');
+        const doctor = await Doctor.findById(req.user.id).select('-password');
         if (!doctor) {
             return res.status(404).json({ success: false, message: 'Doctor not found' });
         }
@@ -85,7 +85,7 @@ export const getDoctorDetails = async (req, res) => {
 
 export const updateProfile = async (req, res) => {
     try {
-        const doctor = await Doctor.findByIdAndUpdate(req.body.userId, req.body, { new: true }).select('-password');
+        const doctor = await Doctor.findByIdAndUpdate(req.user.id, req.body, { new: true }).select('-password');
         res.json({ success: true, message: 'Profile updated successfully', data: doctor });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Failed to update profile' });
@@ -96,7 +96,7 @@ export const updateProfile = async (req, res) => {
 export const updateDoctorAvailability = async (req, res) => {
     try {
         const { available } = req.body;
-        const doctor = await Doctor.findByIdAndUpdate(req.body.userId, { available }, { new: true });
+        const doctor = await Doctor.findByIdAndUpdate(req.user.id, { available }, { new: true });
         res.json({ success: true, message: `Availability updated`, data: doctor });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Failed to update availability' });
@@ -106,7 +106,7 @@ export const updateDoctorAvailability = async (req, res) => {
 // --- Appointments ---
 export const getDoctorAppointments = async (req, res) => {
     try {
-        const appointments = await Appointment.find({ doctor: req.body.userId })
+        const appointments = await Appointment.find({ doctor: req.user.id })
             .populate('user', 'fullName email')
             .sort({ createdAt: -1 });
         res.json({ success: true, data: appointments });

@@ -56,7 +56,7 @@ const AppContextProvider = ({ children }) => {
       setDoctors([]);
     }
   };
-
+ 
   useEffect(() => {
     getDoctorsData();
   }, []);
@@ -64,7 +64,7 @@ const AppContextProvider = ({ children }) => {
   const getUserProfileData = async () => {
     try {
       const { data } = await axios.get(`${backendurl}/api/user/get-profile`, { headers: { Authorization: `Bearer ${token}` } });
-      if (data.success) setUserData(data.userData);
+      if (data.success) setUserData(data.data);
       else {
         setUserData(null);
         toast.error(data.message);
