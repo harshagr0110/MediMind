@@ -289,59 +289,48 @@ function extractSpecialist(text) {
 }
 
 function parseAIResponse(text, userInput = '') {
-  // Helper to extract a section and split into points only if real list markers exist
-  const getSectionPoints = (header, fallbackKeywords = []) => {
-    const safeHeader = header.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const regex = new RegExp(`\\*\\*${safeHeader}\\*\\*:?[ \t]*([\\s\\S]*?)(?=\\*\\*|$)`, 'i');
-    const match = text.match(regex);
-    let section = match ? match[1].trim() : '';
-    // If not found, try fallback keywords
-    if (!section && fallbackKeywords.length) {
-      for (const keyword of fallbackKeywords) {
-        const idx = text.toLowerCase().indexOf(keyword.toLowerCase());
-        if (idx !== -1) {
-          section = text.slice(idx + keyword.length).split(/\*\*|\n|\r/)[0];
-          break;
-        }
-      }
+  // Try to parse as JSON
+  try {
+    const jsonStart = text.indexOf('{');
+    const jsonEnd = text.lastIndexOf('}');
+    if (jsonStart !== -1 && jsonEnd !== -1) {
+      const jsonString = text.slice(jsonStart, jsonEnd + 1);
+      const data = JSON.parse(jsonString);
+      // Map fields to expected frontend structure
+      return {
+        disclaimer: 'This is an AI-generated suggestion. Please consult a real doctor.',
+        analysis: data.disease_analysis || [],
+        symptoms: data.symptoms || [],
+        causes: data.causes || [],
+        prevention: data.prevention || [],
+        evidence: data.evidence || [],
+        potential_conditions: data.potential_conditions || [],
+        specialist: { name: data.recommended_specialist || '', reason: `Consult a ${data.recommended_specialist || ''} for your symptoms.` },
+      };
     }
-    // If section contains real list markers, split, else treat as single paragraph
-    let points = [];
-    if (/\* |\d+\. |\u2022|\-/g.test(section)) {
-      points = section.split(/\n+|\* |\d+\. |\u2022|\-/).map(s => s.trim()).filter(Boolean);
-    } else if (section) {
-      points = [section.trim()];
-    }
-    // Remove empty, single punctuation, single letter/word, or points ending with a colon
-    points = points.filter(s => s && s.length > 2 && !/^[:.\-]$/.test(s) && !/^\w{1,2}:?$/.test(s) && !/^(listed below|s)\b/i.test(s));
-    // If nothing left, return empty array (do not show section)
-    if (points.length === 0 || (points.length === 1 && /not enough information/i.test(points[0]))) points = [];
-    return points;
-  };
-  // Main sections
-  let symptoms = getSectionPoints('Symptoms', ['symptom', 'symptoms']);
-  let causes = getSectionPoints('Causes', ['cause', 'causes']);
-  let prevention = getSectionPoints('Prevention', ['prevention', 'prevent']);
-  let potential_conditions = getSectionPoints('Potential Conditions', ['potential conditions', 'conditions', 'diagnosis']);
-  let evidence = getSectionPoints('Evidence', ['evidence']);
-  let analysis = getSectionPoints('Disease/Condition Analysis', ['analysis', 'summary']);
-  // Specialist extraction
-  const specialistSection = getSectionPoints('Recommended Specialist', ['specialist', 'doctor', 'consult']);
-  let specialistText = specialistSection.join(' ');
-  let specialistName = extractSpecialist(specialistText || text);
-  let reason = specialistSection.filter(s => isNaN(Number(s))).join(' ').replace(/\b\d+\b/g, '').trim();
-  if (!reason) reason = `Consult a ${specialistName} for your symptoms.`;
-
-  // Only return non-empty sections
+  } catch (e) {
+    // Fallback: return a single box with the raw text
+    return {
+      disclaimer: 'This is an AI-generated suggestion. Please consult a real doctor.',
+      analysis: [text],
+      symptoms: [],
+      causes: [],
+      prevention: [],
+      evidence: [],
+      potential_conditions: [],
+      specialist: { name: '', reason: '' },
+    };
+  }
+  // If not JSON, fallback to previous parser or show raw
   return {
     disclaimer: 'This is an AI-generated suggestion. Please consult a real doctor.',
-    analysis: analysis.length ? analysis : undefined,
-    symptoms: symptoms.length ? symptoms : undefined,
-    causes: causes.length ? causes : undefined,
-    prevention: prevention.length ? prevention : undefined,
-    evidence: evidence.length ? evidence : undefined,
-    potential_conditions: potential_conditions.length ? potential_conditions : undefined,
-    specialist: { name: specialistName, reason },
+    analysis: [text],
+    symptoms: [],
+    causes: [],
+    prevention: [],
+    evidence: [],
+    potential_conditions: [],
+    specialist: { name: '', reason: '' },
   };
 }
 
@@ -359,16 +348,16 @@ export const diseasePrediction = async (req, res) => {
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
         let prompt = '';
         let input = [];
-        // New prompt: always generate plausible, relevant points for each section
+        // Strict JSON prompt
         if (hasSymptoms && hasImage) {
-            prompt = `Analyze the following symptoms and medical image. Symptoms: ${symptoms}\nBased on both the text and visual evidence, identify potential diseases, conditions, or abnormalities. For each of the following sections, ALWAYS provide at least 2-3 plausible, medically relevant bullet points. If you are unsure, use your medical knowledge to suggest the most likely symptoms, causes, prevention, etc. for the given input. Do not leave any section empty or generic.\nSections:\n- Disease/Condition Analysis\n- Symptoms\n- Causes\n- Prevention\n- Evidence\n- Potential Conditions\n- Recommended Specialist (choose from: Dermatologist, Cardiologist, Neurologist, etc.)`;
+            prompt = `Given the following symptoms: ${symptoms}. Analyze the symptoms and the attached medical image. Return a JSON object with the following fields, each containing 2-3 concise, medically plausible lines (never empty, never generic, never 'no conditions found'):\n- "disease_analysis": [ ... ]\n- "symptoms": [ ... ]\n- "causes": [ ... ]\n- "prevention": [ ... ]\n- "potential_conditions": [ ... ]\n- "recommended_specialist": "..."\nDo not include any markdown, bullet points, or explanations—just the JSON.`;
             const imagePart = await fileToGenerativePart(req.file.buffer, req.file.mimetype);
             input = [prompt, imagePart];
         } else if (hasSymptoms) {
-            prompt = `Analyze the following symptoms: ${symptoms}\nBased on these, identify potential diseases, conditions, or abnormalities. For each of the following sections, ALWAYS provide at least 2-3 plausible, medically relevant bullet points. If you are unsure, use your medical knowledge to suggest the most likely symptoms, causes, prevention, etc. for the given input. Do not leave any section empty or generic.\nSections:\n- Disease/Condition Analysis\n- Symptoms\n- Causes\n- Prevention\n- Potential Conditions\n- Recommended Specialist (choose from: Dermatologist, Cardiologist, Neurologist, etc.)`;
+            prompt = `Given the following symptoms: ${symptoms}. Return a JSON object with the following fields, each containing 2-3 concise, medically plausible lines (never empty, never generic, never 'no conditions found'):\n- "disease_analysis": [ ... ]\n- "symptoms": [ ... ]\n- "causes": [ ... ]\n- "prevention": [ ... ]\n- "potential_conditions": [ ... ]\n- "recommended_specialist": "..."\nDo not include any markdown, bullet points, or explanations—just the JSON.`;
             input = [prompt];
         } else if (hasImage) {
-            prompt = "Analyze this medical image. Based on visual evidence, identify potential diseases, conditions, or abnormalities. For each of the following sections, ALWAYS provide at least 2-3 plausible, medically relevant bullet points. If you are unsure, use your medical knowledge to suggest the most likely symptoms, causes, prevention, etc. for the given input. Do not leave any section empty or generic.\nSections:\n- Disease/Condition Analysis\n- Evidence\n- Potential Conditions\n- Recommended Specialist (choose from: Dermatologist, Cardiologist, Neurologist, etc.)";
+            prompt = `Analyze the attached medical image. Return a JSON object with the following fields, each containing 2-3 concise, medically plausible lines (never empty, never generic, never 'no conditions found'):\n- "disease_analysis": [ ... ]\n- "evidence": [ ... ]\n- "potential_conditions": [ ... ]\n- "recommended_specialist": "..."\nDo not include any markdown, bullet points, or explanations—just the JSON.`;
             const imagePart = await fileToGenerativePart(req.file.buffer, req.file.mimetype);
             input = [prompt, imagePart];
         }
