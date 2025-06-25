@@ -16,9 +16,11 @@ import authDoctor from '../middleware/authDoctor.js';
 
 const router = express.Router();
 
-// PUBLIC ROUTE
+// PUBLIC ROUTES
 router.post('/login', loginDoctor);
 router.get('/list', getAllDoctors);
+router.get('/:id', getDoctorDetails);
+router.get('/availability/:id', getDoctorAvailability);
 
 // PROTECTED DOCTOR ROUTES (require doctor token for all routes below)
 router.use(authDoctor);
@@ -26,7 +28,6 @@ router.use(authDoctor);
 router.get('/dashboard', getDoctorDashboard);
 router.get('/details', getDoctorDetails);
 router.get('/appointments', getDoctorAppointments);
-router.get('/availability/:id', getDoctorAvailability);
 router.get('/patients', getDoctorPatients);
 
 router.patch('/update-profile', updateProfile);

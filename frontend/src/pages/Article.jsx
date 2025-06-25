@@ -12,6 +12,14 @@ const Article = () => {
     const [article, setArticle] = useState(null);
     const [loading, setLoading] = useState(true);
 
+    if (!id) {
+        return (
+            <div className="text-center p-12 text-red-600 font-bold">
+                Invalid article link. No article ID provided.
+            </div>
+        );
+    }
+
     useEffect(() => {
         const fetchArticle = async () => {
             try {

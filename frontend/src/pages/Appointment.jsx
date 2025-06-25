@@ -19,9 +19,13 @@ const ALL_TIME_SLOTS = [
 ];
 
 const Appointment = () => {
-    const { id } = useParams();
+    const { docId } = useParams();
     const navigate = useNavigate();
     const { token, backendurl } = useContext(AppContext);
+
+    if (!docId) {
+        return <div className="text-center p-8 text-red-600 font-bold">Invalid doctor link. No doctor ID provided.</div>;
+    }
 
     const [doctor, setDoctor] = useState(null);
     const [selectedDate, setSelectedDate] = useState(new Date());
@@ -34,7 +38,7 @@ const Appointment = () => {
     useEffect(() => {
         const getDoctorDetails = async () => {
             try {
-                const { data } = await axios.get(`${backendurl}/api/doctor/${id}`);
+                const { data } = await axios.get(`${backendurl}/api/doctor/${docId}`);
                 if (data.success) {
                     setDoctor(data.data);
                 }
@@ -46,14 +50,14 @@ const Appointment = () => {
             }
         };
         getDoctorDetails();
-    }, [id, backendurl]);
+    }, [docId, backendurl]);
 
     useEffect(() => {
         const getAvailability = async () => {
             if (!selectedDate) return;
             try {
                 const dateStr = moment(selectedDate).format('YYYY-MM-DD');
-                const { data } = await axios.get(`${backendurl}/api/doctor/availability/${id}?date=${dateStr}`);
+                const { data } = await axios.get(`${backendurl}/api/doctor/availability/${docId}?date=${dateStr}`);
                 if (data.success) {
                     setBookedSlots(data.data);
                 }
@@ -63,7 +67,7 @@ const Appointment = () => {
             }
         };
         getAvailability();
-    }, [selectedDate, id, backendurl]);
+    }, [selectedDate, docId, backendurl]);
 
     useEffect(() => {
         setAvailableSlots(ALL_TIME_SLOTS.filter(slot => !bookedSlots.includes(slot)));
