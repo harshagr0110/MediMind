@@ -55,8 +55,7 @@ app.get('/', (req, res) => {
     res.send('api working')
 })
 
-// Favicon handler to prevent Vercel routing error
-app.get('/favicon.ico', (req, res) => res.status(204).end());
+
 
 // 404 handler
 app.use((req, res, next) => {
