@@ -205,29 +205,27 @@ export const diseasePrediction = async (req, res) => {
         }
         const symptoms = req.body.symptoms || '';
         const hasSymptoms = symptoms && symptoms.trim().length > 0;
-        const hasImages = req.files && req.files.length > 0;
-        if (!hasSymptoms && !hasImages) {
-            return res.status(400).json({ success: false, message: "Please provide symptoms or upload at least one image." });
+        const hasImage = !!req.file;
+        if (!hasSymptoms && !hasImage) {
+            return res.status(400).json({ success: false, message: "Please provide symptoms or upload an image." });
         }
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
         let prompt = '';
         let input = [];
-        if (hasSymptoms && hasImages) {
-            prompt = `Analyze the following symptoms and medical images. Symptoms: ${symptoms}\nBased on both the text and visual evidence, identify potential diseases, conditions, or abnormalities. Describe your findings, including the indicators that support your assessment. Recommend a type of medical specialist (e.g., Dermatologist, Cardiologist, Neurologist) a person should consult. Structure your response in clear sections: 'Disease/Condition Analysis', 'Evidence', and 'Recommended Specialist'.`;
-            const imageParts = await Promise.all(req.files.map(file => fileToGenerativePart(file.buffer, file.mimetype)));
-            input = [prompt, ...imageParts];
+        if (hasSymptoms && hasImage) {
+            prompt = `Analyze the following symptoms and medical image. Symptoms: ${symptoms}\nBased on both the text and visual evidence, identify potential diseases, conditions, or abnormalities. Describe your findings, including the indicators that support your assessment. Recommend a type of medical specialist (e.g., Dermatologist, Cardiologist, Neurologist) a person should consult. Structure your response in clear sections: 'Disease/Condition Analysis', 'Evidence', and 'Recommended Specialist'.`;
+            const imagePart = await fileToGenerativePart(req.file.buffer, req.file.mimetype);
+            input = [prompt, imagePart];
         } else if (hasSymptoms) {
             prompt = `Analyze the following symptoms: ${symptoms}\nBased on these, identify potential diseases, conditions, or abnormalities. Recommend a type of medical specialist (e.g., Dermatologist, Cardiologist, Neurologist) a person should consult. Structure your response in clear sections: 'Disease/Condition Analysis', 'Recommended Specialist', and 'For Your Information'.`;
             input = [prompt];
-        } else if (hasImages) {
-            prompt = "Analyze these medical images. Based on visual evidence, identify potential diseases, conditions, or abnormalities. Describe your findings, including the visual indicators that support your assessment. If multiple images are provided, compare and contrast them. Finally, based on your analysis, recommend a type of medical specialist (e.g., Dermatologist, Cardiologist, Neurologist) a person should consult for these symptoms. Structure your response in clear sections: 'Disease/Condition Analysis', 'Visual Evidence', and 'Recommended Specialist'.";
-            const imageParts = await Promise.all(req.files.map(file => fileToGenerativePart(file.buffer, file.mimetype)));
-            input = [prompt, ...imageParts];
+        } else if (hasImage) {
+            prompt = "Analyze this medical image. Based on visual evidence, identify potential diseases, conditions, or abnormalities. Describe your findings, including the visual indicators that support your assessment. Finally, based on your analysis, recommend a type of medical specialist (e.g., Dermatologist, Cardiologist, Neurologist) a person should consult for these symptoms. Structure your response in clear sections: 'Disease/Condition Analysis', 'Visual Evidence', and 'Recommended Specialist'.";
+            const imagePart = await fileToGenerativePart(req.file.buffer, req.file.mimetype);
+            input = [prompt, imagePart];
         }
         const result = await model.generateContent(input);
         const responseText = result.response.text();
-        // Try to parse the response into structured data for the frontend
-        // (You may want to improve this with a more robust parser)
         res.json({ success: true, data: { raw: responseText } });
     } catch (error) {
         console.error("DiseasePrediction error:", error);

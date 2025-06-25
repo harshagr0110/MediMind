@@ -30,7 +30,6 @@ userRouter.post('/book-appointment', bookAppointment);
 userRouter.get('/appointments', listAppointment);
 userRouter.delete('/delete-appointment/:id', deleteAppointment);
 userRouter.post("/create-stripe-session", createStripeSession);
-userRouter.post("/predict", upload.array('images', 3), diseasePrediction);
-userRouter.post('/disease-prediction', upload.array('images', 3), diseasePrediction);
+userRouter.post('/disease-prediction', upload.single('image'), diseasePrediction);
 
 export default userRouter;
