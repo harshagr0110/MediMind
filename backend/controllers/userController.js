@@ -254,7 +254,9 @@ function extractSpecialist(text) {
 function parseAIResponse(text) {
   // Extract sections by header (very basic, can be improved)
   const getSection = (header) => {
-    const regex = new RegExp(`\*\*${header}\*\*:?\s*([\s\S]*?)(?=\*\*|$)`, 'i');
+    // Escape special regex characters in header
+    const safeHeader = header.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`\\*\\*${safeHeader}\\*\\*:?[ \t]*([\\s\\S]*?)(?=\\*\\*|$)`, 'i');
     const match = text.match(regex);
     return match ? match[1].trim() : '';
   };
