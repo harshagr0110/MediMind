@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { assets } from '../../assets/assets_admin/assets.js';
+import { assets } from '../assets/assets_admin/assets.js';
 
 const Sidebar = () => {
     const location = useLocation();

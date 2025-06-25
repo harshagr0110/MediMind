@@ -117,11 +117,6 @@ const Doctors = () => {
 
           {filteredDoctors.length === 0 ? (
             <div className="flex flex-col items-center mt-20 text-center">
-              <img
-                src={assets.no_doctors_found}
-                alt="No doctors found"
-                className="w-24 h-24 opacity-60 mb-4"
-              />
               <p className="text-lg text-gray-600 font-medium">
                 No doctors match your filter.
               </p>

@@ -22,7 +22,7 @@ const Myprofile = () => {
         address: userData.address || "",
         gender: userData.gender || "Male",
         dob: userData.dob ? userData.dob.split("T")[0] : "",
-        profileImage: userData.image || assets.profile_pic,
+        profileImage: userData.image || 'https://i.pravatar.cc/160',
       });
     }
   }, [userData]);
@@ -87,7 +87,7 @@ const Myprofile = () => {
             address: userData.address || "",
             gender: userData.gender || "Male",
             dob: userData.dob ? userData.dob.split("T")[0] : "",
-            profileImage: userData.image || assets.profile_pic,
+            profileImage: userData.image || 'https://i.pravatar.cc/160',
         });
     }
   };

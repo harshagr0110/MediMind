@@ -116,7 +116,6 @@ const MyAppointments = () => {
           </div>
         ) : appointments.length === 0 ? (
           <div className="flex flex-col items-center py-16">
-            <img src={assets.empty_appointments} alt="No appointments" className="w-32 h-32 mb-6 opacity-80" />
             <p className="text-gray-500 text-lg mb-4">No appointments found.</p>
             <button
               onClick={() => navigate('/doctors')}
@@ -136,12 +135,9 @@ const MyAppointments = () => {
                 >
                   <div className="flex-shrink-0 flex flex-col items-center">
                     <img
-                      src={doc.image || assets.default_doctor}
+                      src={doc.image || 'https://i.pravatar.cc/128'}
                       alt={doc.fullName}
                       className="w-32 h-32 rounded-full object-cover border-4 border-teal-200 shadow"
-                      onError={(e) => {
-                        e.target.src = assets.default_doctor;
-                      }}
                     />
                     <span className="mt-2 text-xs text-white font-semibold bg-blue-500 px-2 py-0.5 rounded-full">
                       {doc.speciality || 'General'}
