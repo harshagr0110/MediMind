@@ -73,7 +73,11 @@ export const getDoctorDashboard = async (req, res) => {
 // --- Profile & Details ---
 export const getDoctorDetails = async (req, res) => {
     try {
-        const doctor = await Doctor.findById(req.user.id).select('-password');
+        const doctorId = req.params.id || (req.user && req.user.id);
+        if (!doctorId) {
+            return res.status(400).json({ success: false, message: 'Doctor ID is required' });
+        }
+        const doctor = await Doctor.findById(doctorId).select('-password');
         if (!doctor) {
             return res.status(404).json({ success: false, message: 'Doctor not found' });
         }
