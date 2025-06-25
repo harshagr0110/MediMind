@@ -31,13 +31,16 @@ const corsOptions = {
             callback(new Error('Not allowed by CORS'));
         }
     },
-    credentials: true
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
 };
 
 connectDB();
 connectCloudinary();
 
 app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 app.use(express.json());
 app.use(helmet());
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }));
@@ -46,11 +49,6 @@ app.use('/api/admin', adminRouter);
 app.use('/api/doctor', DoctorRouter);
 app.use('/api/user', userRouter);
 app.use('/api/articles', articleRouter);
-
-// Article API routes defined directly as a workaround
-app.get('/api/articles', getArticles);
-app.get('/api/articles/:id', getArticleById);
-app.post('/api/articles', authAll, upload.single('image'), createArticle);
 
 // Move root route here
 app.get('/', (req, res) => {

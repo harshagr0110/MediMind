@@ -1,42 +1,32 @@
 import express from 'express';
-import authDoctor from '../middleware/authDoctor.js';
-import authUser from '../middleware/authUser.js';
 import {
-    getDoctor,
-    getDoctors,
-    getAppointments,
-    updateAppointmentStatus,
-    getAvailability,
-    getDoctorProfile,
-    updateDoctorAvailability,
-    updateDoctorProfile,
-    getDoctorDashboardData,
     loginDoctor,
+    getDoctorDashboard,
+    getDoctorDetails,
+    updateProfile,
+    updateDoctorAvailability,
+    getDoctorAppointments,
+    cancelAppointment,
+    completeAppointment
 } from '../controllers/doctorController.js';
+import authDoctor from '../middleware/authDoctor.js';
 
 const router = express.Router();
 
-// Public route for doctor login
+// PUBLIC ROUTE
 router.post('/login', loginDoctor);
 
-// GET all doctors
-router.get('/list', getDoctors);
+// PROTECTED DOCTOR ROUTES (require doctor token for all routes below)
+router.use(authDoctor);
 
-// GET single doctor by id
-router.get('/:id', getDoctor);
+router.get('/dashboard', getDoctorDashboard);
+router.get('/details', getDoctorDetails);
+router.get('/appointments', getDoctorAppointments);
 
-// DOCTOR-SPECIFIC ROUTES (require doctor authentication)
-router.get('/profile/:id', authDoctor, getDoctorProfile);
-router.post('/update-profile', authDoctor, updateDoctorProfile);
-router.post('/update-availability', authDoctor, updateDoctorAvailability);
+router.patch('/update-profile', updateProfile);
+router.patch('/update-availability', updateDoctorAvailability);
 
-router.get('/appointments', authDoctor, getAppointments);
-router.post('/update-appointment-status', authDoctor, updateAppointmentStatus);
-
-// New route for fetching availability (can be called by authenticated users)
-router.get('/availability/:id', authUser, getAvailability);
-
-// New route for doctor-specific dashboard data
-router.get('/dashboard', authDoctor, getDoctorDashboardData);
+router.post('/cancel-appointment', cancelAppointment);
+router.post('/complete-appointment', completeAppointment);
 
 export default router;

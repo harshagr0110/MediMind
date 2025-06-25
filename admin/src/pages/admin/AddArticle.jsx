@@ -75,68 +75,71 @@ const AddArticle = () => {
     };
 
     return (
-        <div className="p-4 md:p-8 bg-gray-100 min-h-screen">
+        <div className="p-4 md:p-10 bg-gradient-to-br from-blue-50 to-white min-h-screen">
             <div className="max-w-4xl mx-auto">
-                <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
-                        <FaNewspaper />
+                <div className="mb-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <h1 className="text-4xl font-extrabold text-gray-900 flex items-center gap-3 drop-shadow-sm">
+                        <FaNewspaper className="text-blue-500" />
                         Write a New Article
                     </h1>
-                    <p className="text-gray-500 mt-1">Share knowledge and updates with your users.</p>
+                    <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl shadow border border-blue-100">
+                        <FaImage className="text-blue-400 mr-2" />
+                        <span className="font-semibold text-gray-700">Article Panel</span>
+                    </div>
                 </div>
 
-                <form onSubmit={handleSubmit} className="bg-white p-8 rounded-2xl shadow-lg space-y-8">
+                <form onSubmit={handleSubmit} className="bg-white p-10 rounded-3xl shadow-xl border border-blue-100 space-y-10">
                     <div>
-                        <label htmlFor="title" className="block text-sm font-semibold text-gray-700 mb-1.5">Article Title</label>
+                        <label htmlFor="title" className="block text-base font-semibold text-gray-700 mb-2">Article Title</label>
                         <input
                             type="text"
                             id="title"
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
-                            className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                            className="w-full px-5 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-lg"
                             placeholder="e.g., 10 Tips for a Healthy Heart"
                             required
                         />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1.5">Cover Image</label>
-                      <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
-                        <div className="space-y-1 text-center">
-                          {imagePreview ? (
-                            <img src={imagePreview} alt="Preview" className="mx-auto h-40 w-auto rounded-lg object-cover"/>
-                          ) : (
-                            <FaImage className="mx-auto h-12 w-12 text-gray-400" />
-                          )}
-                          <div className="flex text-sm text-gray-600">
-                            <label htmlFor="image-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
-                              <span>Upload an image</span>
-                              <input id="image-upload" name="image-upload" type="file" className="sr-only" onChange={handleImageChange} accept="image/*" />
-                            </label>
-                          </div>
-                          <p className="text-xs text-gray-500">Required for a better look</p>
+                        <label className="block text-base font-semibold text-gray-700 mb-2">Cover Image</label>
+                        <div className="mt-1 flex justify-center px-6 pt-6 pb-8 border-2 border-blue-200 border-dashed rounded-2xl bg-blue-50">
+                            <div className="space-y-2 text-center">
+                                {imagePreview ? (
+                                    <img src={imagePreview} alt="Preview" className="mx-auto h-44 w-auto rounded-lg object-cover shadow"/>
+                                ) : (
+                                    <FaImage className="mx-auto h-14 w-14 text-blue-300" />
+                                )}
+                                <div className="flex text-sm text-gray-600 justify-center">
+                                    <label htmlFor="image-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500 px-3 py-1.5 border border-blue-100 shadow-sm">
+                                        <span>Upload an image</span>
+                                        <input id="image-upload" name="image-upload" type="file" className="sr-only" onChange={handleImageChange} accept="image/*" />
+                                    </label>
+                                </div>
+                                <p className="text-xs text-gray-400">Required for a better look</p>
+                            </div>
                         </div>
-                      </div>
                     </div>
 
                     <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-1.5">Article Content</label>
+                        <label className="block text-base font-semibold text-gray-700 mb-2">Article Content</label>
                         <div className="prose max-w-none">
                             <ReactQuill
                                 theme="snow"
                                 value={content}
                                 onChange={setContent}
                                 modules={quillModules}
-                                className="mt-1 bg-white"
+                                className="mt-1 bg-white rounded-xl border border-blue-100 shadow"
                             />
                         </div>
                     </div>
 
-                    <div className="pt-4 border-t border-gray-200">
+                    <div className="pt-6 border-t border-gray-200">
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full flex justify-center items-center gap-3 bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-semibold transition text-lg disabled:bg-blue-400 disabled:cursor-not-allowed"
+                            className="w-full flex justify-center items-center gap-3 bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-xl font-semibold transition text-lg disabled:bg-blue-400 disabled:cursor-not-allowed shadow-lg"
                         >
                             {loading ? <><Spinner sm /><span>Publishing...</span></> : 'Publish Article'}
                         </button>

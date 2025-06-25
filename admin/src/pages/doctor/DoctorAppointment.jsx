@@ -50,54 +50,54 @@ const DoctorAppointment = () => {
   };
 
   return (
-    <div className="p-6 md:p-10 bg-blue-50 min-h-screen pt-28">
-      <div className="flex items-center justify-between mb-8">
-        <h2 className="text-3xl font-bold text-blue-800">My Appointments</h2>
+    <div className="p-4 md:p-10 bg-gradient-to-br from-blue-50 to-white min-h-screen pt-28">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-10 gap-4">
+        <h2 className="text-4xl font-extrabold text-blue-900 drop-shadow-sm">My Appointments</h2>
         <button
           onClick={getAppointments}
-          className="bg-blue-100 text-blue-700 px-4 py-2 rounded-lg font-semibold shadow hover:bg-blue-200 transition"
+          className="bg-blue-600 text-white px-6 py-2 rounded-xl font-semibold shadow hover:bg-blue-700 transition text-lg"
         >
           Refresh
         </button>
       </div>
 
       {appointments.length === 0 ? (
-        <p className="text-gray-500">No appointments available.</p>
+        <p className="text-gray-500 text-lg">No appointments available.</p>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
           {appointments.map((app) => (
             <div
               key={app._id}
-              className={`bg-white p-6 rounded-2xl shadow-lg border border-blue-100 flex flex-col gap-2 transition-all ${
+              className={`bg-white p-8 rounded-3xl shadow-xl border border-blue-100 flex flex-col gap-3 transition-all ${
                 app.cancelled ? 'opacity-60' : 'hover:shadow-2xl'
               }`}
             >
               {/* Patient Info */}
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-5 mb-2">
                 <img
                   src={app.userData?.image}
                   alt={app.userData?.fullName}
-                  className="w-14 h-14 rounded-full object-cover border-2 border-teal-100"
+                  className="w-16 h-16 rounded-full object-cover border-2 border-blue-200 shadow"
                 />
                 <div>
-                  <p className="font-semibold text-blue-800">{app.userData?.fullName}</p>
-                  <p className="text-sm text-blue-600">{app.userData?.email}</p>
+                  <p className="font-bold text-blue-900 text-lg">{app.userData?.fullName}</p>
+                  <p className="text-base text-blue-600">{app.userData?.email}</p>
                 </div>
               </div>
 
               {/* Appointment Info */}
-              <div className="text-sm mt-2 space-y-1">
-                <p><span className="font-medium text-blue-700">Date:</span> {app.slotDate}</p>
-                <p><span className="font-medium text-blue-700">Time:</span> {app.slotTime}</p>
-                <p><span className="font-medium text-blue-700">Amount:</span> ₹{app.amount}</p>
+              <div className="text-base mt-1 space-y-1">
+                <p><span className="font-semibold text-blue-700">Date:</span> {app.slotDate}</p>
+                <p><span className="font-semibold text-blue-700">Time:</span> {app.slotTime}</p>
+                <p><span className="font-semibold text-blue-700">Amount:</span> ₹{app.amount}</p>
                 <p>
-                  <span className="font-medium text-blue-700">Completed:</span>{' '}
+                  <span className="font-semibold text-blue-700">Completed:</span>{' '}
                   <span className={app.isCompleted ? 'text-teal-600' : 'text-gray-500'}>
                     {app.isCompleted ? 'Yes' : 'No'}
                   </span>
                 </p>
                 <p>
-                  <span className="font-medium text-blue-700">Cancelled:</span>{' '}
+                  <span className="font-semibold text-blue-700">Cancelled:</span>{' '}
                   <span className={app.cancelled ? 'text-red-500' : 'text-gray-500'}>
                     {app.cancelled ? 'Yes' : 'No'}
                   </span>
@@ -107,7 +107,7 @@ const DoctorAppointment = () => {
               {/* Payment Status */}
               <div className="mt-2">
                 <span
-                  className={`text-xs font-semibold px-3 py-1 rounded-full border
+                  className={`text-xs font-semibold px-4 py-1 rounded-full border
                     ${app.paymentStatus === 'pending' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' : 'bg-teal-50 text-teal-700 border-teal-200'}`}
                 >
                   {app.paymentStatus === 'pending' ? 'Payment Pending' : 'Paid'}
@@ -115,11 +115,11 @@ const DoctorAppointment = () => {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex gap-3 mt-3">
+              <div className="flex gap-4 mt-4">
                 <button
                   onClick={() => handleCancel(app._id)}
                   disabled={app.cancelled || app.isCompleted}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all
+                  className={`px-5 py-2 rounded-xl text-base font-medium transition-all
                     ${app.cancelled || app.isCompleted ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-red-500 text-white hover:bg-red-600'}`}
                 >
                   {app.cancelled ? 'Cancelled' : 'Cancel'}
@@ -128,7 +128,7 @@ const DoctorAppointment = () => {
                 <button
                   onClick={() => handleComplete(app._id)}
                   disabled={app.cancelled || app.isCompleted}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all
+                  className={`px-5 py-2 rounded-xl text-base font-medium transition-all
                     ${app.isCompleted ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-teal-600 text-white hover:bg-teal-700'}`}
                 >
                   {app.isCompleted ? 'Completed' : 'Mark as Completed'}

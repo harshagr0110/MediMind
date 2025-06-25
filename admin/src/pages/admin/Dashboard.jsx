@@ -72,31 +72,37 @@ const Dashboard = () => {
     };
 
     return (
-        <div className="p-4 md:p-8 bg-gray-100 min-h-screen">
+        <div className="p-4 md:p-10 bg-gradient-to-br from-blue-50 to-white min-h-screen">
             {/* Header */}
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-800">Welcome, {admin?.fullName || 'Admin'}!</h1>
-                <p className="text-gray-500">Here's a snapshot of your platform's activity.</p>
+            <div className="mb-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                    <h1 className="text-4xl font-extrabold text-gray-900 mb-1 drop-shadow-sm">Welcome, {admin?.fullName || 'Admin'}!</h1>
+                    <p className="text-gray-500 text-lg">Here's a snapshot of your platform's activity.</p>
+                </div>
+                <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl shadow border border-blue-100">
+                    <FaUserMd className="text-blue-500 mr-2" />
+                    <span className="font-semibold text-gray-700">Admin Panel</span>
+                </div>
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
                 {stats.map((stat, index) => (
-                    <div key={index} className={`relative p-6 rounded-2xl overflow-hidden text-white shadow-lg transition-transform transform hover:scale-105 ${stat.color}`}>
+                    <div key={index} className={`relative p-8 rounded-3xl overflow-hidden text-white shadow-xl border-2 border-white hover:border-blue-200 transition-all duration-200 bg-opacity-90 ${stat.color}`}>
                         <div className="relative z-10">
-                            <p className="text-lg font-semibold">{stat.title}</p>
-                            <p className="text-4xl font-bold mt-2">{stat.value}</p>
+                            <p className="text-lg font-semibold tracking-wide opacity-90">{stat.title}</p>
+                            <p className="text-5xl font-extrabold mt-2 drop-shadow">{stat.value}</p>
                         </div>
-                        <div className="absolute -right-4 -bottom-4 text-6xl opacity-20 z-0">
-                            {React.cloneElement(stat.icon, { size: '100' })}
+                        <div className="absolute -right-4 -bottom-4 text-7xl opacity-15 z-0 pointer-events-none">
+                            {React.cloneElement(stat.icon, { size: '110' })}
                         </div>
                     </div>
                 ))}
             </div>
 
             {/* Chart Section */}
-            <div className="bg-white p-6 rounded-2xl shadow-lg">
-                <h2 className="text-xl font-bold text-gray-800 mb-4">Activity Overview</h2>
+            <div className="bg-white p-8 rounded-3xl shadow-xl border border-blue-100">
+                <h2 className="text-2xl font-bold text-gray-800 mb-6">Activity Overview</h2>
                 <Bar options={chartOptions} data={chartData} />
             </div>
         </div>

@@ -1,19 +1,13 @@
 import express from 'express';
-import { 
-    registerUser, 
-    loginUser, 
-    getProfile, 
-    updateProfile,
-    bookAppointment,
-    listAppointment,
-    cancelAppointment,
-    createStripeSession,
-    verifyStripe,
-    diseasePrediction,
-    deleteAppointment
-} from '../controllers/userController.js';
+import { registerUser, loginUser, getProfile, updateProfile } from '../controllers/userController.js';
 import userAuth from '../middleware/authUser.js';
 import { upload } from '../middleware/multer.js';
+import { bookAppointment } from '../controllers/userController.js';
+import { listAppointment } from '../controllers/userController.js';
+import { cancelAppointment } from '../controllers/userController.js';
+import { createStripeSession } from '../controllers/userController.js';
+import { verifyStripe } from '../controllers/userController.js';
+import { diseasePrediction } from '../controllers/userController.js';
 
 const userRouter = express.Router();
 
@@ -26,8 +20,7 @@ userRouter.post('/book-appointment', userAuth, bookAppointment);
 userRouter.get('/appointments', userAuth, listAppointment);
 userRouter.post('/cancel-appointment', userAuth, cancelAppointment);
 userRouter.post("/create-stripe-session", userAuth, createStripeSession);
-userRouter.post("/verifystripe", verifyStripe);
-userRouter.post("/predict", userAuth, upload.array('images', 3), diseasePrediction);
-userRouter.delete('/delete-appointment/:id', userAuth, deleteAppointment);
+userRouter.post("/verifystripe", verifyStripe); // No auth needed here
+userRouter.post("/predict", diseasePrediction);
 
 export default userRouter;

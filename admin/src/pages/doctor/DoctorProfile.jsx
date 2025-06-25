@@ -23,7 +23,7 @@ const DoctorProfile = () => {
       } else {
         toast.error('Failed to load profile');
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to load profile');
     }
   }, [dToken, backendurl]);
@@ -42,8 +42,8 @@ const DoctorProfile = () => {
       );
       toast.success("Availability updated");
       fetchDoctorProfile();
-    } catch (err) {
-      toast.error("Failed to update availability");
+    } catch {
+      toast.error('Failed to update availability');
     }
   };
 
@@ -55,8 +55,8 @@ const DoctorProfile = () => {
       toast.success("Profile updated successfully");
       setEditing(false);
       fetchDoctorProfile();
-    } catch (error) {
-      toast.error("Failed to update profile");
+    } catch {
+      toast.error('Failed to update profile');
     }
   };
 
@@ -73,23 +73,23 @@ const DoctorProfile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-blue-50 py-12 px-4 md:px-20 flex justify-center items-start pt-28">
-      <div className="w-full max-w-6xl bg-white shadow-2xl rounded-3xl p-10 flex flex-col md:flex-row gap-10 border border-blue-100">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white py-16 px-4 md:px-20 flex justify-center items-start pt-28">
+      <div className="w-full max-w-6xl bg-white shadow-2xl rounded-3xl p-12 flex flex-col md:flex-row gap-12 border border-blue-100">
         <div className="flex flex-col items-center md:items-start md:w-1/3">
           <img
             src={doctor.image}
             alt={doctor.fullName}
-            className="w-64 h-64 rounded-2xl object-cover border-4 border-teal-100 shadow-lg"
+            className="w-64 h-64 rounded-2xl object-cover border-4 border-blue-200 shadow-lg"
             onError={(e) => {
               e.target.src = assets.profile_pic;
             }}
           />
-          <h3 className="text-3xl font-bold mt-6 text-blue-800">{doctor.fullName}</h3>
-          <p className="text-lg text-blue-600">{doctor.email}</p>
+          <h3 className="text-3xl font-extrabold mt-8 text-blue-900 drop-shadow-sm">{doctor.fullName}</h3>
+          <p className="text-lg text-blue-600 mb-2">{doctor.email}</p>
           <div className="mt-4">
             <button
               onClick={toggleAvailability}
-              className={`px-5 py-2 rounded-full text-sm font-semibold shadow transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400
+              className={`px-6 py-2 rounded-full text-base font-semibold shadow transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400
                 ${doctor.available ? 'bg-teal-100 text-teal-700 hover:bg-teal-200' : 'bg-red-100 text-red-700 hover:bg-red-200'}`}
             >
               {doctor.available ? 'Available' : 'Not Available'}
@@ -98,22 +98,21 @@ const DoctorProfile = () => {
         </div>
 
         <div className="flex-1 flex flex-col justify-between">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 text-base">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-10 text-lg">
             <Info label="Speciality" value={editing ? (
               <input 
                 name="speciality" 
                 value={formData.speciality || ''} 
                 onChange={handleChange} 
-                className="input border border-blue-200 rounded p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-400" 
+                className="input border border-blue-200 rounded-xl p-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-400" 
               />
             ) : doctor.speciality} />
-            
             <Info label="Degree" value={editing ? (
               <input 
                 name="degree" 
                 value={formData.degree || ''} 
                 onChange={handleChange} 
-                className="input border border-blue-200 rounded p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-400" 
+                className="input border border-blue-200 rounded-xl p-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-400" 
               />
             ) : doctor.degree} />
             
@@ -123,7 +122,7 @@ const DoctorProfile = () => {
                 type="number" 
                 value={formData.experience || ''} 
                 onChange={handleChange} 
-                className="input border border-blue-200 rounded p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-400" 
+                className="input border border-blue-200 rounded-xl p-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-400" 
               />
             ) : `${doctor.experience} years`} />
             
@@ -133,7 +132,7 @@ const DoctorProfile = () => {
                 type="number" 
                 value={formData.fees || ''} 
                 onChange={handleChange} 
-                className="input border border-blue-200 rounded p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-400" 
+                className="input border border-blue-200 rounded-xl p-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-400" 
               />
             ) : `₹${doctor.fees}`} />
             
@@ -142,7 +141,7 @@ const DoctorProfile = () => {
                 name="address" 
                 value={formData.address || ''} 
                 onChange={handleChange} 
-                className="input border border-blue-200 rounded p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-400" 
+                className="input border border-blue-200 rounded-xl p-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-400" 
               />
             ) : doctor.address} />
           </div>

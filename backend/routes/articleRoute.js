@@ -12,4 +12,4 @@ articleRouter.get('/:id', getArticleById);
 // Protected route for creating articles (Admins and Doctors only)
 articleRouter.post('/', authAll, upload.single('image'), createArticle);
 
-export default articleRouter; 
+export default articleRouter;

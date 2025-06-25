@@ -64,6 +64,7 @@ const DoctorsList = () => {
 
     useEffect(() => {
         getAllDoctors();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [backendurl]);
 
     const filteredDoctors = useMemo(() =>
@@ -91,46 +92,46 @@ const DoctorsList = () => {
     };
 
     return (
-        <div className="p-4 md:p-8 bg-gray-100 min-h-screen">
+        <div className="p-4 md:p-10 bg-gradient-to-br from-blue-50 to-white min-h-screen">
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-800">Manage Doctors</h1>
-                        <p className="text-gray-500 mt-1">Approve, reject, or remove doctor profiles.</p>
+                        <h1 className="text-4xl font-extrabold text-gray-900 drop-shadow-sm">Manage Doctors</h1>
+                        <p className="text-gray-500 text-lg mt-1">Approve, reject, or remove doctor profiles.</p>
                     </div>
-                    <div className="relative mt-4 sm:mt-0">
+                    <div className="relative mt-4 md:mt-0 w-full md:w-auto">
                         <FaSearch className="absolute top-1/2 left-4 -translate-y-1/2 text-gray-400" />
                         <input
                             type="text"
                             placeholder="Search by name, email..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-12 pr-4 py-2.5 rounded-full border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition w-full sm:w-64"
+                            className="pl-12 pr-4 py-3 rounded-full border border-blue-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition w-full md:w-72 text-lg shadow-sm"
                         />
                     </div>
                 </div>
 
                 {/* Doctors Table */}
-                <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+                <div className="bg-white rounded-3xl shadow-xl border border-blue-100 overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="min-w-full text-left">
-                            <thead className="bg-gray-50 border-b border-gray-200">
+                            <thead className="bg-blue-50 border-b border-blue-100">
                                 <tr>
-                                    <th className="px-6 py-4 text-sm font-semibold text-gray-600 uppercase">Name</th>
-                                    <th className="px-6 py-4 text-sm font-semibold text-gray-600 uppercase">Specialization</th>
-                                    <th className="px-6 py-4 text-sm font-semibold text-gray-600 uppercase">Status</th>
-                                    <th className="px-6 py-4 text-sm font-semibold text-gray-600 uppercase text-center">Actions</th>
+                                    <th className="px-6 py-5 text-base font-bold text-blue-700 uppercase">Name</th>
+                                    <th className="px-6 py-5 text-base font-bold text-blue-700 uppercase">Specialization</th>
+                                    <th className="px-6 py-5 text-base font-bold text-blue-700 uppercase">Status</th>
+                                    <th className="px-6 py-5 text-base font-bold text-blue-700 uppercase text-center">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {filteredDoctors.length > 0 ? filteredDoctors.map((doctor) => (
-                                    <tr key={doctor._id} className="border-b border-gray-200 hover:bg-gray-50 transition">
+                                    <tr key={doctor._id} className="border-b border-blue-50 hover:bg-blue-50 transition">
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="font-medium text-gray-900">{doctor.fullName}</div>
+                                            <div className="font-semibold text-gray-900 text-lg">{doctor.fullName}</div>
                                             <div className="text-sm text-gray-500">{doctor.email}</div>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-gray-700">{doctor.specialization}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-gray-700 text-base">{doctor.specialization}</td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <StatusBadge status={doctor.status} />
                                         </td>
@@ -142,7 +143,7 @@ const DoctorsList = () => {
                                                         className="p-2 rounded-full text-green-600 hover:bg-green-100 transition"
                                                         title="Approve"
                                                     >
-                                                        <FaCheckCircle size={20} />
+                                                        <FaCheckCircle size={22} />
                                                     </button>
                                                 )}
                                                 {doctor.status !== 'rejected' && (
@@ -151,7 +152,7 @@ const DoctorsList = () => {
                                                         className="p-2 rounded-full text-yellow-600 hover:bg-yellow-100 transition"
                                                         title="Reject"
                                                     >
-                                                        <FaTimesCircle size={20} />
+                                                        <FaTimesCircle size={22} />
                                                     </button>
                                                 )}
                                                 <button
@@ -159,16 +160,16 @@ const DoctorsList = () => {
                                                     className="p-2 rounded-full text-red-600 hover:bg-red-100 transition"
                                                     title="Delete"
                                                 >
-                                                    <FaTrash size={18} />
+                                                    <FaTrash size={20} />
                                                 </button>
                                             </div>
                                         </td>
                                     </tr>
                                 )) : (
                                     <tr>
-                                        <td colSpan="4" className="text-center py-12 text-gray-500">
-                                            <p className="text-lg font-medium">No doctors found.</p>
-                                            <p className="text-sm">Try adjusting your search or check back later.</p>
+                                        <td colSpan="4" className="text-center py-16 text-gray-500">
+                                            <p className="text-xl font-semibold">No doctors found.</p>
+                                            <p className="text-base">Try adjusting your search or check back later.</p>
                                         </td>
                                     </tr>
                                 )}

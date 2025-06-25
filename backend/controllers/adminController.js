@@ -122,14 +122,14 @@ const allDoctors=async(req,res)=>{
   }
 }
 
-export const dashboarddata=async(req,res)=>{
+const dashboarddata = async (req, res) => {
   try {
-    const doctors=await doctormodel.find({}).select('-password');
-    const users=await User.find({}).select('-password');
-    const appointments=await appointmentModel.find({}).select('-password');
-    return res.status(200).json({success:true,doctors,users,appointments});
+    const doctors = await doctormodel.find({}).select('-password');
+    const users = await User.find({}).select('-password');
+    const appointments = await appointmentModel.find({}).select('-password');
+    return res.status(200).json({ success: true, doctors, users, appointments });
   } catch (error) {
-    return res.status(500).json({success:false,message:error.message});
+    return res.status(500).json({ success: false, message: error.message });
   }
 }
 
@@ -147,4 +147,29 @@ const deleteDoctor = async (req, res) => {
   }
 };
 
-export { addDoctor, adminLogin, allDoctors, deleteDoctor };
+// Approve or reject doctor status
+const updateDoctorStatus = async (req, res) => {
+  try {
+    const { doctorId, status } = req.body;
+    if (!doctorId || !status) {
+      return res.status(400).json({ success: false, message: 'Doctor ID and status are required' });
+    }
+    const allowed = ['approved', 'rejected', 'pending'];
+    if (!allowed.includes(status)) {
+      return res.status(400).json({ success: false, message: 'Invalid status value' });
+    }
+    const doctor = await doctormodel.findByIdAndUpdate(
+      doctorId,
+      { status },
+      { new: true }
+    );
+    if (!doctor) {
+      return res.status(404).json({ success: false, message: 'Doctor not found' });
+    }
+    return res.status(200).json({ success: true, message: `Doctor status updated to ${status}`, doctor });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export { addDoctor, adminLogin, allDoctors, deleteDoctor, updateDoctorStatus, dashboarddata };
