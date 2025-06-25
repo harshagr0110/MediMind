@@ -6,6 +6,30 @@ import Spinner from '../components/Spinner';
 import moment from 'moment';
 import { FaUserMd, FaCalendarAlt } from 'react-icons/fa';
 
+class ErrorBoundary extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = { hasError: false, error: null };
+    }
+    static getDerivedStateFromError(error) {
+        return { hasError: true, error };
+    }
+    render() {
+        if (this.state.hasError) {
+            return (
+                <div className="min-h-screen flex items-center justify-center bg-blue-50">
+                    <div className="bg-white p-10 rounded-3xl shadow-2xl max-w-xl w-full text-center">
+                        <h2 className="text-2xl font-bold text-red-600 mb-4">Something went wrong</h2>
+                        <p className="text-gray-700 mb-4">{this.state.error?.message || 'An unexpected error occurred.'}</p>
+                        <button className="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold shadow hover:bg-blue-700" onClick={() => window.location.reload()}>Reload</button>
+                    </div>
+                </div>
+            );
+        }
+        return this.props.children;
+    }
+}
+
 const Article = () => {
     const { id } = useParams();
     const { backendurl } = useContext(AppContext);
@@ -53,25 +77,31 @@ const Article = () => {
     return (
         <div className="container mx-auto p-4 md:p-8">
             <div className="max-w-4xl mx-auto">
-                <img src={article.image} alt={article.title} className="w-full h-96 object-cover rounded-lg shadow-lg mb-8" />
-                <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-6">{article.title}</h1>
+                <img src={article.image || ''} alt={article.title || 'Article'} className="w-full h-96 object-cover rounded-lg shadow-lg mb-8" />
+                <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-6">{article.title || 'Untitled'}</h1>
                 <div className="flex items-center text-gray-500 mb-8 space-x-6">
                     <div className="flex items-center">
                         <FaUserMd className="mr-2" />
-                        <span>By Dr. {article.authorName}</span>
+                        <span>By Dr. {article.authorName || 'Unknown'}</span>
                     </div>
                     <div className="flex items-center">
                         <FaCalendarAlt className="mr-2" />
-                        <span>{moment(article.createdAt).format('MMMM Do, YYYY')}</span>
+                        <span>{article.createdAt ? moment(article.createdAt).format('MMMM Do, YYYY') : 'Unknown date'}</span>
                     </div>
                 </div>
                 <div 
                     className="prose prose-lg max-w-none"
-                    dangerouslySetInnerHTML={{ __html: article.content }}
+                    dangerouslySetInnerHTML={{ __html: article.content || '' }}
                 />
             </div>
         </div>
     );
 };
 
-export default Article; 
+const ArticlePage = (props) => (
+    <ErrorBoundary>
+        <Article {...props} />
+    </ErrorBoundary>
+);
+
+export default ArticlePage; 

@@ -4,6 +4,30 @@ import { AppContext } from "../context/AppContext";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { jwtDecode } from 'jwt-decode';
 
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-blue-50">
+          <div className="bg-white p-10 rounded-3xl shadow-2xl max-w-xl w-full text-center">
+            <h2 className="text-2xl font-bold text-red-600 mb-4">Something went wrong</h2>
+            <p className="text-gray-700 mb-4">{this.state.error?.message || 'An unexpected error occurred.'}</p>
+            <button className="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold shadow hover:bg-blue-700" onClick={() => window.location.reload()}>Reload</button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 const Login = () => {
   const [isRegister, setIsRegister] = useState(false);
   const [form, setForm] = useState({ email: "", fullName: "", password: "" });
@@ -129,4 +153,10 @@ const Login = () => {
   );
 };
 
-export default Login;
+const LoginPage = (props) => (
+  <ErrorBoundary>
+    <Login {...props} />
+  </ErrorBoundary>
+);
+
+export default LoginPage;
