@@ -11,9 +11,13 @@ import {
     updateDoctorAvailability,
     updateDoctorProfile,
     getDoctorDashboardData,
+    loginDoctor,
 } from '../controllers/doctorController.js';
 
 const router = express.Router();
+
+// Public route for doctor login
+router.post('/login', loginDoctor);
 
 // GET all doctors
 router.get('/list', getDoctors);

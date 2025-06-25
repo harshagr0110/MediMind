@@ -4,6 +4,8 @@ import userModel from '../models/userModel.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
+const createToken = (id) => jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+
 const getDoctors = async (req, res) => {
     try {
         const doctors = await doctorModel.find({ status: 'approved' }).select('-password');
@@ -167,6 +169,36 @@ const getDoctorDashboardData = async (req, res) => {
     }
 };
 
+export const loginDoctor = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        if (!email || !password) {
+            return res.status(400).json({ success: false, message: 'Email and password are required.' });
+        }
+
+        const doctor = await doctorModel.findOne({ email });
+        if (!doctor) {
+            return res.status(404).json({ success: false, message: 'Doctor not found.' });
+        }
+
+        const isMatch = await bcrypt.compare(password, doctor.password);
+        if (!isMatch) {
+            return res.status(401).json({ success: false, message: 'Invalid credentials.' });
+        }
+
+        if (doctor.status !== 'approved') {
+            return res.status(403).json({ success: false, message: 'Your application is pending approval.' });
+        }
+
+        const token = createToken(doctor._id);
+        res.status(200).json({ success: true, token, doctorId: doctor._id });
+
+    } catch (error) {
+        console.error("Doctor login error:", error);
+        res.status(500).json({ success: false, message: 'Internal server error.' });
+    }
+};
+
 export {
     getDoctor,
     getDoctors,
@@ -177,5 +209,6 @@ export {
     updateAppointmentStatus,
     getAvailability,
     getDoctorDashboardData,
+    loginDoctor,
 };
  

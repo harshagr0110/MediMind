@@ -4,7 +4,7 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 
 const DoctorAppointment = () => {
-  const { dToken, appointments, getAppointments, backendurl } = useContext(DoctorContext);
+  const { dToken, appointments = [], getAppointments, backendurl } = useContext(DoctorContext);
 
   useEffect(() => {
     if (dToken) {

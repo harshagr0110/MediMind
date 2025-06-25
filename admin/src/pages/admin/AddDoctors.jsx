@@ -1,193 +1,168 @@
-// --- src/components/AddDoctors.jsx ---
 import React, { useState, useContext } from 'react';
 import axios from 'axios';
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { toast } from 'react-toastify';
 import { AdminContext } from '../../context/Admincontext';
+import Spinner from '../../components/Spinner';
+import { FaUserMd, FaUpload, FaImage } from 'react-icons/fa';
 
 const AddDoctors = () => {
-  const { backendurl, aToken } = useContext(AdminContext);
+  const { backendurl } = useContext(AdminContext);
 
   const [form, setForm] = useState({
     fullName: '',
     email: '',
     password: '',
-    speciality: '',
+    specialization: '',
     degree: '',
     experience: '',
     about: '',
     fees: '',
     address: '',
-    available: true,
     image: null,
   });
-
   const [loading, setLoading] = useState(false);
+  const [imagePreview, setImagePreview] = useState(null);
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setForm(prev => ({ ...prev, image: file }));
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleCheckboxChange = (e) => {
-    setForm((prev) => ({ ...prev, available: e.target.checked }));
-  };
-
-  const handleImageChange = (e) => {
-    setForm((prev) => ({ ...prev, image: e.target.files[0] }));
+    setForm(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!form.image) {
+      toast.error('Please upload a profile image for the doctor.');
+      return;
+    }
     setLoading(true);
+
     const formData = new FormData();
-
-    // Ensure numeric fields
-    const payload = {
-      ...form,
-      experience: Number(form.experience),
-      fees: Number(form.fees),
-    };
-
-    Object.entries(payload).forEach(([key, value]) => {
-      formData.append(key, value);
+    Object.keys(form).forEach(key => {
+      formData.append(key, form[key]);
     });
 
     try {
-      await axios.post(
-        `${backendurl}/api/admin/add-doctor`,
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          }
-        }
-      );
+      await axios.post(`${backendurl}/api/admin/add-doctor`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
 
-      toast.success('Doctor added successfully', {
-        position: 'top-center',
-        autoClose: 2500,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: 'colored',
-      });
+      toast.success('Doctor added successfully!');
       setForm({
-        fullName: '',
-        email: '',
-        password: '',
-        speciality: '',
-        degree: '',
-        experience: '',
-        about: '',
-        fees: '',
-        address: '',
-        available: true,
-        image: null,
+        fullName: '', email: '', password: '', specialization: '', degree: '',
+        experience: '', about: '', fees: '', address: '', image: null,
       });
+      setImagePreview(null);
+      document.getElementById('image-upload').value = null; // Reset file input
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to add doctor', {
-        position: 'top-center',
-        autoClose: 2500,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: 'colored',
-      });
+      toast.error(err.response?.data?.message || 'Failed to add doctor');
     } finally {
       setLoading(false);
     }
   };
 
+  const inputFields = [
+    { name: 'fullName', label: 'Full Name', placeholder: 'Dr. Jane Smith' },
+    { name: 'email', label: 'Email Address', type: 'email', placeholder: 'doctor@web.com' },
+    { name: 'password', label: 'Password', type: 'password', placeholder: '••••••••' },
+    { name: 'specialization', label: 'Specialization', placeholder: 'Dermatology' },
+    { name: 'degree', label: 'Degree', placeholder: 'MBBS, MD' },
+    { name: 'experience', label: 'Experience (Years)', type: 'number', placeholder: '8' },
+    { name: 'fees', label: 'Consultation Fees (₹)', type: 'number', placeholder: '750' },
+    { name: 'address', label: 'Clinic Address', placeholder: '456 SkinCare Ave, Beautown' },
+  ];
+
   return (
-    <div className="min-h-screen bg-blue-50 flex items-center justify-center p-8 pt-24">
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-2xl bg-white p-10 rounded-2xl shadow-2xl border border-blue-100"
-        encType="multipart/form-data"
-      >
-        <h2 className="text-3xl font-bold text-center mb-8 text-blue-800">Add Doctor</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {[
-            { name: 'fullName', label: 'Full Name' },
-            { name: 'email', label: 'Email', type: 'email' },
-            { name: 'password', label: 'Password', type: 'password' },
-            { name: 'speciality', label: 'Speciality' },
-            { name: 'degree', label: 'Degree' },
-            { name: 'experience', label: 'Experience (years)', type: 'number', min: 0 },
-            { name: 'fees', label: 'Fees', type: 'number', min: 0 },
-            { name: 'address', label: 'Address' },
-          ].map(({ name, label, type = 'text', ...rest }) => (
-            <div key={name}>
-              <label className="block mb-1 text-sm font-semibold text-blue-700">
-                {label}
-              </label>
-              <input
-                type={type}
-                name={name}
-                value={form[name] ?? ''}
-                onChange={handleChange}
-                required
-                className="w-full border border-blue-200 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
-                {...rest}
-              />
-            </div>
-          ))}
-
-          <div className="md:col-span-2">
-            <label className="block mb-1 text-sm font-semibold text-blue-700">About</label>
-            <textarea
-              name="about"
-              value={form.about}
-              onChange={handleChange}
-              required
-              rows={3}
-              className="w-full border border-blue-200 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
-            />
-          </div>
-
-          <div className="md:col-span-2 flex items-center space-x-2">
-            <input
-              type="checkbox"
-              name="available"
-              checked={form.available}
-              onChange={handleCheckboxChange}
-              className="w-5 h-5 text-blue-600 focus:ring-blue-400 border-blue-200 rounded"
-            />
-            <label className="text-sm font-semibold text-blue-700">Available</label>
-          </div>
-
-          <div className="md:col-span-2">
-            <label className="block mb-1 text-sm font-semibold text-blue-700">Image</label>
-            <input
-              type="file"
-              name="image"
-              accept="image/*"
-              onChange={handleImageChange}
-              required
-              className="w-full border border-blue-200 px-3 py-2 rounded-md file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition"
-            />
-          </div>
+    <div className="p-4 md:p-8 bg-gray-100 min-h-screen">
+      <div className="max-w-4xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
+            <FaUserMd />
+            Add New Doctor
+          </h1>
+          <p className="text-gray-500 mt-1">Fill out the form to add a new doctor profile.</p>
         </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="mt-8 w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-md font-semibold transition flex items-center justify-center text-lg shadow"
-        >
-          {loading ? (
-            <svg className="animate-spin h-5 w-5 mr-2 text-white" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-            </svg>
-          ) : null}
-          {loading ? 'Submitting...' : 'Submit'}
-        </button>
-      </form>
+        <form onSubmit={handleSubmit} className="bg-white p-8 rounded-2xl shadow-lg space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+            
+            <div className="md:col-span-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-1.5">Profile Image</label>
+              <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                <div className="space-y-1 text-center">
+                  {imagePreview ? (
+                    <img src={imagePreview} alt="Preview" className="mx-auto h-32 w-auto rounded-lg object-cover"/>
+                  ) : (
+                    <FaImage className="mx-auto h-12 w-12 text-gray-400" />
+                  )}
+                  <div className="flex text-sm text-gray-600">
+                    <label htmlFor="image-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
+                      <span>Upload a file</span>
+                      <input id="image-upload" name="image-upload" type="file" className="sr-only" onChange={handleImageChange} accept="image/*" />
+                    </label>
+                    <p className="pl-1">or drag and drop</p>
+                  </div>
+                  <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                </div>
+              </div>
+            </div>
+
+            {inputFields.map(({ name, label, type = 'text', placeholder }) => (
+              <div key={name}>
+                <label htmlFor={name} className="block text-sm font-semibold text-gray-700 mb-1.5">{label}</label>
+                <input
+                  type={type}
+                  id={name}
+                  name={name}
+                  value={form[name]}
+                  onChange={handleChange}
+                  placeholder={placeholder}
+                  required
+                  className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                />
+              </div>
+            ))}
+
+            <div className="md:col-span-2">
+              <label htmlFor="about" className="block text-sm font-semibold text-gray-700 mb-1.5">About Doctor</label>
+              <textarea
+                id="about"
+                name="about"
+                value={form.about}
+                onChange={handleChange}
+                required
+                rows={4}
+                placeholder="Write a brief bio about the doctor..."
+                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+              />
+            </div>
+          </div>
+
+          <div className="pt-4 border-t border-gray-200">
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full flex justify-center items-center gap-3 bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-semibold transition text-lg disabled:bg-blue-400 disabled:cursor-not-allowed"
+            >
+              {loading ? (
+                <>
+                  <Spinner sm />
+                  <span>Adding Doctor...</span>
+                </>
+              ) : (
+                <span>Submit Profile</span>
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };
