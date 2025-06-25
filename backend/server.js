@@ -17,30 +17,21 @@ const app = express();
 const port = process.env.PORT || 4000;
 
 // CORS configuration
-const allowedOrigins = [
-    'http://localhost:5173',
+app.use(cors({
+  origin: [
+    'https://medimind-frontend-three.vercel.app',
     'https://medimind-admin-green.vercel.app',
-    'https://medimind-frontend-three.vercel.app'
-];
-
-const corsOptions = {
-    origin: (origin, callback) => {
-        if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
-            callback(null, true);
-        } else {
-            callback(new Error('Not allowed by CORS'));
-        }
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-};
+    'http://localhost:5173'
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+app.options('*', cors());
 
 connectDB();
 connectCloudinary();
 
-app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
 app.use(express.json());
 app.use(helmet());
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }));
