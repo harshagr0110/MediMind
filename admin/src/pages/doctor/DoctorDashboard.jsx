@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useContext } from 'react';
 import axios from 'axios';
 import { DoctorContext } from '../../context/Doctorcontext';
-import Spinner from '../../components/Spinner';
+// import Spinner from '../../components/Spinner';
 import { toast } from 'react-toastify';
 import { FaUserInjured, FaCalendarCheck, FaRupeeSign } from 'react-icons/fa';
 
@@ -39,7 +39,7 @@ const DoctorDashboard = () => {
         fetchDashboardData();
     }, [backendurl]);
 
-    if (loading) return <Spinner />;
+    if (loading) return <div className="p-8 text-center">Loading...</div>;
     if (!dashboardData) return <div className="p-8 text-center">Could not load dashboard data.</div>;
 
     const { totalAppointments, totalPatients, totalEarnings, upcomingAppointments } = dashboardData;

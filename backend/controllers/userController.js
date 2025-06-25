@@ -470,6 +470,5 @@ export {
     cancelAppointment,
     createStripeSession,
     verifyStripe,
-    diseasePrediction,
-    deleteAppointment
+    diseasePrediction
 };

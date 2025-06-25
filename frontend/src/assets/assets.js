@@ -37,9 +37,6 @@ import PlasticSurgeon from './General_physician.svg'
 import Anesthesiologist from './General_physician.svg'
 import Pathologist from './General_physician.svg'
 import Radiologist from './General_physician.svg'
-import no_doctors_found from './no-doctors-found.png'
-import empty_appointments from './empty-appointments.svg'
-import default_doctor from './default-doctor.png'
 
 
 export const assets = {
@@ -59,10 +56,7 @@ export const assets = {
     dropdown_icon,
     upload_icon,
     stripe_logo,
-    razorpay_logo,
-    no_doctors_found,
-    empty_appointments,
-    default_doctor
+    razorpay_logo
 }
 
 export const specialityData = [

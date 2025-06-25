@@ -3,7 +3,7 @@ import axios from "axios";
 import { AdminContext } from "../../context/Admincontext";
 import { FaUserMd, FaUser, FaFileMedical, FaRupeeSign } from 'react-icons/fa';
 import { toast } from 'react-toastify';
-import Spinner from "../../components/Spinner"; // Assuming you have a Spinner component
+// import Spinner from "../../components/Spinner"; // Assuming you have a Spinner component
 
 const Dashboard = () => {
     const { backendurl } = useContext(AdminContext);
@@ -32,7 +32,7 @@ const Dashboard = () => {
     }, [backendurl]);
 
     if (loading) {
-        return <Spinner />;
+        return <div className="p-8 text-center text-gray-500">Loading...</div>;
     }
 
     if (!dashboardData) {
