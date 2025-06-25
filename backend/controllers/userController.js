@@ -252,33 +252,66 @@ function extractSpecialist(text) {
 }
 
 function parseAIResponse(text) {
-  // Extract sections by header (very basic, can be improved)
-  const getSection = (header) => {
+  // Helper to extract a section and split into points
+  const getSectionPoints = (header, fallbackKeywords = []) => {
     // Escape special regex characters in header
     const safeHeader = header.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const regex = new RegExp(`\\*\\*${safeHeader}\\*\\*:?[ \t]*([\\s\\S]*?)(?=\\*\\*|$)`, 'i');
     const match = text.match(regex);
-    return match ? match[1].trim() : '';
+    let section = match ? match[1].trim() : '';
+    // If not found, try fallback keywords
+    if (!section && fallbackKeywords.length) {
+      for (const keyword of fallbackKeywords) {
+        const idx = text.toLowerCase().indexOf(keyword.toLowerCase());
+        if (idx !== -1) {
+          section = text.slice(idx + keyword.length).split(/\*\*|\n|\r/)[0];
+          break;
+        }
+      }
+    }
+    // Split into points by *, newlines, or numbered lists
+    return section
+      ? section.split(/\n+|\* |\d+\. |\u2022|\-/).map(s => s.trim()).filter(Boolean)
+      : [];
   };
-  const analysis = getSection('Disease/Condition Analysis');
-  const evidence = getSection('Evidence');
-  const specialistText = getSection('Recommended Specialist');
-  const symptomsText = getSection('Patient Reported Symptom|Symptoms');
-  const conditionsText = getSection('Potential Conditions|For Your Information');
-  // Parse lists
-  const symptoms = symptomsText ? symptomsText.split(/\*\*|\*|\n|,|\./).map(s => s.trim()).filter(Boolean) : [];
-  const evidenceList = evidence ? evidence.split(/\*\*|\*|\n|,|\./).map(s => s.trim()).filter(Boolean) : [];
-  const potential_conditions = conditionsText ? conditionsText.split(/\*\*|\*|\n|,|\./).map(s => s.trim()).filter(Boolean) : [];
+  // Main sections
+  const symptoms = getSectionPoints('Symptoms', ['symptom', 'symptoms']);
+  const causes = getSectionPoints('Causes', ['cause', 'causes']);
+  const prevention = getSectionPoints('Prevention', ['prevention', 'prevent']);
+  const potential_conditions = getSectionPoints('Potential Conditions', ['potential conditions', 'conditions', 'diagnosis']);
+  const evidence = getSectionPoints('Evidence', ['evidence']);
+  const analysis = getSectionPoints('Disease/Condition Analysis', ['analysis', 'summary']);
   // Specialist extraction
-  const specialistName = extractSpecialist(specialistText || text);
-  let reason = specialistText || `Consult a ${specialistName} for your symptoms.`;
+  const specialistSection = getSectionPoints('Recommended Specialist', ['specialist', 'doctor', 'consult']);
+  let specialistText = specialistSection.join(' ');
+  let specialistName = extractSpecialist(specialistText || text);
+  // If the AI mentions dermatologist/skin/related, prefer Dermatologist
+  if (/dermatolog|skin|rash|lesion|infection|blister|eczema|psoriasis|acne/i.test(text) && specialistName === 'General Physician') {
+    specialistName = 'Dermatologist';
+  }
+  // Never return General Physician unless no other match
+  if (specialistName === 'General Physician' && /cardio|neuro|gastro|pediatric|gyne|ortho|psych|ent|ophthal|endo|nephro|onco|pulmo|uro|hema|rheuma|allerg|infect|plastic|dental|anesth|patho|radio|ortho/i.test(text)) {
+    // Try to match a more specific specialist
+    for (const spec of allowedSpecialities) {
+      if (new RegExp(spec.split(' ')[0], 'i').test(text)) {
+        specialistName = spec;
+        break;
+      }
+    }
+  }
+  // Remove any stray numbers or artifacts from reason
+  let reason = specialistSection.filter(s => isNaN(Number(s))).join(' ').replace(/\b\d+\b/g, '').trim();
+  if (!reason) reason = `Consult a ${specialistName} for your symptoms.`;
+  // Return all as arrays for bullet lists
   return {
     disclaimer: 'This is an AI-generated suggestion. Please consult a real doctor.',
-    analysis: analysis || '',
+    analysis,
     symptoms,
-    evidence: evidenceList,
+    causes,
+    prevention,
+    evidence,
+    potential_conditions,
     specialist: { name: specialistName, reason },
-    potential_conditions: potential_conditions.length ? potential_conditions : [text]
   };
 }
 

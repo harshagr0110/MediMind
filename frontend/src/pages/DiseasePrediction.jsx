@@ -87,25 +87,31 @@ const DiseasePrediction = () => {
     // Robust guards for prediction rendering
     let disclaimer = '';
     let specialist = null;
-    let potentialConditions = [];
-    let analysis = '';
+    let analysis = [];
     let symptomsList = [];
+    let causesList = [];
+    let preventionList = [];
     let evidenceList = [];
+    let potentialConditions = [];
     if (prediction) {
         if (prediction.raw) {
             disclaimer = 'This is an AI-generated suggestion. Please consult a real doctor.';
             specialist = { name: 'Specialist', reason: 'Consult a specialist for your symptoms.' };
-            potentialConditions = [prediction.raw];
-            analysis = '';
+            analysis = [];
             symptomsList = [];
+            causesList = [];
+            preventionList = [];
             evidenceList = [];
+            potentialConditions = [prediction.raw];
         } else {
             disclaimer = prediction.disclaimer || 'This is an AI-generated suggestion. Please consult a real doctor.';
             specialist = prediction.specialist || { name: 'Specialist', reason: 'Consult a specialist for your symptoms.' };
-            potentialConditions = Array.isArray(prediction.potential_conditions) ? prediction.potential_conditions : [prediction.potential_conditions || 'No conditions found.'];
-            analysis = prediction.analysis || '';
+            analysis = Array.isArray(prediction.analysis) ? prediction.analysis : (prediction.analysis ? [prediction.analysis] : []);
             symptomsList = Array.isArray(prediction.symptoms) ? prediction.symptoms : [];
+            causesList = Array.isArray(prediction.causes) ? prediction.causes : [];
+            preventionList = Array.isArray(prediction.prevention) ? prediction.prevention : [];
             evidenceList = Array.isArray(prediction.evidence) ? prediction.evidence : [];
+            potentialConditions = Array.isArray(prediction.potential_conditions) ? prediction.potential_conditions : [prediction.potential_conditions || 'No conditions found.'];
         }
     }
 
@@ -149,10 +155,12 @@ const DiseasePrediction = () => {
                 {prediction && (
                     <div className="mt-12 w-full animate-fade-in">
                         {/* Disease/Condition Analysis */}
-                        {analysis && (
+                        {analysis.length > 0 && (
                             <div className="bg-blue-50 border border-blue-200 rounded-2xl p-8 mb-6 shadow">
                                 <h2 className="text-2xl font-bold text-blue-800 mb-3 flex items-center"><FaLightbulb className="mr-2" /> Disease/Condition Analysis</h2>
-                                <p className="text-gray-700 text-lg">{analysis}</p>
+                                <ul className="list-disc list-inside space-y-1 text-gray-700 text-lg">
+                                    {analysis.map((item, idx) => <li key={idx}>{item}</li>)}
+                                </ul>
                             </div>
                         )}
                         {/* Symptoms */}
@@ -161,6 +169,24 @@ const DiseasePrediction = () => {
                                 <h2 className="text-2xl font-bold text-gray-800 mb-3 flex items-center"><FaLightbulb className="mr-2" /> Symptoms</h2>
                                 <ul className="list-disc list-inside space-y-1 text-gray-700 text-lg">
                                     {symptomsList.map((symptom, idx) => <li key={idx}>{symptom}</li>)}
+                                </ul>
+                            </div>
+                        )}
+                        {/* Causes */}
+                        {causesList.length > 0 && (
+                            <div className="bg-gray-50 border border-gray-200 rounded-2xl p-8 mb-6 shadow">
+                                <h2 className="text-2xl font-bold text-gray-800 mb-3 flex items-center"><FaLightbulb className="mr-2" /> Causes</h2>
+                                <ul className="list-disc list-inside space-y-1 text-gray-700 text-lg">
+                                    {causesList.map((cause, idx) => <li key={idx}>{cause}</li>)}
+                                </ul>
+                            </div>
+                        )}
+                        {/* Prevention */}
+                        {preventionList.length > 0 && (
+                            <div className="bg-gray-50 border border-gray-200 rounded-2xl p-8 mb-6 shadow">
+                                <h2 className="text-2xl font-bold text-gray-800 mb-3 flex items-center"><FaLightbulb className="mr-2" /> Prevention</h2>
+                                <ul className="list-disc list-inside space-y-1 text-gray-700 text-lg">
+                                    {preventionList.map((item, idx) => <li key={idx}>{item}</li>)}
                                 </ul>
                             </div>
                         )}
@@ -174,14 +200,16 @@ const DiseasePrediction = () => {
                             </div>
                         )}
                         {/* Potential Conditions */}
-                        <div className="bg-gray-50 border border-gray-200 rounded-2xl p-8 mb-6 shadow">
-                            <h2 className="text-2xl font-bold text-gray-800 mb-3 flex items-center"><FaLightbulb className="mr-2" /> Potential Conditions</h2>
-                            <ul className="list-disc list-inside space-y-1 text-gray-700 text-lg">
-                                {potentialConditions.map((condition, index) => (
-                                    <li key={index}>{condition}</li>
-                                ))}
-                            </ul>
-                        </div>
+                        {potentialConditions.length > 0 && (
+                            <div className="bg-gray-50 border border-gray-200 rounded-2xl p-8 mb-6 shadow">
+                                <h2 className="text-2xl font-bold text-gray-800 mb-3 flex items-center"><FaLightbulb className="mr-2" /> Potential Conditions</h2>
+                                <ul className="list-disc list-inside space-y-1 text-gray-700 text-lg">
+                                    {potentialConditions.map((condition, index) => (
+                                        <li key={index}>{condition}</li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
                         {/* Specialist Suggestion */}
                         <div className="bg-blue-50 border border-blue-200 rounded-2xl p-8 mb-6 shadow">
                             <h2 className="text-2xl font-bold text-blue-800 mb-3 flex items-center"><FaStethoscope className="mr-2" /> Suggested Specialist</h2>
