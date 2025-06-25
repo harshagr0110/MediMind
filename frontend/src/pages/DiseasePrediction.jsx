@@ -117,17 +117,7 @@ const DiseasePrediction = () => {
 
     return (
         <ErrorBoundary>
-        <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-blue-500 via-blue-400 to-blue-700 relative">
-            {/* Loading Overlay */}
-            {loading && (
-                <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black bg-opacity-40">
-                    <div className="flex flex-col items-center justify-center p-8 rounded-2xl bg-white shadow-2xl border-2 border-blue-200 animate-fade-in">
-                        <Spinner className="w-16 h-16 text-blue-600 mb-6 animate-spin" />
-                        <p className="text-xl font-bold text-blue-700 mb-2">Analyzing your symptoms…</p>
-                        <p className="text-gray-600 text-lg">Our AI is reviewing your input. This may take a few seconds.</p>
-                    </div>
-                </div>
-            )}
+        <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-blue-500 via-blue-400 to-blue-700">
             <div className="w-full max-w-4xl bg-white shadow-2xl rounded-3xl p-10 md:p-16 flex flex-col items-center">
                 <h1 className="text-4xl font-extrabold text-center text-blue-800 mb-6 drop-shadow-lg">AI Symptom Analyzer</h1>
                 <p className="text-center text-gray-600 mb-8 text-lg">Enter symptoms and/or upload an image, and our AI will suggest a specialist to consult. This is not a medical diagnosis.</p>
@@ -157,7 +147,7 @@ const DiseasePrediction = () => {
                         </div>
                     </div>
                     <div className="text-center mt-8">
-                        <button type="submit" disabled={loading} className="bg-blue-600 text-white font-bold py-4 px-12 rounded-xl text-lg hover:bg-blue-700 disabled:bg-gray-400 transition-transform transform hover:scale-105 shadow-lg">
+                        <button type="submit" disabled={loading} className="bg-blue-600 text-white font-bold py-4 px-12 rounded-xl text-lg hover:bg-blue-700 disabled:bg-gray-400 transition-transform transform hover:scale-105 shadow-lg flex items-center justify-center gap-2">
                             {loading ? <Spinner /> : 'Analyze Symptoms'}
                         </button>
                     </div>

@@ -312,8 +312,8 @@ function parseAIResponse(text) {
     } else if (section) {
       points = [section.trim()];
     }
-    // Remove empty, single punctuation, or meaningless points
-    return points.filter(s => s && s.length > 2 && !/^[:.\-]$/.test(s));
+    // Remove empty, single punctuation, single letter/word, or points ending with a colon
+    return points.filter(s => s && s.length > 2 && !/^[:.\-]$/.test(s) && !/^\w{1,2}:?$/.test(s) && !/^(listed below|s)\b/i.test(s));
   };
   // Main sections
   const symptoms = getSectionPoints('Symptoms', ['symptom', 'symptoms']);
@@ -356,15 +356,16 @@ export const diseasePrediction = async (req, res) => {
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
         let prompt = '';
         let input = [];
+        // Improved prompt for bullet-point lists and no filler
         if (hasSymptoms && hasImage) {
-            prompt = `Analyze the following symptoms and medical image. Symptoms: ${symptoms}\nBased on both the text and visual evidence, identify potential diseases, conditions, or abnormalities. Describe your findings, including the indicators that support your assessment. Recommend a type of medical specialist (e.g., Dermatologist, Cardiologist, Neurologist) a person should consult. Structure your response in clear sections: 'Disease/Condition Analysis', 'Evidence', 'Symptoms', 'Potential Conditions', and 'Recommended Specialist'.`;
+            prompt = `Analyze the following symptoms and medical image. Symptoms: ${symptoms}\nBased on both the text and visual evidence, identify potential diseases, conditions, or abnormalities. For each section below, provide a concise, actionable bullet-point list (no paragraphs, no filler, no generic statements, no bullets starting with 's', 'listed below', or similar).\n\nSections:\n- Disease/Condition Analysis\n- Symptoms\n- Causes\n- Prevention\n- Evidence\n- Potential Conditions\n- Recommended Specialist (from this list: Dermatologist, Cardiologist, Neurologist, etc.)`;
             const imagePart = await fileToGenerativePart(req.file.buffer, req.file.mimetype);
             input = [prompt, imagePart];
         } else if (hasSymptoms) {
-            prompt = `Analyze the following symptoms: ${symptoms}\nBased on these, identify potential diseases, conditions, or abnormalities. Recommend a type of medical specialist (e.g., Dermatologist, Cardiologist, Neurologist) a person should consult. Structure your response in clear sections: 'Disease/Condition Analysis', 'Symptoms', 'Potential Conditions', and 'Recommended Specialist'.`;
+            prompt = `Analyze the following symptoms: ${symptoms}\nBased on these, identify potential diseases, conditions, or abnormalities. For each section below, provide a concise, actionable bullet-point list (no paragraphs, no filler, no generic statements, no bullets starting with 's', 'listed below', or similar).\n\nSections:\n- Disease/Condition Analysis\n- Symptoms\n- Causes\n- Prevention\n- Potential Conditions\n- Recommended Specialist (from this list: Dermatologist, Cardiologist, Neurologist, etc.)`;
             input = [prompt];
         } else if (hasImage) {
-            prompt = "Analyze this medical image. Based on visual evidence, identify potential diseases, conditions, or abnormalities. Describe your findings, including the visual indicators that support your assessment. Finally, based on your analysis, recommend a type of medical specialist (e.g., Dermatologist, Cardiologist, Neurologist) a person should consult for these symptoms. Structure your response in clear sections: 'Disease/Condition Analysis', 'Evidence', 'Potential Conditions', and 'Recommended Specialist'.";
+            prompt = "Analyze this medical image. Based on visual evidence, identify potential diseases, conditions, or abnormalities. For each section below, provide a concise, actionable bullet-point list (no paragraphs, no filler, no generic statements, no bullets starting with 's', 'listed below', or similar).\n\nSections:\n- Disease/Condition Analysis\n- Evidence\n- Potential Conditions\n- Recommended Specialist (from this list: Dermatologist, Cardiologist, Neurologist, etc.)";
             const imagePart = await fileToGenerativePart(req.file.buffer, req.file.mimetype);
             input = [prompt, imagePart];
         }
