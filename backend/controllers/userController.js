@@ -1,394 +1,201 @@
 import User from "../models/userModel.js";
+import Doctor from "../models/doctorModel.js";
+import Appointment from "../models/appointmentModel.js";
 import validator from "validator";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { v2 as cloudinary } from "cloudinary";
-import doctormodel from "../models/doctorModel.js";
-import appointmentModel from "../models/appointmentModel.js";
 import Stripe from "stripe";
-import axios from "axios";
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-const createToken = (id) => jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "7d" });
+const createToken = (id) => jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "3d" });
 
+// --- Authentication ---
 export const registerUser = async (req, res) => {
-  try {
-    const { email, fullName, password } = req.body;
+    try {
+        const { email, fullName, password } = req.body;
+        if (!email || !fullName || !password) return res.status(400).json({ success: false, message: "All fields are required" });
+        if (!validator.isEmail(email)) return res.status(400).json({ success: false, message: "Invalid email format" });
+        if (password.length < 8) return res.status(400).json({ success: false, message: "Password must be at least 8 characters" });
+        if (await User.findOne({ email })) return res.status(400).json({ success: false, message: "User already exists" });
 
-    if (!email || !fullName || !password) {
-      return res.status(400).json({ success: false, message: "All fields are required" });
+        const salt = await bcrypt.genSalt(10);
+        const hash = await bcrypt.hash(password, salt);
+        const user = await User.create({ fullName, email, password: hash });
+        const token = createToken(user._id);
+
+        res.status(201).json({ success: true, message: "User registered", token });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Server error during registration" });
     }
-    if (!validator.isEmail(email)) {
-      return res.status(400).json({ success: false, message: "Invalid email format" });
-    }
-    if (password.length < 8) {
-      return res.status(400).json({ success: false, message: "Password must be at least 8 characters" });
-    }
-
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ success: false, message: "User already exists" });
-    }
-
-    const salt = await bcrypt.genSalt(10);
-    const hash = await bcrypt.hash(password, salt);
-    const user = await User.create({ fullName, email, password: hash });
-
-    const token = createToken(user._id);
-
-    return res.status(201).json({ success: true, message: "User registered", token, userId: user._id });
-  } catch (err) {
-    console.error("Register User Error:", err);
-    return res.status(500).json({ success: false, message: "Server error during registration" });
-  }
 };
 
 export const loginUser = async (req, res) => {
-  try {
-    const { email, password } = req.body;
+    try {
+        const { email, password } = req.body;
+        if (!email || !password) return res.status(400).json({ success: false, message: "Email and password required" });
+        
+        const user = await User.findOne({ email });
+        if (!user) return res.status(404).json({ success: false, message: "User not found" });
 
-    if (!email || !password) {
-      return res.status(400).json({ success: false, message: "Email and password required" });
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) return res.status(400).json({ success: false, message: "Invalid credentials" });
+        
+        const token = createToken(user._id);
+        res.json({ success: true, message: "Login successful", token });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Server error during login" });
     }
-
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(400).json({ success: false, message: "User not found" });
-    }
-
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(400).json({ success: false, message: "Invalid credentials" });
-    }
-
-    const token = createToken(user._id);
-    return res.json({ success: true, message: "Login successful", token, userId: user._id });
-  } catch (err) {
-    console.error("Login User Error:", err);
-    return res.status(500).json({ success: false, message: "Server error during login" });
-  }
 };
 
+// --- User Profile ---
 export const getProfile = async (req, res) => {
-  try {
-    if (!req.user || !req.user.id) {
-      return res.status(401).json({ success: false, message: "Unauthorized: Invalid token" });
+    try {
+        const user = await User.findById(req.body.userId).select("-password");
+        if (!user) return res.status(404).json({ success: false, message: "User not found" });
+        res.json({ success: true, data: user });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Server error while fetching profile" });
     }
-
-    const userId = req.user.id;
-    const userData = await User.findById(userId).select("-password");
-
-    if (!userData) {
-      return res.status(404).json({ success: false, message: "User not found" });
-    }
-
-    return res.json({ success: true, userData });
-  } catch (err) {
-    console.error("Get Profile Error:", err);
-    return res.status(500).json({ success: false, message: "Server error while fetching profile" });
-  }
 };
 
 export const updateProfile = async (req, res) => {
-  try {
-    if (!req.user || !req.user.id) {
-      return res.status(401).json({ success: false, message: "Unauthorized: Invalid token" });
+    try {
+        let updates = req.body;
+        if (req.file) {
+            const result = await new Promise((resolve, reject) => {
+                const stream = cloudinary.uploader.upload_stream({ folder: 'users' }, (err, result) => {
+                    if (err) return reject(err);
+                    resolve(result);
+                });
+                stream.end(req.file.buffer);
+            });
+            updates.image = result.secure_url;
+        }
+
+        const updatedUser = await User.findByIdAndUpdate(req.body.userId, updates, { new: true }).select("-password");
+        if (!updatedUser) return res.status(404).json({ success: false, message: "User not found" });
+
+        res.json({ success: true, message: "Profile updated successfully", data: updatedUser });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Server error while updating profile" });
     }
-
-    const { fullName, phone, address, dob, gender } = req.body;
-    const userId = req.user.id;
-
-    if (!fullName || !phone || !address || !dob || !gender) {
-      return res.status(400).json({ success: false, message: "All fields are required" });
-    }
-
-    const updates = { fullName, phone, address, dob, gender };
-
-    if (req.file) {
-      try {
-        updates.image = await new Promise((resolve, reject) => {
-          const stream = cloudinary.uploader.upload_stream({ resource_type: "image" }, (err, result) => {
-            if (err) return reject(err);
-            resolve(result.secure_url);
-          });
-          stream.end(req.file.buffer);
-        });
-      } catch (uploadError) {
-        console.error("Cloudinary Upload Error:", uploadError);
-        return res.status(500).json({ success: false, message: "Image upload failed" });
-      }
-    }
-
-    const updatedUser = await User.findByIdAndUpdate(userId, updates, { new: true }).select("-password");
-
-    if (!updatedUser) {
-      return res.status(404).json({ success: false, message: "User not found" });
-    }
-
-    return res.json({ success: true, userData: updatedUser });
-  } catch (err) {
-    console.error("Update Profile Error:", err);
-    return res.status(500).json({ success: false, message: "Server error while updating profile" });
-  }
 };
 
+// --- Appointments ---
 export const bookAppointment = async (req, res) => {
-  try {
-    const { userId, docId, slotDate, slotTime } = req.body;
+    try {
+        const { docId, slotDate, slotTime, amount } = req.body;
+        const userId = req.body.userId;
 
-    const docDataRaw = await doctormodel.findById(docId).select('-password');
-    if (!docDataRaw) {
-      return res.status(404).json({ success: false, message: "Doctor not found" });
+        const doctor = await Doctor.findById(docId);
+        if (!doctor || !doctor.available) return res.status(404).json({ success: false, message: "Doctor not found or is unavailable" });
+        
+        const existingAppointment = await Appointment.findOne({ doctor: docId, slotDate, slotTime });
+        if (existingAppointment) return res.status(400).json({ success: false, message: "This slot is already booked" });
+        
+        const newAppointment = new Appointment({
+            user: userId,
+            doctor: docId,
+            slotDate,
+            slotTime,
+            amount,
+        });
+        await newAppointment.save();
+        
+        res.status(201).json({ success: true, message: "Appointment booked, pending payment", appointmentId: newAppointment._id });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Server error while booking appointment" });
     }
-
-    if (!docDataRaw.available) {
-      return res.status(400).json({ success: false, message: "Doctor is not available" });
-    }
-
-    let slots_booked = docDataRaw.slots_booked || {};
-    if (slots_booked[slotDate]) {
-      if (slots_booked[slotDate].includes(slotTime)) {
-        return res.status(200).json({ success: false, message: "Slot is already booked" });
-      } else {
-        slots_booked[slotDate].push(slotTime);
-      }
-    } else {
-      slots_booked[slotDate] = [slotTime];
-    }
-    
-    const userData = await User.findById(userId).select('-password');
-    if (!userData) {
-      return res.status(404).json({ success: false, message: "User not found" });
-    }
-
-    const docData = docDataRaw.toObject();
-    delete docData.slots_booked;
-
-    const appointmentData = {
-      userId,
-      docId,
-      slotDate,
-      slotTime,
-      userData,
-      docData,
-      amount: docData.fees,
-      date: Date.now(),
-    };
-
-    const newAppointment = new appointmentModel(appointmentData);
-    await newAppointment.save();
-
-    await doctormodel.findByIdAndUpdate(docId, { slots_booked });
-
-    const doctordata = await doctormodel.findById(docId)
-    console.log(doctordata);
-    return res.status(200).json({ success: true, appointmentId: newAppointment._id });
-   
-  } catch (error) {
-    return res.status(500).json({ success: false, message: "Server error while booking appointment" });
-  }
 };
 
 export const listAppointment = async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const appointments = await appointmentModel.find({userId});
-    return res.status(200).json({ success: true, appointments });
-  } catch (error) {
-    console.error("🔥 ERROR in listAppointment:", error);
-    return res.status(500).json({ success: false, message: "Server error while listing appointments" });
-  }
-};
-
-export const cancelAppointment=async(req,res)=>{
-  try{
-    const {appointmentId}=req.body
-    const userId=req.user.id
-    const appointment=await appointmentModel.findById(appointmentId)
-    if(appointment.userId!==userId){
-      return res.status(401).json({success:false,message:"Unauthorized: Invalid token"});
-    }
-    else{
-      await appointmentModel.findByIdAndDelete(appointmentId,{cancelled:true})
-      const {docId,slotDate,slotTime}=appointment
-      const docdata=await doctormodel.findById(docId)
-      const slots_booked=docdata.slots_booked
-      if(slots_booked[slotDate]){
-        slots_booked[slotDate]=slots_booked[slotDate].filter((time)=>time!==slotTime)
-        await doctormodel.findByIdAndUpdate(docId,{slots_booked})
-      }
-      return res.status(200).json({success:true,message:"Appointment cancelled"})
-    }
-  }
-  catch(error){
-    console.error("🔥 ERROR in cancelAppointment:", error);
-    return res.status(500).json({ success: false, message: "Server error while cancelling appointment" });
-  }
-}
-
-export const createStripeSession = async (req, res) => {
-  try {
-    const { appointmentId } = req.body;
-    const userId = req.user.id;
-
-    const appointment = await appointmentModel.findById(appointmentId);
-    if (!appointment) {
-      return res.status(404).json({ success: false, message: "Appointment not found" });
-    }
-
-    if (appointment.userId.toString() !== userId) {
-      return res.status(403).json({ success: false, message: "Unauthorized access" });
-    }
-
-    if (appointment.paymentStatus === 'paid') {
-      return res.status(400).json({ success: false, message: "Payment already completed" });
-    }
-
-    if (appointment.cancelled) {
-      return res.status(400).json({ success: false, message: "Cannot pay for cancelled appointment" });
-    }
-
-    const doctor = await doctormodel.findById(appointment.docId);
-    if (!doctor) {
-      return res.status(404).json({ success: false, message: "Doctor not found" });
-    }
-
-    const origin = req.headers.origin || process.env.FRONTEND_URL;
-
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
-      line_items: [
-        {
-          price_data: {
-            currency: "inr",
-            product_data: {
-              name: `Appointment with Dr. ${doctor.fullName}`,
-              description: `Appointment on ${appointment.slotDate} at ${appointment.slotTime}`
-            },
-            unit_amount: Math.round(appointment.amount * 100),
-          },
-          quantity: 1,
-        },
-      ],
-      mode: "payment",
-      metadata: {
-        appointmentId: appointmentId.toString(),
-        userId: userId.toString()
-      },
-      success_url: `${origin}/payment-success?success=true&appointmentId=${appointmentId}`,
-      cancel_url: `${origin}/payment-success?success=false&appointmentId=${appointmentId}`,
-    });
-
-    return res.status(200).json({ success: true, url: session.url });
-
-  } catch (error) {
-    console.error("Stripe Session Error:", error);
-    return res.status(500).json({ success: false, message: "Error creating payment session", error: error.message });
-  }
-};
-
-export const verifyStripe = async (req, res) => {
-  try {
-    const { appointmentId, success } = req.body;
-
-    if (!appointmentId || typeof success !== 'string') {
-      return res.status(400).json({ success: false, message: "Invalid parameters" });
-    }
-
-    const appointment = await appointmentModel.findById(appointmentId);
-    if (!appointment) {
-      return res.status(404).json({ success: false, message: "Appointment not found" });
-    }
-
-    if (success === "true") {
-      appointment.paymentStatus = 'paid';
-      await appointment.save();
-      
-      return res.status(200).json({ success: true, message: "Payment confirmed successfully" });
-    } else {
-      return res.status(200).json({ success: false, message: "Payment not completed" });
-    }
-  } catch (error) {
-    console.error("Payment Verification Error:", error);
-    return res.status(500).json({ success: false, message: "Error verifying payment", error: error.message });
-  }
-};
-
-export const diseasePrediction = async (req, res) => {
     try {
-        const { prompt } = req.body;
-        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash", generationConfig: { responseMimeType: "application/json" } });
-
-        if (!prompt && !req.file) {
-            return res.status(400).json({ success: false, message: "A textual description or an image is required." });
-        }
-
-        const system_prompt = `
-            SYSTEM INSTRUCTION: You are an AI medical assistant. Analyze the user's symptoms and/or images to suggest a relevant medical specialist. You are NOT a doctor and must NOT provide a diagnosis. Your response MUST be a JSON object and nothing else.
-
-            IMPORTANT SAFETY RULE: Your response must begin with a clear, prominent disclaimer.
-
-            Analyze the user's input and generate a JSON object with the following structure. The 'specialist.name' field is the most important; it must be one of the common medical specialties that can be used in a URL (e.g., Cardiologist, Dermatologist, etc.).
-
-            {
-              "disclaimer": "This is an AI-generated suggestion and not a medical diagnosis. Please consult a qualified healthcare professional for any medical concerns.",
-              "specialist": {
-                "name": "SpecialistName",
-                "reason": "A brief, one-sentence explanation of why this specialty is relevant."
-              },
-              "potential_conditions": [
-                "A list of 2-3 potential, non-alarming conditions related to the symptoms.",
-                "Mention general conditions, not severe or life-threatening ones."
-              ]
-            }
-        `;
-
-        const user_prompt = `User's Symptoms/Query: "${prompt || 'No text symptoms provided.'}"`;
-
-        const parts = [
-            system_prompt,
-            user_prompt
-        ];
-
-        if (req.file) {
-            parts.push({
-                inlineData: {
-                    mimeType: req.file.mimetype,
-                    data: req.file.buffer.toString("base64"),
-                },
-            });
-        }
-        
-        const result = await model.generateContent(parts);
-        const response = await result.response;
-        const text = response.text();
-        
-        const parsedResponse = JSON.parse(text);
-
-        res.status(200).json({ success: true, data: parsedResponse });
-
+        const appointments = await Appointment.find({ user: req.body.userId }).populate('doctor', 'fullName speciality image');
+        res.status(200).json({ success: true, data: appointments });
     } catch (error) {
-        console.error("Error in disease prediction:", error);
-        res.status(500).json({ success: false, message: "Failed to get a suggestion from the AI service." });
+        res.status(500).json({ success: false, message: "Server error while listing appointments" });
     }
 };
 
 export const deleteAppointment = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const appointment = await appointmentModel.findById(id);
-    if (!appointment) {
-      return res.status(404).json({ success: false, message: 'Appointment not found' });
+    try {
+        const { id } = req.params;
+        await Appointment.findByIdAndDelete(id);
+        res.status(200).json({ success: true, message: "Appointment deleted successfully" });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Failed to delete appointment." });
     }
-    if (appointment.userId.toString() !== req.user.id) {
-      return res.status(403).json({ success: false, message: 'Unauthorized' });
+};
+
+// --- Payment ---
+export const createStripeSession = async (req, res) => {
+    try {
+        const { appointmentId } = req.body;
+        const appointment = await Appointment.findById(appointmentId).populate('doctor', 'fullName');
+
+        if (!appointment) return res.status(404).json({ success: false, message: "Appointment not found" });
+        
+        const session = await stripe.checkout.sessions.create({
+            payment_method_types: ['card'],
+            line_items: [{
+                price_data: {
+                    currency: 'inr',
+                    product_data: {
+                        name: `Appointment with Dr. ${appointment.doctor.fullName}`,
+                        description: `On ${appointment.slotDate} at ${appointment.slotTime}`,
+                    },
+                    unit_amount: appointment.amount * 100, // Amount in paise
+                },
+                quantity: 1,
+            }],
+            mode: 'payment',
+            success_url: `${process.env.FRONTEND_URL}/verify?success=true&appointmentId=${appointmentId}`,
+            cancel_url: `${process.env.FRONTEND_URL}/verify?success=false&appointmentId=${appointmentId}`,
+        });
+
+        res.json({ success: true, session_url: session.url });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Error creating Stripe session" });
     }
-    await appointmentModel.findByIdAndDelete(id);
-    return res.status(200).json({ success: true, message: 'Appointment deleted successfully' });
-  } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
-  }
+};
+
+export const verifyStripe = async (req, res) => {
+    try {
+        const { appointmentId, success } = req.query;
+        if (success === "true") {
+            await Appointment.findByIdAndUpdate(appointmentId, { paymentStatus: 'Paid' });
+            res.redirect(`${process.env.FRONTEND_URL}/my-appointments?payment=success`);
+        } else {
+            await Appointment.findByIdAndDelete(appointmentId);
+            res.redirect(`${process.env.FRONTEND_URL}/my-appointments?payment=failed`);
+        }
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Error verifying payment" });
+    }
+};
+
+// --- AI Disease Prediction ---
+async function fileToGenerativePart(buffer, mimeType) {
+    return { inlineData: { data: buffer.toString("base64"), mimeType } };
+}
+
+export const diseasePrediction = async (req, res) => {
+    try {
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const imageParts = await Promise.all(
+            req.files.map(file => fileToGenerativePart(file.buffer, file.mimetype))
+        );
+        
+        const prompt = "Analyze these medical images. Based on visual evidence, identify potential diseases, conditions, or abnormalities. Describe your findings, including the visual indicators that support your assessment. If multiple images are provided, compare and contrast them. Finally, based on your analysis, recommend a type of medical specialist (e.g., Dermatologist, Cardiologist, Neurologist) a person should consult for these symptoms. Structure your response in clear sections: 'Disease/Condition Analysis', 'Visual Evidence', and 'Recommended Specialist'.";
+
+        const result = await model.generateContent([prompt, ...imageParts]);
+        const responseText = result.response.text();
+        res.json({ success: true, prediction: responseText });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Error in disease prediction." });
+    }
 };
