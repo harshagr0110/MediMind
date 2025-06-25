@@ -288,7 +288,7 @@ function extractSpecialist(text) {
   return 'General Physician';
 }
 
-function parseAIResponse(text) {
+function parseAIResponse(text, userInput = '') {
   // Helper to extract a section and split into points only if real list markers exist
   const getSectionPoints = (header, fallbackKeywords = []) => {
     const safeHeader = header.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -314,33 +314,33 @@ function parseAIResponse(text) {
     }
     // Remove empty, single punctuation, single letter/word, or points ending with a colon
     points = points.filter(s => s && s.length > 2 && !/^[:.\-]$/.test(s) && !/^\w{1,2}:?$/.test(s) && !/^(listed below|s)\b/i.test(s));
-    // If nothing left, fill with default
-    if (points.length === 0) points = ['Not enough information to determine.'];
+    // If nothing left, return empty array (do not show section)
+    if (points.length === 0 || (points.length === 1 && /not enough information/i.test(points[0]))) points = [];
     return points;
   };
   // Main sections
-  const symptoms = getSectionPoints('Symptoms', ['symptom', 'symptoms']);
-  const causes = getSectionPoints('Causes', ['cause', 'causes']);
-  const prevention = getSectionPoints('Prevention', ['prevention', 'prevent']);
-  const potential_conditions = getSectionPoints('Potential Conditions', ['potential conditions', 'conditions', 'diagnosis']);
-  const evidence = getSectionPoints('Evidence', ['evidence']);
-  const analysis = getSectionPoints('Disease/Condition Analysis', ['analysis', 'summary']);
+  let symptoms = getSectionPoints('Symptoms', ['symptom', 'symptoms']);
+  let causes = getSectionPoints('Causes', ['cause', 'causes']);
+  let prevention = getSectionPoints('Prevention', ['prevention', 'prevent']);
+  let potential_conditions = getSectionPoints('Potential Conditions', ['potential conditions', 'conditions', 'diagnosis']);
+  let evidence = getSectionPoints('Evidence', ['evidence']);
+  let analysis = getSectionPoints('Disease/Condition Analysis', ['analysis', 'summary']);
   // Specialist extraction
   const specialistSection = getSectionPoints('Recommended Specialist', ['specialist', 'doctor', 'consult']);
   let specialistText = specialistSection.join(' ');
   let specialistName = extractSpecialist(specialistText || text);
-  // Remove any stray numbers or artifacts from reason
   let reason = specialistSection.filter(s => isNaN(Number(s))).join(' ').replace(/\b\d+\b/g, '').trim();
   if (!reason) reason = `Consult a ${specialistName} for your symptoms.`;
-  // Return all as arrays for bullet lists
+
+  // Only return non-empty sections
   return {
     disclaimer: 'This is an AI-generated suggestion. Please consult a real doctor.',
-    analysis,
-    symptoms,
-    causes,
-    prevention,
-    evidence,
-    potential_conditions,
+    analysis: analysis.length ? analysis : undefined,
+    symptoms: symptoms.length ? symptoms : undefined,
+    causes: causes.length ? causes : undefined,
+    prevention: prevention.length ? prevention : undefined,
+    evidence: evidence.length ? evidence : undefined,
+    potential_conditions: potential_conditions.length ? potential_conditions : undefined,
     specialist: { name: specialistName, reason },
   };
 }
@@ -359,22 +359,22 @@ export const diseasePrediction = async (req, res) => {
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
         let prompt = '';
         let input = [];
-        // Improved prompt: force all sections, fill with 'Not enough information to determine.' if unknown
+        // New prompt: always generate plausible, relevant points for each section
         if (hasSymptoms && hasImage) {
-            prompt = `Analyze the following symptoms and medical image. Symptoms: ${symptoms}\nBased on both the text and visual evidence, identify potential diseases, conditions, or abnormalities. For each of the following sections, ALWAYS provide a bullet-point list. If you don't have enough information, write 'Not enough information to determine.' Do not skip any section.\nSections:\n- Disease/Condition Analysis\n- Symptoms\n- Causes\n- Prevention\n- Evidence\n- Potential Conditions\n- Recommended Specialist (choose from: Dermatologist, Cardiologist, Neurologist, etc.)`;
+            prompt = `Analyze the following symptoms and medical image. Symptoms: ${symptoms}\nBased on both the text and visual evidence, identify potential diseases, conditions, or abnormalities. For each of the following sections, ALWAYS provide at least 2-3 plausible, medically relevant bullet points. If you are unsure, use your medical knowledge to suggest the most likely symptoms, causes, prevention, etc. for the given input. Do not leave any section empty or generic.\nSections:\n- Disease/Condition Analysis\n- Symptoms\n- Causes\n- Prevention\n- Evidence\n- Potential Conditions\n- Recommended Specialist (choose from: Dermatologist, Cardiologist, Neurologist, etc.)`;
             const imagePart = await fileToGenerativePart(req.file.buffer, req.file.mimetype);
             input = [prompt, imagePart];
         } else if (hasSymptoms) {
-            prompt = `Analyze the following symptoms: ${symptoms}\nBased on these, identify potential diseases, conditions, or abnormalities. For each of the following sections, ALWAYS provide a bullet-point list. If you don't have enough information, write 'Not enough information to determine.' Do not skip any section.\nSections:\n- Disease/Condition Analysis\n- Symptoms\n- Causes\n- Prevention\n- Potential Conditions\n- Recommended Specialist (choose from: Dermatologist, Cardiologist, Neurologist, etc.)`;
+            prompt = `Analyze the following symptoms: ${symptoms}\nBased on these, identify potential diseases, conditions, or abnormalities. For each of the following sections, ALWAYS provide at least 2-3 plausible, medically relevant bullet points. If you are unsure, use your medical knowledge to suggest the most likely symptoms, causes, prevention, etc. for the given input. Do not leave any section empty or generic.\nSections:\n- Disease/Condition Analysis\n- Symptoms\n- Causes\n- Prevention\n- Potential Conditions\n- Recommended Specialist (choose from: Dermatologist, Cardiologist, Neurologist, etc.)`;
             input = [prompt];
         } else if (hasImage) {
-            prompt = "Analyze this medical image. Based on visual evidence, identify potential diseases, conditions, or abnormalities. For each of the following sections, ALWAYS provide a bullet-point list. If you don't have enough information, write 'Not enough information to determine.' Do not skip any section.\nSections:\n- Disease/Condition Analysis\n- Evidence\n- Potential Conditions\n- Recommended Specialist (choose from: Dermatologist, Cardiologist, Neurologist, etc.)";
+            prompt = "Analyze this medical image. Based on visual evidence, identify potential diseases, conditions, or abnormalities. For each of the following sections, ALWAYS provide at least 2-3 plausible, medically relevant bullet points. If you are unsure, use your medical knowledge to suggest the most likely symptoms, causes, prevention, etc. for the given input. Do not leave any section empty or generic.\nSections:\n- Disease/Condition Analysis\n- Evidence\n- Potential Conditions\n- Recommended Specialist (choose from: Dermatologist, Cardiologist, Neurologist, etc.)";
             const imagePart = await fileToGenerativePart(req.file.buffer, req.file.mimetype);
             input = [prompt, imagePart];
         }
         const result = await model.generateContent(input);
         const responseText = result.response.text();
-        const structured = parseAIResponse(responseText);
+        const structured = parseAIResponse(responseText, symptoms);
         res.json({ success: true, data: structured });
     } catch (error) {
         console.error("DiseasePrediction error:", error);
