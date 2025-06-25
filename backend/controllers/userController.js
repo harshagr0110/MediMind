@@ -313,7 +313,10 @@ function parseAIResponse(text) {
       points = [section.trim()];
     }
     // Remove empty, single punctuation, single letter/word, or points ending with a colon
-    return points.filter(s => s && s.length > 2 && !/^[:.\-]$/.test(s) && !/^\w{1,2}:?$/.test(s) && !/^(listed below|s)\b/i.test(s));
+    points = points.filter(s => s && s.length > 2 && !/^[:.\-]$/.test(s) && !/^\w{1,2}:?$/.test(s) && !/^(listed below|s)\b/i.test(s));
+    // If nothing left, fill with default
+    if (points.length === 0) points = ['Not enough information to determine.'];
+    return points;
   };
   // Main sections
   const symptoms = getSectionPoints('Symptoms', ['symptom', 'symptoms']);
@@ -356,16 +359,16 @@ export const diseasePrediction = async (req, res) => {
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
         let prompt = '';
         let input = [];
-        // Improved prompt for bullet-point lists and no filler
+        // Improved prompt: force all sections, fill with 'Not enough information to determine.' if unknown
         if (hasSymptoms && hasImage) {
-            prompt = `Analyze the following symptoms and medical image. Symptoms: ${symptoms}\nBased on both the text and visual evidence, identify potential diseases, conditions, or abnormalities. For each section below, provide a concise, actionable bullet-point list (no paragraphs, no filler, no generic statements, no bullets starting with 's', 'listed below', or similar).\n\nSections:\n- Disease/Condition Analysis\n- Symptoms\n- Causes\n- Prevention\n- Evidence\n- Potential Conditions\n- Recommended Specialist (from this list: Dermatologist, Cardiologist, Neurologist, etc.)`;
+            prompt = `Analyze the following symptoms and medical image. Symptoms: ${symptoms}\nBased on both the text and visual evidence, identify potential diseases, conditions, or abnormalities. For each of the following sections, ALWAYS provide a bullet-point list. If you don't have enough information, write 'Not enough information to determine.' Do not skip any section.\nSections:\n- Disease/Condition Analysis\n- Symptoms\n- Causes\n- Prevention\n- Evidence\n- Potential Conditions\n- Recommended Specialist (choose from: Dermatologist, Cardiologist, Neurologist, etc.)`;
             const imagePart = await fileToGenerativePart(req.file.buffer, req.file.mimetype);
             input = [prompt, imagePart];
         } else if (hasSymptoms) {
-            prompt = `Analyze the following symptoms: ${symptoms}\nBased on these, identify potential diseases, conditions, or abnormalities. For each section below, provide a concise, actionable bullet-point list (no paragraphs, no filler, no generic statements, no bullets starting with 's', 'listed below', or similar).\n\nSections:\n- Disease/Condition Analysis\n- Symptoms\n- Causes\n- Prevention\n- Potential Conditions\n- Recommended Specialist (from this list: Dermatologist, Cardiologist, Neurologist, etc.)`;
+            prompt = `Analyze the following symptoms: ${symptoms}\nBased on these, identify potential diseases, conditions, or abnormalities. For each of the following sections, ALWAYS provide a bullet-point list. If you don't have enough information, write 'Not enough information to determine.' Do not skip any section.\nSections:\n- Disease/Condition Analysis\n- Symptoms\n- Causes\n- Prevention\n- Potential Conditions\n- Recommended Specialist (choose from: Dermatologist, Cardiologist, Neurologist, etc.)`;
             input = [prompt];
         } else if (hasImage) {
-            prompt = "Analyze this medical image. Based on visual evidence, identify potential diseases, conditions, or abnormalities. For each section below, provide a concise, actionable bullet-point list (no paragraphs, no filler, no generic statements, no bullets starting with 's', 'listed below', or similar).\n\nSections:\n- Disease/Condition Analysis\n- Evidence\n- Potential Conditions\n- Recommended Specialist (from this list: Dermatologist, Cardiologist, Neurologist, etc.)";
+            prompt = "Analyze this medical image. Based on visual evidence, identify potential diseases, conditions, or abnormalities. For each of the following sections, ALWAYS provide a bullet-point list. If you don't have enough information, write 'Not enough information to determine.' Do not skip any section.\nSections:\n- Disease/Condition Analysis\n- Evidence\n- Potential Conditions\n- Recommended Specialist (choose from: Dermatologist, Cardiologist, Neurologist, etc.)";
             const imagePart = await fileToGenerativePart(req.file.buffer, req.file.mimetype);
             input = [prompt, imagePart];
         }
