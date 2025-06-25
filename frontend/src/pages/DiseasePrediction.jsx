@@ -59,47 +59,43 @@ const DiseasePrediction = () => {
     };
 
     return (
-        <div className="container mx-auto p-4 md:p-8 min-h-screen">
-            <div className="max-w-3xl mx-auto bg-white shadow-2xl rounded-lg p-8">
-                <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">AI Symptom Analyzer</h1>
-                <p className="text-center text-gray-600 mb-8">Enter symptoms and/or upload an image, and our AI will suggest a specialist to consult. This is not a medical diagnosis.</p>
-
-                <form onSubmit={handlePredict}>
+        <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-blue-500 via-blue-400 to-blue-700">
+            <div className="w-full max-w-4xl bg-white shadow-2xl rounded-3xl p-10 md:p-16 flex flex-col items-center">
+                <h1 className="text-4xl font-extrabold text-center text-blue-800 mb-6 drop-shadow-lg">AI Symptom Analyzer</h1>
+                <p className="text-center text-gray-600 mb-8 text-lg">Enter symptoms and/or upload an image, and our AI will suggest a specialist to consult. This is not a medical diagnosis.</p>
+                <form onSubmit={handlePredict} className="w-full">
                     <textarea
                         value={symptoms}
                         onChange={(e) => setSymptoms(e.target.value)}
-                        className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 transition-shadow"
-                        rows="4"
+                        className="w-full p-5 border-2 border-blue-200 rounded-xl focus:ring-4 focus:ring-blue-400 transition-shadow text-lg min-h-[120px] resize-none mb-6 shadow-sm"
+                        rows="5"
                         placeholder="For example: 'I have a persistent headache, dizziness, and blurred vision...'"
                     />
-                    
-                    <div className="mt-6">
-                        <label className="block text-gray-700 font-semibold mb-2">Upload an Image (Optional)</label>
+                    <div className="mt-4">
+                        <label className="block text-blue-700 font-semibold mb-2">Upload an Image (Optional)</label>
                         <div className="flex items-center gap-4">
-                            <button type="button" onClick={() => fileInputRef.current.click()} className="flex items-center gap-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg">
+                            <button type="button" onClick={() => fileInputRef.current.click()} className="flex items-center gap-2 bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold py-2 px-4 rounded-lg shadow">
                                 <FaCamera /> Choose Image
                             </button>
                             <input type="file" ref={fileInputRef} onChange={handleImageChange} className="hidden" accept="image/*"/>
                             {imagePreview && (
                                 <div className="relative">
-                                    <img src={imagePreview} alt="Preview" className="h-16 w-16 rounded-lg object-cover" />
-                                    <button type="button" onClick={() => { setImage(null); setImagePreview(''); fileInputRef.current.value = null;}} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1">
+                                    <img src={imagePreview} alt="Preview" className="h-20 w-20 rounded-xl object-cover border-2 border-blue-300 shadow" />
+                                    <button type="button" onClick={() => { setImage(null); setImagePreview(''); fileInputRef.current.value = null;}} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow">
                                         <FaTimes />
                                     </button>
                                 </div>
                             )}
                         </div>
                     </div>
-
-                    <div className="text-center mt-6">
-                        <button type="submit" disabled={loading} className="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-transform transform hover:scale-105">
+                    <div className="text-center mt-8">
+                        <button type="submit" disabled={loading} className="bg-blue-600 text-white font-bold py-4 px-12 rounded-xl text-lg hover:bg-blue-700 disabled:bg-gray-400 transition-transform transform hover:scale-105 shadow-lg">
                             {loading ? <Spinner /> : 'Analyze Symptoms'}
                         </button>
                     </div>
                 </form>
-
                 {prediction && (
-                    <div className="mt-10 animate-fade-in">
+                    <div className="mt-12 w-full animate-fade-in">
                         {/* Disclaimer */}
                         <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded-lg mb-6" role="alert">
                             <div className="flex">
@@ -110,24 +106,22 @@ const DiseasePrediction = () => {
                                 </div>
                             </div>
                         </div>
-
                         {/* Specialist Suggestion */}
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
-                            <h2 className="text-xl font-bold text-blue-800 mb-3 flex items-center"><FaStethoscope className="mr-2" /> Suggested Specialist</h2>
-                            <p className="text-2xl font-semibold text-gray-900">{prediction.specialist.name}</p>
-                            <p className="text-gray-600 mt-1">{prediction.specialist.reason}</p>
-                            <div className="mt-4 text-center">
-                                <button onClick={() => navigate(`/doctors/${prediction.specialist.name}`)} className="bg-green-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-green-600">
+                        <div className="bg-blue-50 border border-blue-200 rounded-2xl p-8 mb-6 shadow">
+                            <h2 className="text-2xl font-bold text-blue-800 mb-3 flex items-center"><FaStethoscope className="mr-2" /> Suggested Specialist</h2>
+                            <p className="text-3xl font-semibold text-gray-900">{prediction.specialist.name}</p>
+                            <p className="text-gray-600 mt-1 text-lg">{prediction.specialist.reason}</p>
+                            <div className="mt-6 text-center">
+                                <button onClick={() => navigate(`/doctors/${prediction.specialist.name}`)} className="bg-green-500 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-600 text-lg shadow">
                                     Find a {prediction.specialist.name}
                                 </button>
                             </div>
                         </div>
-                        
                         {/* Potential Conditions */}
-                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
-                            <h2 className="text-xl font-bold text-gray-800 mb-3 flex items-center"><FaLightbulb className="mr-2" /> For Your Information</h2>
-                            <p className="text-gray-600 mb-3">To help guide your conversation with a doctor, here are some general conditions related to your symptoms:</p>
-                            <ul className="list-disc list-inside space-y-1 text-gray-700">
+                        <div className="bg-gray-50 border border-gray-200 rounded-2xl p-8 shadow">
+                            <h2 className="text-2xl font-bold text-gray-800 mb-3 flex items-center"><FaLightbulb className="mr-2" /> For Your Information</h2>
+                            <p className="text-gray-600 mb-3 text-lg">To help guide your conversation with a doctor, here are some general conditions related to your symptoms:</p>
+                            <ul className="list-disc list-inside space-y-1 text-gray-700 text-lg">
                                 {prediction.potential_conditions.map((condition, index) => (
                                     <li key={index}>{condition}</li>
                                 ))}
