@@ -235,8 +235,9 @@ const synonyms = {
   'braces': 'Orthodontist'
 };
 
-// Mapping of keywords/diseases to specialties
+// Mapping of keywords/diseases to specialties (Ophthalmologist prioritized for eye symptoms)
 const diseaseToSpecialist = [
+  { keywords: ['eye', 'red eye', 'watering eye', 'vision', 'conjunctivitis', 'blurred vision', 'dry eye', 'itchy eye', 'ophthalmology', 'eye pain', 'double vision', 'visual disturbance', 'foreign body in eye'], specialist: 'Ophthalmologist' },
   { keywords: ['skin', 'rash', 'lesion', 'eczema', 'psoriasis', 'acne', 'dermatitis', 'blister'], specialist: 'Dermatologist' },
   { keywords: ['pregnancy', 'menstruation', 'gynecology', 'uterus', 'ovary', 'female reproductive'], specialist: 'Gynecologist' },
   { keywords: ['child', 'pediatric', 'infant', 'baby', 'toddler'], specialist: 'Pediatrician' },
@@ -244,8 +245,7 @@ const diseaseToSpecialist = [
   { keywords: ['heart', 'cardio', 'chest pain', 'hypertension', 'arrhythmia'], specialist: 'Cardiologist' },
   { keywords: ['bone', 'joint', 'fracture', 'arthritis', 'orthopedic', 'sprain'], specialist: 'Orthopedic Surgeon' },
   { keywords: ['mental', 'depression', 'anxiety', 'psychiatry', 'bipolar', 'schizophrenia'], specialist: 'Psychiatrist' },
-  { keywords: ['ear', 'nose', 'throat', 'sinus', 'hearing', 'ent'], specialist: 'ENT Specialist' },
-  { keywords: ['eye', 'vision', 'cataract', 'glaucoma', 'ophthalmology'], specialist: 'Ophthalmologist' },
+  { keywords: ['ear', 'nose', 'throat', 'sinus', 'hearing', 'ent', 'sore throat', 'runny nose', 'nasal', 'tonsil', 'ear pain', 'hoarseness', 'snoring'], specialist: 'ENT Specialist' },
   { keywords: ['hormone', 'thyroid', 'diabetes', 'endocrine', 'endocrinology'], specialist: 'Endocrinologist' },
   { keywords: ['kidney', 'renal', 'nephro', 'dialysis'], specialist: 'Nephrologist' },
   { keywords: ['cancer', 'tumor', 'oncology', 'chemotherapy'], specialist: 'Oncologist' },

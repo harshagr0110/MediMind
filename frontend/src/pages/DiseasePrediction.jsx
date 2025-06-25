@@ -148,7 +148,7 @@ const DiseasePrediction = () => {
                     </div>
                     <div className="text-center mt-8">
                         <button type="submit" disabled={loading} className="bg-blue-600 text-white font-bold py-4 px-12 rounded-xl text-lg hover:bg-blue-700 disabled:bg-gray-400 transition-transform transform hover:scale-105 shadow-lg flex items-center justify-center gap-2">
-                            {loading ? <Spinner /> : 'Analyze Symptoms'}
+                            {loading ? 'Analyzing...' : 'Analyze Symptoms'}
                         </button>
                     </div>
                 </form>
