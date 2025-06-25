@@ -7,7 +7,8 @@ import {
     updateDoctorAvailability,
     getDoctorAppointments,
     cancelAppointment,
-    completeAppointment
+    completeAppointment,
+    getAllDoctors
 } from '../controllers/doctorController.js';
 import authDoctor from '../middleware/authDoctor.js';
 
@@ -15,6 +16,7 @@ const router = express.Router();
 
 // PUBLIC ROUTE
 router.post('/login', loginDoctor);
+router.get('/list', getAllDoctors);
 
 // PROTECTED DOCTOR ROUTES (require doctor token for all routes below)
 router.use(authDoctor);

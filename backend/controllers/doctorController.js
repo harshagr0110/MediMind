@@ -132,3 +132,12 @@ export const completeAppointment = async (req, res) => {
         res.status(500).json({ success: false, message: 'Failed to complete appointment' });
     }
 };
+
+export const getAllDoctors = async (req, res) => {
+    try {
+        const doctors = await Doctor.find({ available: true }).select('-password');
+        res.json({ success: true, doctors });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Failed to fetch doctors' });
+    }
+};
