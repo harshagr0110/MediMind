@@ -19,8 +19,8 @@ const port = process.env.PORT || 4000;
 // CORS configuration
 const allowedOrigins = [
     'http://localhost:5173',
-    'https://medimind-admin-green.vercel.app/',
-    'https://medimind-frontend-three.vercel.app/'
+    'https://medimind-admin-green.vercel.app',
+    'https://medimind-frontend-three.vercel.app'
 ];
 
 const corsOptions = {
