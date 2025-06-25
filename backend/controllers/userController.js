@@ -234,10 +234,47 @@ const synonyms = {
   'scan': 'Radiologist',
   'braces': 'Orthodontist'
 };
+
+// Mapping of keywords/diseases to specialties
+const diseaseToSpecialist = [
+  { keywords: ['skin', 'rash', 'lesion', 'eczema', 'psoriasis', 'acne', 'dermatitis', 'blister'], specialist: 'Dermatologist' },
+  { keywords: ['pregnancy', 'menstruation', 'gynecology', 'uterus', 'ovary', 'female reproductive'], specialist: 'Gynecologist' },
+  { keywords: ['child', 'pediatric', 'infant', 'baby', 'toddler'], specialist: 'Pediatrician' },
+  { keywords: ['brain', 'seizure', 'stroke', 'parkinson', 'epilepsy', 'neurology', 'migraine', 'headache'], specialist: 'Neurologist' },
+  { keywords: ['heart', 'cardio', 'chest pain', 'hypertension', 'arrhythmia'], specialist: 'Cardiologist' },
+  { keywords: ['bone', 'joint', 'fracture', 'arthritis', 'orthopedic', 'sprain'], specialist: 'Orthopedic Surgeon' },
+  { keywords: ['mental', 'depression', 'anxiety', 'psychiatry', 'bipolar', 'schizophrenia'], specialist: 'Psychiatrist' },
+  { keywords: ['ear', 'nose', 'throat', 'sinus', 'hearing', 'ent'], specialist: 'ENT Specialist' },
+  { keywords: ['eye', 'vision', 'cataract', 'glaucoma', 'ophthalmology'], specialist: 'Ophthalmologist' },
+  { keywords: ['hormone', 'thyroid', 'diabetes', 'endocrine', 'endocrinology'], specialist: 'Endocrinologist' },
+  { keywords: ['kidney', 'renal', 'nephro', 'dialysis'], specialist: 'Nephrologist' },
+  { keywords: ['cancer', 'tumor', 'oncology', 'chemotherapy'], specialist: 'Oncologist' },
+  { keywords: ['lung', 'asthma', 'pulmonary', 'respiratory', 'pulmonology'], specialist: 'Pulmonologist' },
+  { keywords: ['urinary', 'prostate', 'urology', 'bladder'], specialist: 'Urologist' },
+  { keywords: ['blood', 'anemia', 'hemato', 'leukemia'], specialist: 'Hematologist' },
+  { keywords: ['autoimmune', 'rheumatoid', 'lupus', 'rheumatology'], specialist: 'Rheumatologist' },
+  { keywords: ['allergy', 'asthma', 'allergic'], specialist: 'Allergist' },
+  { keywords: ['infection', 'infectious', 'fever', 'sepsis'], specialist: 'Infectious Disease Specialist' },
+  { keywords: ['plastic surgery', 'cosmetic', 'reconstructive'], specialist: 'Plastic Surgeon' },
+  { keywords: ['dental', 'tooth', 'teeth', 'gum', 'dentist'], specialist: 'Dentist' },
+  { keywords: ['anesthesia', 'anesthesiology'], specialist: 'Anesthesiologist' },
+  { keywords: ['lab', 'biopsy', 'pathology'], specialist: 'Pathologist' },
+  { keywords: ['scan', 'radiology', 'x-ray', 'mri', 'ct', 'ultrasound'], specialist: 'Radiologist' },
+  { keywords: ['braces', 'orthodontics'], specialist: 'Orthodontist' },
+  { keywords: ['gastro', 'liver', 'stomach', 'intestine', 'hepatitis', 'colitis'], specialist: 'Gastroenterologist' },
+  { keywords: ['physician', 'general', 'checkup', 'fever', 'cough', 'cold', 'flu'], specialist: 'General Physician' },
+];
+
 function extractSpecialist(text) {
-  const norm = s => s.toLowerCase().replace(/[^a-z]/g, '');
+  const norm = s => s.toLowerCase();
   const normText = norm(text);
-  // Exact match
+  // Disease/symptom keyword mapping
+  for (const entry of diseaseToSpecialist) {
+    for (const kw of entry.keywords) {
+      if (normText.includes(kw)) return entry.specialist;
+    }
+  }
+  // Exact match from allowedSpecialities
   for (const spec of allowedSpecialities) {
     if (normText.includes(norm(spec))) return spec;
   }
@@ -252,9 +289,8 @@ function extractSpecialist(text) {
 }
 
 function parseAIResponse(text) {
-  // Helper to extract a section and split into points
+  // Helper to extract a section and split into points only if real list markers exist
   const getSectionPoints = (header, fallbackKeywords = []) => {
-    // Escape special regex characters in header
     const safeHeader = header.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const regex = new RegExp(`\\*\\*${safeHeader}\\*\\*:?[ \t]*([\\s\\S]*?)(?=\\*\\*|$)`, 'i');
     const match = text.match(regex);
@@ -269,10 +305,15 @@ function parseAIResponse(text) {
         }
       }
     }
-    // Split into points by *, newlines, or numbered lists
-    return section
-      ? section.split(/\n+|\* |\d+\. |\u2022|\-/).map(s => s.trim()).filter(Boolean)
-      : [];
+    // If section contains real list markers, split, else treat as single paragraph
+    let points = [];
+    if (/\* |\d+\. |\u2022|\-/g.test(section)) {
+      points = section.split(/\n+|\* |\d+\. |\u2022|\-/).map(s => s.trim()).filter(Boolean);
+    } else if (section) {
+      points = [section.trim()];
+    }
+    // Remove empty, single punctuation, or meaningless points
+    return points.filter(s => s && s.length > 2 && !/^[:.\-]$/.test(s));
   };
   // Main sections
   const symptoms = getSectionPoints('Symptoms', ['symptom', 'symptoms']);
@@ -285,20 +326,6 @@ function parseAIResponse(text) {
   const specialistSection = getSectionPoints('Recommended Specialist', ['specialist', 'doctor', 'consult']);
   let specialistText = specialistSection.join(' ');
   let specialistName = extractSpecialist(specialistText || text);
-  // If the AI mentions dermatologist/skin/related, prefer Dermatologist
-  if (/dermatolog|skin|rash|lesion|infection|blister|eczema|psoriasis|acne/i.test(text) && specialistName === 'General Physician') {
-    specialistName = 'Dermatologist';
-  }
-  // Never return General Physician unless no other match
-  if (specialistName === 'General Physician' && /cardio|neuro|gastro|pediatric|gyne|ortho|psych|ent|ophthal|endo|nephro|onco|pulmo|uro|hema|rheuma|allerg|infect|plastic|dental|anesth|patho|radio|ortho/i.test(text)) {
-    // Try to match a more specific specialist
-    for (const spec of allowedSpecialities) {
-      if (new RegExp(spec.split(' ')[0], 'i').test(text)) {
-        specialistName = spec;
-        break;
-      }
-    }
-  }
   // Remove any stray numbers or artifacts from reason
   let reason = specialistSection.filter(s => isNaN(Number(s))).join(' ').replace(/\b\d+\b/g, '').trim();
   if (!reason) reason = `Consult a ${specialistName} for your symptoms.`;
