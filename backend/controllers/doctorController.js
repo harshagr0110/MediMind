@@ -47,7 +47,6 @@ export const getDoctorDashboard = async (req, res) => {
             isCompleted: false,
             cancelled: { $ne: true }
         })
-        .populate('user', 'fullName')
         .sort({ slotDate: 1 })
         .limit(5);
 
@@ -111,7 +110,6 @@ export const updateDoctorAvailability = async (req, res) => {
 export const getDoctorAppointments = async (req, res) => {
     try {
         const appointments = await Appointment.find({ doctor: req.user.id })
-            .populate('user', 'fullName email')
             .sort({ createdAt: -1 });
         res.json({ success: true, data: appointments });
     } catch (error) {
@@ -167,12 +165,13 @@ export const getDoctorPatients = async (req, res) => {
   try {
     const doctorId = req.user.id;
     // Find all appointments for this doctor
-    const appointments = await Appointment.find({ doctor: doctorId }).populate('user', 'fullName email age');
+    const appointments = await Appointment.find({ doctor: doctorId });
     // Get unique patients
     const uniquePatients = {};
     appointments.forEach(app => {
-      if (app.user && !uniquePatients[app.user._id]) {
-        uniquePatients[app.user._id] = app.user;
+      const user = app.userData;
+      if (user && user.email && !uniquePatients[user.email]) {
+        uniquePatients[user.email] = user;
       }
     });
     res.json({ success: true, patients: Object.values(uniquePatients) });

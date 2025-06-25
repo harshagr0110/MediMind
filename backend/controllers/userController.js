@@ -129,8 +129,8 @@ export const bookAppointment = async (req, res) => {
 
 export const listAppointment = async (req, res) => {
     try {
-        const appointments = await Appointment.find({ user: req.user.id }).populate('doctor', 'fullName speciality image');
-        res.status(200).json({ success: true, data: appointments });
+        const appointments = await Appointment.find({ userId: req.user.id });
+        res.status(200).json({ success: true, appointments });
     } catch (error) {
         res.status(500).json({ success: false, message: "Server error while listing appointments" });
     }
@@ -150,17 +150,17 @@ export const deleteAppointment = async (req, res) => {
 export const createStripeSession = async (req, res) => {
     try {
         const { appointmentId } = req.body;
-        const appointment = await Appointment.findById(appointmentId).populate('doctor', 'fullName');
+        const appointment = await Appointment.findById(appointmentId);
 
         if (!appointment) return res.status(404).json({ success: false, message: "Appointment not found" });
-        
+
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
             line_items: [{
                 price_data: {
                     currency: 'inr',
                     product_data: {
-                        name: `Appointment with Dr. ${appointment.doctor.fullName}`,
+                        name: `Appointment with Dr. ${appointment.docData.fullName}`,
                         description: `On ${appointment.slotDate} at ${appointment.slotTime}`,
                     },
                     unit_amount: appointment.amount * 100, // Amount in paise
