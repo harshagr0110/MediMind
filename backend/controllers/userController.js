@@ -153,6 +153,19 @@ export const createStripeSession = async (req, res) => {
         const appointment = await Appointment.findById(appointmentId);
 
         if (!appointment) return res.status(404).json({ success: false, message: "Appointment not found" });
+        // Guard: check required fields
+        if (!appointment.amount || isNaN(appointment.amount)) {
+            return res.status(400).json({ success: false, message: "Invalid or missing appointment amount." });
+        }
+        if (!appointment.docData || !appointment.docData.fullName) {
+            return res.status(400).json({ success: false, message: "Missing doctor name in appointment." });
+        }
+        if (!appointment.slotDate || !appointment.slotTime) {
+            return res.status(400).json({ success: false, message: "Missing slot date or time in appointment." });
+        }
+        if (!process.env.STRIPE_SECRET_KEY) {
+            return res.status(500).json({ success: false, message: "Stripe secret key not configured." });
+        }
 
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
@@ -174,7 +187,12 @@ export const createStripeSession = async (req, res) => {
 
         res.json({ success: true, session_url: session.url });
     } catch (error) {
-        res.status(500).json({ success: false, message: "Error creating Stripe session" });
+        console.error('Stripe session error:', error, {
+            appointmentId: req.body?.appointmentId,
+            appointment: typeof appointment !== 'undefined' ? appointment : 'not loaded',
+            stripeKey: process.env.STRIPE_SECRET_KEY ? 'present' : 'missing',
+        });
+        res.status(500).json({ success: false, message: error.message || "Error creating Stripe session" });
     }
 };
 

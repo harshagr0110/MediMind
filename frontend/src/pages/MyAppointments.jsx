@@ -79,9 +79,8 @@ const MyAppointments = () => {
   const cancelAppointment = async (appointmentId) => {
     if (!window.confirm("Are you sure you want to cancel this appointment?")) return;
     try {
-      const { data } = await axios.post(
-        `${backendurl}/api/user/cancel-appointment`,
-        { appointmentId },
+      const { data } = await axios.delete(
+        `${backendurl}/api/user/delete-appointment/${appointmentId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (data.success) {
