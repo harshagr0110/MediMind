@@ -93,19 +93,34 @@ export const bookAppointment = async (req, res) => {
 
         const doctor = await Doctor.findById(docId);
         if (!doctor || !doctor.available) return res.status(404).json({ success: false, message: "Doctor not found or is unavailable" });
-        
-        const existingAppointment = await Appointment.findOne({ doctor: docId, slotDate, slotTime });
+
+        const user = await User.findById(userId);
+        if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+        const existingAppointment = await Appointment.findOne({ docId, slotDate, slotTime });
         if (existingAppointment) return res.status(400).json({ success: false, message: "This slot is already booked" });
-        
+
         const newAppointment = new Appointment({
-            user: userId,
-            doctor: docId,
+            userId,
+            docId,
             slotDate,
             slotTime,
+            userData: {
+                fullName: user.fullName,
+                email: user.email,
+                image: user.image || '',
+            },
+            docData: {
+                fullName: doctor.fullName,
+                email: doctor.email,
+                image: doctor.image || '',
+                specialization: doctor.specialization || doctor.speciality || '',
+            },
             amount,
+            date: new Date(),
         });
         await newAppointment.save();
-        
+
         res.status(201).json({ success: true, message: "Appointment booked, pending payment", appointmentId: newAppointment._id });
     } catch (error) {
         res.status(500).json({ success: false, message: "Server error while booking appointment" });

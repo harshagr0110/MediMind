@@ -28,7 +28,7 @@ const Appointment = () => {
     }
 
     const [doctor, setDoctor] = useState(null);
-    const [selectedDate, setSelectedDate] = useState(new Date());
+    const [selectedDate, setSelectedDate] = useState(moment().toDate());
     const [selectedSlot, setSelectedSlot] = useState('');
     const [bookedSlots, setBookedSlots] = useState([]);
     const [availableSlots, setAvailableSlots] = useState([]);
@@ -72,6 +72,9 @@ const Appointment = () => {
     useEffect(() => {
         setAvailableSlots(ALL_TIME_SLOTS.filter(slot => !bookedSlots.includes(slot)));
     }, [bookedSlots]);
+
+    // Generate next 7 days
+    const next7Days = Array.from({ length: 7 }, (_, i) => moment().add(i, 'days').toDate());
 
     const handleBooking = async () => {
         if (!selectedSlot) {
@@ -130,22 +133,17 @@ const Appointment = () => {
 
                 <div className="md:w-2/3 p-6">
                     <h2 className="text-2xl font-bold mb-4 text-gray-800">Book Your Slot</h2>
-                    
-                    <div style={{ height: '500px' }}>
-                        <Calendar
-                            localizer={localizer}
-                            events={calendarEvents}
-                            startAccessor="start"
-                            endAccessor="end"
-                            defaultView="month"
-                            views={['month', 'week', 'day']}
-                            onNavigate={date => setSelectedDate(date)}
-                            onSelectSlot={({ start }) => setSelectedDate(start)}
-                            selectable
-                            min={new Date()} // Prevent booking past dates
-                        />
+                    <div className="mb-6 flex gap-2 flex-wrap">
+                        {next7Days.map(date => (
+                            <button
+                                key={date}
+                                onClick={() => setSelectedDate(date)}
+                                className={`px-4 py-2 rounded-lg font-semibold border transition-all duration-200 ${moment(selectedDate).isSame(date, 'day') ? 'bg-blue-600 text-white border-blue-600' : 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100'}`}
+                            >
+                                {moment(date).format('ddd, MMM D')}
+                            </button>
+                        ))}
                     </div>
-
                     <div className="mt-6">
                         <h3 className="text-xl font-semibold text-gray-700 mb-3">
                             Available Slots for <span className="text-blue-600">{moment(selectedDate).format('MMMM Do, YYYY')}</span>
@@ -166,7 +164,6 @@ const Appointment = () => {
                             <p className="text-gray-500">No available slots for this day. Please select another date.</p>
                         )}
                     </div>
-                    
                     <div className="mt-8 text-center">
                         <button
                             onClick={handleBooking}
