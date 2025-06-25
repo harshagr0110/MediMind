@@ -8,7 +8,9 @@ import {
     getDoctorAppointments,
     cancelAppointment,
     completeAppointment,
-    getAllDoctors
+    getAllDoctors,
+    getDoctorAvailability,
+    getDoctorPatients
 } from '../controllers/doctorController.js';
 import authDoctor from '../middleware/authDoctor.js';
 
@@ -24,6 +26,8 @@ router.use(authDoctor);
 router.get('/dashboard', getDoctorDashboard);
 router.get('/details', getDoctorDetails);
 router.get('/appointments', getDoctorAppointments);
+router.get('/availability/:id', getDoctorAvailability);
+router.get('/patients', getDoctorPatients);
 
 router.patch('/update-profile', updateProfile);
 router.patch('/update-availability', updateDoctorAvailability);

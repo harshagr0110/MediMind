@@ -5,6 +5,7 @@ import Doctor from '../models/doctorModel.js';
 import User from '../models/userModel.js';
 import Appointment from '../models/appointmentModel.js';
 import jwt from 'jsonwebtoken';
+import Admin from '../models/adminModel.js';
 
 // --- Doctor Management ---
 export const addDoctor = async (req, res) => {
@@ -105,4 +106,43 @@ export const getDashboardData = async (req, res) => {
     } catch (error) {
         res.status(500).json({ success: false, message: 'Failed to fetch dashboard data.' });
     }
+};
+
+export const getAdminProfile = async (req, res) => {
+  try {
+    const admin = await Admin.findById(req.user.id).select('-password');
+    if (!admin) {
+      return res.status(404).json({ success: false, message: 'Admin not found' });
+    }
+    res.json({ success: true, ...admin.toObject() });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to fetch profile' });
+  }
+};
+
+export const updateAdminProfile = async (req, res) => {
+  try {
+    const admin = await Admin.findByIdAndUpdate(req.user.id, req.body, { new: true }).select('-password');
+    res.json({ success: true, message: 'Profile updated successfully', data: admin });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to update profile' });
+  }
+};
+
+export const registerAdmin = async (req, res) => {
+  try {
+    const { email, password, fullName } = req.body;
+    if (!email || !password || !fullName) {
+      return res.status(400).json({ success: false, message: 'All fields are required' });
+    }
+    const existing = await Admin.findOne({ email });
+    if (existing) {
+      return res.status(400).json({ success: false, message: 'Email already registered' });
+    }
+    const hashed = await bcrypt.hash(password, 10);
+    const admin = await Admin.create({ email, password: hashed, fullName });
+    res.json({ success: true, message: 'Admin registered successfully', data: { id: admin._id, email: admin.email, fullName: admin.fullName } });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to register admin' });
+  }
 };

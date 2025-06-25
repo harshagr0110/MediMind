@@ -141,3 +141,38 @@ export const getAllDoctors = async (req, res) => {
         res.status(500).json({ success: false, message: 'Failed to fetch doctors' });
     }
 };
+
+export const getDoctorAvailability = async (req, res) => {
+  try {
+    const doctorId = req.params.id;
+    const date = req.query.date;
+    if (!date) {
+      return res.status(400).json({ success: false, message: 'Date is required' });
+    }
+    // Find all appointments for this doctor and date
+    const appointments = await Appointment.find({ doctor: doctorId, slotDate: date });
+    // Return the booked slot times
+    const bookedSlots = appointments.map(app => app.slotTime);
+    res.json({ success: true, data: bookedSlots });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to fetch availability' });
+  }
+};
+
+export const getDoctorPatients = async (req, res) => {
+  try {
+    const doctorId = req.user.id;
+    // Find all appointments for this doctor
+    const appointments = await Appointment.find({ doctor: doctorId }).populate('user', 'fullName email age');
+    // Get unique patients
+    const uniquePatients = {};
+    appointments.forEach(app => {
+      if (app.user && !uniquePatients[app.user._id]) {
+        uniquePatients[app.user._id] = app.user;
+      }
+    });
+    res.json({ success: true, patients: Object.values(uniquePatients) });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to fetch patients' });
+  }
+};
