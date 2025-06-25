@@ -200,17 +200,37 @@ async function fileToGenerativePart(buffer, mimeType) {
 
 export const diseasePrediction = async (req, res) => {
     try {
+        if (!process.env.GEMINI_API_KEY) {
+            return res.status(500).json({ success: false, message: "AI service unavailable: Missing GEMINI_API_KEY." });
+        }
+        const symptoms = req.body.symptoms || '';
+        const hasSymptoms = symptoms && symptoms.trim().length > 0;
+        const hasImages = req.files && req.files.length > 0;
+        if (!hasSymptoms && !hasImages) {
+            return res.status(400).json({ success: false, message: "Please provide symptoms or upload at least one image." });
+        }
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-        const imageParts = await Promise.all(
-            req.files.map(file => fileToGenerativePart(file.buffer, file.mimetype))
-        );
-        
-        const prompt = "Analyze these medical images. Based on visual evidence, identify potential diseases, conditions, or abnormalities. Describe your findings, including the visual indicators that support your assessment. If multiple images are provided, compare and contrast them. Finally, based on your analysis, recommend a type of medical specialist (e.g., Dermatologist, Cardiologist, Neurologist) a person should consult for these symptoms. Structure your response in clear sections: 'Disease/Condition Analysis', 'Visual Evidence', and 'Recommended Specialist'.";
-
-        const result = await model.generateContent([prompt, ...imageParts]);
+        let prompt = '';
+        let input = [];
+        if (hasSymptoms && hasImages) {
+            prompt = `Analyze the following symptoms and medical images. Symptoms: ${symptoms}\nBased on both the text and visual evidence, identify potential diseases, conditions, or abnormalities. Describe your findings, including the indicators that support your assessment. Recommend a type of medical specialist (e.g., Dermatologist, Cardiologist, Neurologist) a person should consult. Structure your response in clear sections: 'Disease/Condition Analysis', 'Evidence', and 'Recommended Specialist'.`;
+            const imageParts = await Promise.all(req.files.map(file => fileToGenerativePart(file.buffer, file.mimetype)));
+            input = [prompt, ...imageParts];
+        } else if (hasSymptoms) {
+            prompt = `Analyze the following symptoms: ${symptoms}\nBased on these, identify potential diseases, conditions, or abnormalities. Recommend a type of medical specialist (e.g., Dermatologist, Cardiologist, Neurologist) a person should consult. Structure your response in clear sections: 'Disease/Condition Analysis', 'Recommended Specialist', and 'For Your Information'.`;
+            input = [prompt];
+        } else if (hasImages) {
+            prompt = "Analyze these medical images. Based on visual evidence, identify potential diseases, conditions, or abnormalities. Describe your findings, including the visual indicators that support your assessment. If multiple images are provided, compare and contrast them. Finally, based on your analysis, recommend a type of medical specialist (e.g., Dermatologist, Cardiologist, Neurologist) a person should consult for these symptoms. Structure your response in clear sections: 'Disease/Condition Analysis', 'Visual Evidence', and 'Recommended Specialist'.";
+            const imageParts = await Promise.all(req.files.map(file => fileToGenerativePart(file.buffer, file.mimetype)));
+            input = [prompt, ...imageParts];
+        }
+        const result = await model.generateContent(input);
         const responseText = result.response.text();
-        res.json({ success: true, prediction: responseText });
+        // Try to parse the response into structured data for the frontend
+        // (You may want to improve this with a more robust parser)
+        res.json({ success: true, data: { raw: responseText } });
     } catch (error) {
-        res.status(500).json({ success: false, message: "Error in disease prediction." });
+        console.error("DiseasePrediction error:", error);
+        res.status(500).json({ success: false, message: error.message || "Error in disease prediction." });
     }
 };
