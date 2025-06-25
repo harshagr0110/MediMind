@@ -17,7 +17,6 @@ export const registerUser = async (req, res) => {
   try {
     const { email, fullName, password } = req.body;
 
-    // Validate input fields
     if (!email || !fullName || !password) {
       return res.status(400).json({ success: false, message: "All fields are required" });
     }
@@ -28,18 +27,15 @@ export const registerUser = async (req, res) => {
       return res.status(400).json({ success: false, message: "Password must be at least 8 characters" });
     }
 
-    // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ success: false, message: "User already exists" });
     }
 
-    // Hash the password before storing
     const salt = await bcrypt.genSalt(10);
     const hash = await bcrypt.hash(password, salt);
     const user = await User.create({ fullName, email, password: hash });
 
-    // Generate JWT token
     const token = createToken(user._id);
 
     return res.status(201).json({ success: true, message: "User registered", token, userId: user._id });
@@ -110,7 +106,6 @@ export const updateProfile = async (req, res) => {
 
     const updates = { fullName, phone, address, dob, gender };
 
-    // Handle image upload if provided
     if (req.file) {
       try {
         updates.image = await new Promise((resolve, reject) => {
@@ -143,38 +138,28 @@ export const bookAppointment = async (req, res) => {
   try {
     const { userId, docId, slotDate, slotTime } = req.body;
 
-   // console.log("➡️ bookAppointment called with:", req.body);
-
     const docDataRaw = await doctormodel.findById(docId).select('-password');
     if (!docDataRaw) {
-     // console.log("❌ Doctor not found");
       return res.status(404).json({ success: false, message: "Doctor not found" });
     }
 
     if (!docDataRaw.available) {
-    
-      console.log("⚠️ Doctor not available");
       return res.status(400).json({ success: false, message: "Doctor is not available" });
     }
 
     let slots_booked = docDataRaw.slots_booked || {};
     if (slots_booked[slotDate]) {
-      console.log("this dayyy");
       if (slots_booked[slotDate].includes(slotTime)) {
-        console.log("⚠️ Slot already booked");
-       // toast.error("Slot is already booked");
         return res.status(200).json({ success: false, message: "Slot is already booked" });
       } else {
-        console.log("linewwwwww");
         slots_booked[slotDate].push(slotTime);
       }
     } else {
       slots_booked[slotDate] = [slotTime];
     }
-    console.log("linewwwwww");
+    
     const userData = await User.findById(userId).select('-password');
     if (!userData) {
-     // console.log("❌ User not found");
       return res.status(404).json({ success: false, message: "User not found" });
     }
 
@@ -192,21 +177,16 @@ export const bookAppointment = async (req, res) => {
       date: Date.now(),
     };
 
-//    console.log("📝 Saving appointment:", appointmentData);
-
     const newAppointment = new appointmentModel(appointmentData);
     await newAppointment.save();
 
-   // console.log("✅ Appointment saved. Updating doctor slots...");
     await doctormodel.findByIdAndUpdate(docId, { slots_booked });
 
- //   console.log("✅ Doctor updated");
- const doctordata=await doctormodel.findById(docId)
+    const doctordata = await doctormodel.findById(docId)
     console.log(doctordata);
     return res.status(200).json({ success: true, appointmentId: newAppointment._id });
    
   } catch (error) {
-   // console.error("🔥 ERROR in bookAppointment:", error);
     return res.status(500).json({ success: false, message: "Server error while booking appointment" });
   }
 };
@@ -240,7 +220,6 @@ export const cancelAppointment=async(req,res)=>{
         await doctormodel.findByIdAndUpdate(docId,{slots_booked})
       }
       return res.status(200).json({success:true,message:"Appointment cancelled"})
-
     }
   }
   catch(error){
@@ -249,54 +228,35 @@ export const cancelAppointment=async(req,res)=>{
   }
 }
 
-
 export const createStripeSession = async (req, res) => {
   try {
     const { appointmentId } = req.body;
     const userId = req.user.id;
 
-    // Validate appointment
     const appointment = await appointmentModel.findById(appointmentId);
     if (!appointment) {
-      return res.status(404).json({ 
-        success: false, 
-        message: "Appointment not found" 
-      });
+      return res.status(404).json({ success: false, message: "Appointment not found" });
     }
 
     if (appointment.userId.toString() !== userId) {
-      return res.status(403).json({ 
-        success: false, 
-        message: "Unauthorized access" 
-      });
+      return res.status(403).json({ success: false, message: "Unauthorized access" });
     }
 
     if (appointment.paymentStatus === 'paid') {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Payment already completed" 
-      });
+      return res.status(400).json({ success: false, message: "Payment already completed" });
     }
 
     if (appointment.cancelled) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Cannot pay for cancelled appointment" 
-      });
+      return res.status(400).json({ success: false, message: "Cannot pay for cancelled appointment" });
     }
 
-    // Get doctor details
     const doctor = await doctormodel.findById(appointment.docId);
     if (!doctor) {
-      return res.status(404).json({ 
-        success: false, 
-        message: "Doctor not found" 
-      });
+      return res.status(404).json({ success: false, message: "Doctor not found" });
     }
 
     const origin = req.headers.origin || process.env.FRONTEND_URL;
 
-    // Create Stripe session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items: [
@@ -321,18 +281,11 @@ export const createStripeSession = async (req, res) => {
       cancel_url: `${origin}/payment-success?success=false&appointmentId=${appointmentId}`,
     });
 
-    return res.status(200).json({ 
-      success: true, 
-      url: session.url 
-    });
+    return res.status(200).json({ success: true, url: session.url });
 
   } catch (error) {
     console.error("Stripe Session Error:", error);
-    return res.status(500).json({ 
-      success: false, 
-      message: "Error creating payment session",
-      error: error.message 
-    });
+    return res.status(500).json({ success: false, message: "Error creating payment session", error: error.message });
   }
 };
 
@@ -340,44 +293,26 @@ export const verifyStripe = async (req, res) => {
   try {
     const { appointmentId, success } = req.body;
 
-    // Validate input
     if (!appointmentId || typeof success !== 'string') {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Invalid parameters" 
-      });
+      return res.status(400).json({ success: false, message: "Invalid parameters" });
     }
 
-    // Find and update appointment
     const appointment = await appointmentModel.findById(appointmentId);
     if (!appointment) {
-      return res.status(404).json({ 
-        success: false, 
-        message: "Appointment not found" 
-      });
+      return res.status(404).json({ success: false, message: "Appointment not found" });
     }
 
     if (success === "true") {
       appointment.paymentStatus = 'paid';
       await appointment.save();
       
-      return res.status(200).json({ 
-        success: true, 
-        message: "Payment confirmed successfully" 
-      });
+      return res.status(200).json({ success: true, message: "Payment confirmed successfully" });
     } else {
-      return res.status(200).json({ 
-        success: false, 
-        message: "Payment not completed" 
-      });
+      return res.status(200).json({ success: false, message: "Payment not completed" });
     }
   } catch (error) {
     console.error("Payment Verification Error:", error);
-    return res.status(500).json({ 
-      success: false, 
-      message: "Error verifying payment",
-      error: error.message 
-    });
+    return res.status(500).json({ success: false, message: "Error verifying payment", error: error.message });
   }
 };
 
@@ -441,16 +376,14 @@ export const diseasePrediction = async (req, res) => {
     }
 };
 
-// Delete appointment by ID
 export const deleteAppointment = async (req, res) => {
   try {
     const { id } = req.params;
-    // Only allow user to delete their own appointment
     const appointment = await appointmentModel.findById(id);
     if (!appointment) {
       return res.status(404).json({ success: false, message: 'Appointment not found' });
     }
-    if (appointment.userId !== req.user.id) {
+    if (appointment.userId.toString() !== req.user.id) {
       return res.status(403).json({ success: false, message: 'Unauthorized' });
     }
     await appointmentModel.findByIdAndDelete(id);
@@ -458,17 +391,4 @@ export const deleteAppointment = async (req, res) => {
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
-};
-
-export {
-    registerUser,
-    loginUser,
-    getProfile,
-    updateProfile,
-    bookAppointment,
-    listAppointment,
-    cancelAppointment,
-    createStripeSession,
-    verifyStripe,
-    diseasePrediction
 };

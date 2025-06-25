@@ -4,7 +4,6 @@ import authUser from '../middleware/authUser.js';
 import {
     getDoctor,
     getDoctors,
-    updateProfile,
     getAppointments,
     updateAppointmentStatus,
     getAvailability,

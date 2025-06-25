@@ -11,7 +11,7 @@ import rateLimit from 'express-rate-limit';
 import articleRouter from './routes/articleRoute.js';
 import { createArticle, getArticles, getArticleById } from './controllers/articleController.js';
 import authAll from './middleware/authAll.js';
-import upload from './middleware/multer.js';
+import { upload } from './middleware/multer.js';
 
 const app = express();
 const port = process.env.PORT || 4000;
