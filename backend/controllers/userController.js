@@ -198,6 +198,88 @@ async function fileToGenerativePart(buffer, mimeType) {
     return { inlineData: { data: buffer.toString("base64"), mimeType } };
 }
 
+// List of allowed specialties (copy from frontend)
+const allowedSpecialities = [
+  'General Physician', 'Gynecologist', 'Dermatologist', 'Pediatrician', 'Neurologist', 'Gastroenterologist',
+  'Cardiologist', 'Orthopedic Surgeon', 'Psychiatrist', 'ENT Specialist', 'Ophthalmologist', 'Endocrinologist',
+  'Nephrologist', 'Oncologist', 'Pulmonologist', 'Urologist', 'Hematologist', 'Rheumatologist', 'Allergist',
+  'Infectious Disease Specialist', 'Plastic Surgeon', 'Dentist', 'Anesthesiologist', 'Pathologist', 'Radiologist', 'Orthodontist'
+];
+const synonyms = {
+  'physician': 'General Physician',
+  'doctor': 'General Physician',
+  'obgyn': 'Gynecologist',
+  'skin': 'Dermatologist',
+  'child': 'Pediatrician',
+  'neuro': 'Neurologist',
+  'gastro': 'Gastroenterologist',
+  'heart': 'Cardiologist',
+  'bone': 'Orthopedic Surgeon',
+  'mental': 'Psychiatrist',
+  'ent': 'ENT Specialist',
+  'eye': 'Ophthalmologist',
+  'hormone': 'Endocrinologist',
+  'kidney': 'Nephrologist',
+  'cancer': 'Oncologist',
+  'lung': 'Pulmonologist',
+  'urinary': 'Urologist',
+  'blood': 'Hematologist',
+  'autoimmune': 'Rheumatologist',
+  'allergy': 'Allergist',
+  'infection': 'Infectious Disease Specialist',
+  'plastic': 'Plastic Surgeon',
+  'dental': 'Dentist',
+  'anesthesia': 'Anesthesiologist',
+  'lab': 'Pathologist',
+  'scan': 'Radiologist',
+  'braces': 'Orthodontist'
+};
+function extractSpecialist(text) {
+  const norm = s => s.toLowerCase().replace(/[^a-z]/g, '');
+  const normText = norm(text);
+  // Exact match
+  for (const spec of allowedSpecialities) {
+    if (normText.includes(norm(spec))) return spec;
+  }
+  // Synonym/partial match
+  for (const [key, value] of Object.entries(synonyms)) {
+    if (normText.includes(key)) {
+      const match = allowedSpecialities.find(s => s.toLowerCase() === value.toLowerCase());
+      return match || value;
+    }
+  }
+  return 'General Physician';
+}
+
+function parseAIResponse(text) {
+  // Extract sections by header (very basic, can be improved)
+  const getSection = (header) => {
+    const regex = new RegExp(`\*\*${header}\*\*:?\s*([\s\S]*?)(?=\*\*|$)`, 'i');
+    const match = text.match(regex);
+    return match ? match[1].trim() : '';
+  };
+  const analysis = getSection('Disease/Condition Analysis');
+  const evidence = getSection('Evidence');
+  const specialistText = getSection('Recommended Specialist');
+  const symptomsText = getSection('Patient Reported Symptom|Symptoms');
+  const conditionsText = getSection('Potential Conditions|For Your Information');
+  // Parse lists
+  const symptoms = symptomsText ? symptomsText.split(/\*\*|\*|\n|,|\./).map(s => s.trim()).filter(Boolean) : [];
+  const evidenceList = evidence ? evidence.split(/\*\*|\*|\n|,|\./).map(s => s.trim()).filter(Boolean) : [];
+  const potential_conditions = conditionsText ? conditionsText.split(/\*\*|\*|\n|,|\./).map(s => s.trim()).filter(Boolean) : [];
+  // Specialist extraction
+  const specialistName = extractSpecialist(specialistText || text);
+  let reason = specialistText || `Consult a ${specialistName} for your symptoms.`;
+  return {
+    disclaimer: 'This is an AI-generated suggestion. Please consult a real doctor.',
+    analysis: analysis || '',
+    symptoms,
+    evidence: evidenceList,
+    specialist: { name: specialistName, reason },
+    potential_conditions: potential_conditions.length ? potential_conditions : [text]
+  };
+}
+
 export const diseasePrediction = async (req, res) => {
     try {
         if (!process.env.GEMINI_API_KEY) {
@@ -213,20 +295,21 @@ export const diseasePrediction = async (req, res) => {
         let prompt = '';
         let input = [];
         if (hasSymptoms && hasImage) {
-            prompt = `Analyze the following symptoms and medical image. Symptoms: ${symptoms}\nBased on both the text and visual evidence, identify potential diseases, conditions, or abnormalities. Describe your findings, including the indicators that support your assessment. Recommend a type of medical specialist (e.g., Dermatologist, Cardiologist, Neurologist) a person should consult. Structure your response in clear sections: 'Disease/Condition Analysis', 'Evidence', and 'Recommended Specialist'.`;
+            prompt = `Analyze the following symptoms and medical image. Symptoms: ${symptoms}\nBased on both the text and visual evidence, identify potential diseases, conditions, or abnormalities. Describe your findings, including the indicators that support your assessment. Recommend a type of medical specialist (e.g., Dermatologist, Cardiologist, Neurologist) a person should consult. Structure your response in clear sections: 'Disease/Condition Analysis', 'Evidence', 'Symptoms', 'Potential Conditions', and 'Recommended Specialist'.`;
             const imagePart = await fileToGenerativePart(req.file.buffer, req.file.mimetype);
             input = [prompt, imagePart];
         } else if (hasSymptoms) {
-            prompt = `Analyze the following symptoms: ${symptoms}\nBased on these, identify potential diseases, conditions, or abnormalities. Recommend a type of medical specialist (e.g., Dermatologist, Cardiologist, Neurologist) a person should consult. Structure your response in clear sections: 'Disease/Condition Analysis', 'Recommended Specialist', and 'For Your Information'.`;
+            prompt = `Analyze the following symptoms: ${symptoms}\nBased on these, identify potential diseases, conditions, or abnormalities. Recommend a type of medical specialist (e.g., Dermatologist, Cardiologist, Neurologist) a person should consult. Structure your response in clear sections: 'Disease/Condition Analysis', 'Symptoms', 'Potential Conditions', and 'Recommended Specialist'.`;
             input = [prompt];
         } else if (hasImage) {
-            prompt = "Analyze this medical image. Based on visual evidence, identify potential diseases, conditions, or abnormalities. Describe your findings, including the visual indicators that support your assessment. Finally, based on your analysis, recommend a type of medical specialist (e.g., Dermatologist, Cardiologist, Neurologist) a person should consult for these symptoms. Structure your response in clear sections: 'Disease/Condition Analysis', 'Visual Evidence', and 'Recommended Specialist'.";
+            prompt = "Analyze this medical image. Based on visual evidence, identify potential diseases, conditions, or abnormalities. Describe your findings, including the visual indicators that support your assessment. Finally, based on your analysis, recommend a type of medical specialist (e.g., Dermatologist, Cardiologist, Neurologist) a person should consult for these symptoms. Structure your response in clear sections: 'Disease/Condition Analysis', 'Evidence', 'Potential Conditions', and 'Recommended Specialist'.";
             const imagePart = await fileToGenerativePart(req.file.buffer, req.file.mimetype);
             input = [prompt, imagePart];
         }
         const result = await model.generateContent(input);
         const responseText = result.response.text();
-        res.json({ success: true, data: { raw: responseText } });
+        const structured = parseAIResponse(responseText);
+        res.json({ success: true, data: structured });
     } catch (error) {
         console.error("DiseasePrediction error:", error);
         res.status(500).json({ success: false, message: error.message || "Error in disease prediction." });

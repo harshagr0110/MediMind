@@ -88,15 +88,24 @@ const DiseasePrediction = () => {
     let disclaimer = '';
     let specialist = null;
     let potentialConditions = [];
+    let analysis = '';
+    let symptomsList = [];
+    let evidenceList = [];
     if (prediction) {
         if (prediction.raw) {
             disclaimer = 'This is an AI-generated suggestion. Please consult a real doctor.';
             specialist = { name: 'Specialist', reason: 'Consult a specialist for your symptoms.' };
             potentialConditions = [prediction.raw];
+            analysis = '';
+            symptomsList = [];
+            evidenceList = [];
         } else {
             disclaimer = prediction.disclaimer || 'This is an AI-generated suggestion. Please consult a real doctor.';
             specialist = prediction.specialist || { name: 'Specialist', reason: 'Consult a specialist for your symptoms.' };
             potentialConditions = Array.isArray(prediction.potential_conditions) ? prediction.potential_conditions : [prediction.potential_conditions || 'No conditions found.'];
+            analysis = prediction.analysis || '';
+            symptomsList = Array.isArray(prediction.symptoms) ? prediction.symptoms : [];
+            evidenceList = Array.isArray(prediction.evidence) ? prediction.evidence : [];
         }
     }
 
@@ -139,15 +148,39 @@ const DiseasePrediction = () => {
                 </form>
                 {prediction && (
                     <div className="mt-12 w-full animate-fade-in">
-                        {/* Disclaimer */}
-                        <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded-lg mb-6" role="alert">
-                            <div className="flex">
-                                <FaExclamationTriangle className="text-2xl mr-3" />
-                                <div>
-                                    <p className="font-bold">Important Disclaimer</p>
-                                    <p>{disclaimer}</p>
-                                </div>
+                        {/* Disease/Condition Analysis */}
+                        {analysis && (
+                            <div className="bg-blue-50 border border-blue-200 rounded-2xl p-8 mb-6 shadow">
+                                <h2 className="text-2xl font-bold text-blue-800 mb-3 flex items-center"><FaLightbulb className="mr-2" /> Disease/Condition Analysis</h2>
+                                <p className="text-gray-700 text-lg">{analysis}</p>
                             </div>
+                        )}
+                        {/* Symptoms */}
+                        {symptomsList.length > 0 && (
+                            <div className="bg-gray-50 border border-gray-200 rounded-2xl p-8 mb-6 shadow">
+                                <h2 className="text-2xl font-bold text-gray-800 mb-3 flex items-center"><FaLightbulb className="mr-2" /> Symptoms</h2>
+                                <ul className="list-disc list-inside space-y-1 text-gray-700 text-lg">
+                                    {symptomsList.map((symptom, idx) => <li key={idx}>{symptom}</li>)}
+                                </ul>
+                            </div>
+                        )}
+                        {/* Evidence */}
+                        {evidenceList.length > 0 && (
+                            <div className="bg-gray-50 border border-gray-200 rounded-2xl p-8 mb-6 shadow">
+                                <h2 className="text-2xl font-bold text-gray-800 mb-3 flex items-center"><FaLightbulb className="mr-2" /> Evidence</h2>
+                                <ul className="list-disc list-inside space-y-1 text-gray-700 text-lg">
+                                    {evidenceList.map((evidence, idx) => <li key={idx}>{evidence}</li>)}
+                                </ul>
+                            </div>
+                        )}
+                        {/* Potential Conditions */}
+                        <div className="bg-gray-50 border border-gray-200 rounded-2xl p-8 mb-6 shadow">
+                            <h2 className="text-2xl font-bold text-gray-800 mb-3 flex items-center"><FaLightbulb className="mr-2" /> Potential Conditions</h2>
+                            <ul className="list-disc list-inside space-y-1 text-gray-700 text-lg">
+                                {potentialConditions.map((condition, index) => (
+                                    <li key={index}>{condition}</li>
+                                ))}
+                            </ul>
                         </div>
                         {/* Specialist Suggestion */}
                         <div className="bg-blue-50 border border-blue-200 rounded-2xl p-8 mb-6 shadow">
@@ -160,15 +193,15 @@ const DiseasePrediction = () => {
                                 </button>
                             </div>
                         </div>
-                        {/* Potential Conditions */}
-                        <div className="bg-gray-50 border border-gray-200 rounded-2xl p-8 shadow">
-                            <h2 className="text-2xl font-bold text-gray-800 mb-3 flex items-center"><FaLightbulb className="mr-2" /> For Your Information</h2>
-                            <p className="text-gray-600 mb-3 text-lg">To help guide your conversation with a doctor, here are some general conditions related to your symptoms:</p>
-                            <ul className="list-disc list-inside space-y-1 text-gray-700 text-lg">
-                                {potentialConditions.map((condition, index) => (
-                                    <li key={index}>{condition}</li>
-                                ))}
-                            </ul>
+                        {/* Disclaimer */}
+                        <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded-lg mt-6" role="alert">
+                            <div className="flex">
+                                <FaExclamationTriangle className="text-2xl mr-3" />
+                                <div>
+                                    <p className="font-bold">Important Disclaimer</p>
+                                    <p>{disclaimer}</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 )}
