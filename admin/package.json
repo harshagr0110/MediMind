@@ -12,7 +12,9 @@
     "set-backend-url": "echo VITE_BACKEND_URL=http://localhost:5000 > .env"
   },
   "dependencies": {
+    "@tailwindcss/postcss": "^4.1.11",
     "@tailwindcss/vite": "^4.1.8",
+    "autoprefixer": "^10.4.19",
     "axios": "^1.9.0",
     "chart.js": "^4.5.0",
     "react": "^19.1.0",
@@ -23,8 +25,7 @@
     "react-modal": "^3.16.3",
     "react-router-dom": "^7.6.2",
     "react-toastify": "^11.0.5",
-    "tailwindcss": "^4.1.8",
-    "autoprefixer": "^10.4.19"
+    "tailwindcss": "^4.1.8"
   },
   "devDependencies": {
     "@eslint/js": "^9.25.0",
