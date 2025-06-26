@@ -6,14 +6,12 @@ import AdminContextProvider from './context/Admincontext.jsx';
 import DoctorContextProvider from './context/Doctorcontext.jsx';
 import './index.css';
 
-const backendurl = import.meta.env.VITE_BACKEND_URL;
-
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>
       <AdminContextProvider>
         <DoctorContextProvider>
-          <App backendurl={backendurl} />
+          <App />
         </DoctorContextProvider>
       </AdminContextProvider>
     </BrowserRouter>

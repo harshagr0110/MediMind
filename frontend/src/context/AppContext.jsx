@@ -5,6 +5,7 @@ import { toast } from 'react-toastify';
 export const AppContext = createContext();
 
 const AppContextProvider = ({ children }) => {
+  // VITE_BACKEND_URL should be set in the frontend .env file (e.g., .env or .env.local)
   const backendurl = import.meta.env.VITE_BACKEND_URL;
   const [doctors, setDoctors] = useState([]);
   const [token, setToken] = useState(localStorage.getItem('token') || '');

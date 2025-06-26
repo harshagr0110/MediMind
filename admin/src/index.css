@@ -1,6 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 :root {
   --color-primary: #555879;
@@ -10,6 +8,54 @@
 }
 
 body {
-  background-color: var(--color-background);
-  color: var(--color-primary);
+  font-family: 'Inter', system-ui, sans-serif;
+  background: #f7f8fa;
+  color: #222;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  color: #1a2233;
+}
+
+input, textarea, select, button {
+  font-family: inherit;
+}
+
+.card {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 12px rgba(30, 34, 51, 0.06);
+  border: 1px solid #e5e7eb;
+}
+
+.btn-primary {
+  background: #1a2233;
+  color: #fff;
+  border-radius: 6px;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+.btn-primary:hover {
+  background: #111827;
+}
+
+.btn-danger {
+  background: #e53e3e;
+  color: #fff;
+  border-radius: 6px;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+.btn-danger:hover {
+  background: #b91c1c;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  background: #f1f1f1;
+}
+::-webkit-scrollbar-thumb {
+  background: #e5e7eb;
+  border-radius: 4px;
 }

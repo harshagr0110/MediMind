@@ -11,7 +11,6 @@ import Admin from '../models/adminModel.js';
 export const addDoctor = async (req, res) => {
     try {
         const { fullName, email, password, speciality, degree, experience, about, fees, address, available } = req.body;
-        if (!req.file) return res.status(400).json({ success: false, message: 'Doctor profile image is required' });
         if (!fullName || !email || !password || !speciality || !degree || !experience || !about || !fees || !address) {
             return res.status(400).json({ success: false, message: 'All fields are required' });
         }
@@ -21,18 +20,22 @@ export const addDoctor = async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        const imageUrl = await new Promise((resolve, reject) => {
-            const stream = cloudinary.uploader.upload_stream({ folder: 'doctors' }, (err, result) => {
-                if (err) return reject(err);
-                resolve(result.secure_url);
+        let imageUrl = undefined;
+        if (req.file) {
+            imageUrl = await new Promise((resolve, reject) => {
+                const stream = cloudinary.uploader.upload_stream({ folder: 'doctors' }, (err, result) => {
+                    if (err) return reject(err);
+                    resolve(result.secure_url);
+                });
+                stream.end(req.file.buffer);
             });
-            stream.end(req.file.buffer);
-        });
+        }
 
         const newDoctor = new Doctor({
             ...req.body,
             password: hashedPassword,
-            image: imageUrl,
+            available: available === true || available === 'yes' || available === true || available === 'true',
+            ...(imageUrl && { image: imageUrl }),
         });
         const savedDoctor = await newDoctor.save();
 
@@ -110,23 +113,15 @@ export const getDashboardData = async (req, res) => {
 
 export const getAdminProfile = async (req, res) => {
   try {
-    const admin = await Admin.findById(req.user.id).select('-password');
-    if (!admin) {
-      return res.status(404).json({ success: false, message: 'Admin not found' });
-    }
-    res.json({ success: true, ...admin.toObject() });
+    // Return static info from .env
+    res.json({ success: true, email: process.env.ADMIN_EMAIL, name: 'Admin' });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Failed to fetch profile' });
   }
 };
 
 export const updateAdminProfile = async (req, res) => {
-  try {
-    const admin = await Admin.findByIdAndUpdate(req.user.id, req.body, { new: true }).select('-password');
-    res.json({ success: true, message: 'Profile updated successfully', data: admin });
-  } catch (error) {
-    res.status(500).json({ success: false, message: 'Failed to update profile' });
-  }
+  res.status(400).json({ success: false, message: 'Profile update not supported for .env admin.' });
 };
 
 export const registerAdmin = async (req, res) => {

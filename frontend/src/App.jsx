@@ -51,6 +51,7 @@ function App() {
           <Route path='/disease-prediction' element={<DiseasePrediction />} />
           <Route path='/blog' element={<Blog />} />
           <Route path='/blog/:id' element={<Article />} />
+          <Route path='/verify' element={<Verify />} />
         </Routes> 
 
       </main>

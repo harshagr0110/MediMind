@@ -146,6 +146,19 @@ export const deleteAppointment = async (req, res) => {
     }
 };
 
+export const getAppointmentById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const appointment = await Appointment.findOne({ _id: id, userId: req.user.id });
+        if (!appointment) {
+            return res.status(404).json({ success: false, message: 'Appointment not found' });
+        }
+        res.status(200).json({ success: true, appointment });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server error while fetching appointment' });
+    }
+};
+
 // --- Payment ---
 export const createStripeSession = async (req, res) => {
     try {
@@ -167,6 +180,9 @@ export const createStripeSession = async (req, res) => {
             return res.status(500).json({ success: false, message: "Stripe secret key not configured." });
         }
 
+        // Use process.env.FRONTEND_URL everywhere for frontend redirects
+        const backendUrl = process.env.BACKEND_URL || 'http://localhost:4000';
+        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
             line_items: [{
@@ -181,11 +197,12 @@ export const createStripeSession = async (req, res) => {
                 quantity: 1,
             }],
             mode: 'payment',
-            success_url: `${process.env.FRONTEND_URL}/verify?success=true&appointmentId=${appointmentId}`,
-            cancel_url: `${process.env.FRONTEND_URL}/verify?success=false&appointmentId=${appointmentId}`,
+            // Redirect to backend for verification, then backend redirects to frontend
+            success_url: `${backendUrl}/api/user/verifystripe?appointmentId=${appointmentId}&success=true`,
+            cancel_url: `${backendUrl}/api/user/verifystripe?appointmentId=${appointmentId}&success=false`,
         });
 
-        res.json({ success: true, session_url: session.url });
+        res.json({ success: true, url: session.url });
     } catch (error) {
         console.error('Stripe session error:', error, {
             appointmentId: req.body?.appointmentId,
@@ -199,15 +216,24 @@ export const createStripeSession = async (req, res) => {
 export const verifyStripe = async (req, res) => {
     try {
         const { appointmentId, success } = req.query;
+        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+        console.log('verifyStripe called with:', { appointmentId, success });
         if (success === "true") {
-            await Appointment.findByIdAndUpdate(appointmentId, { paymentStatus: 'Paid' });
-            res.redirect(`${process.env.FRONTEND_URL}/my-appointments?payment=success`);
+            const updated = await Appointment.findByIdAndUpdate(appointmentId, { paymentStatus: 'paid' }, { new: true });
+            console.log('Appointment update result:', updated);
+            if (!updated) {
+                // Appointment not found
+                return res.redirect(`${frontendUrl}/verify?success=false&appointmentId=${appointmentId}`);
+            }
+            return res.redirect(`${frontendUrl}/verify?success=true&appointmentId=${appointmentId}`);
         } else {
             await Appointment.findByIdAndDelete(appointmentId);
-            res.redirect(`${process.env.FRONTEND_URL}/my-appointments?payment=failed`);
+            return res.redirect(`${frontendUrl}/verify?success=false&appointmentId=${appointmentId}`);
         }
     } catch (error) {
-        res.status(500).json({ success: false, message: "Error verifying payment" });
+        console.error("Error in verifyStripe:", error);
+        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+        return res.redirect(`${frontendUrl}/verify?success=false&appointmentId=${req.query.appointmentId}`);
     }
 };
 

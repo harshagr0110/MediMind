@@ -62,7 +62,7 @@ const Appointment = () => {
     useEffect(() => {
         const getDoctorDetails = async () => {
             try {
-                const { data } = await axios.get(`${backendurl}/api/doctor/${docId}`);
+                const { data } = await axios.get(`${backendurl}/api/doctor/public/${docId}`);
                 if (data.success) {
                     setDoctor(data.data);
                 }
@@ -109,12 +109,17 @@ const Appointment = () => {
         }
         setBooking(true);
         try {
-            const { data } = await axios.post(`${backendurl}/api/user/book-appointment`, {
-                docId: doctor._id,
-                slotDate: moment(selectedDate).format('YYYY-MM-DD'),
-                slotTime: selectedSlot,
-                amount: doctor.fees
-            });
+            const { data } = await axios.post(
+                `${backendurl}/api/user/book-appointment`, {
+                    docId: doctor._id,
+                    slotDate: moment(selectedDate).format('YYYY-MM-DD'),
+                    slotTime: selectedSlot,
+                    amount: doctor.fees
+                },
+                {
+                    headers: { Authorization: `Bearer ${token}` }
+                }
+            );
 
             if (data.success) {
                 toast.success(data.message);

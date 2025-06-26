@@ -12,8 +12,8 @@ const articleSchema = new mongoose.Schema({
     },
     author: {
         type: mongoose.Schema.Types.ObjectId,
-        required: true,
-        refPath: 'authorModel', // Dynamic reference to either 'Admin' or 'Doctor'
+        refPath: 'authorModel',
+        required: function() { return this.authorModel === 'Doctor'; }
     },
     authorModel: {
         type: String,
@@ -26,7 +26,7 @@ const articleSchema = new mongoose.Schema({
     },
     image: {
         type: String, // URL to a cover image for the article
-        default: 'https://via.placeholder.com/800x400.png?text=Health+Hub+Article'
+        // No default, not required
     }
 }, { timestamps: true });
 

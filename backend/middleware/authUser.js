@@ -13,6 +13,11 @@ const userAuth = (req, res, next) => {
       token = token.slice(7).trim();
     }
 
+    // Check for empty, 'null', or 'undefined' tokens
+    if (!token || token === 'null' || token === 'undefined') {
+      return res.status(401).json({ message: "Unauthorized: Invalid token" });
+    }
+
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     // Now decoded is an object { email: '...', iat: ..., exp: ... }
     req.user = decoded;  // ✅ Store user data safely without modifying `req.body`

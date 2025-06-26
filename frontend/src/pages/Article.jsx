@@ -77,7 +77,9 @@ const Article = () => {
     return (
         <div className="container mx-auto p-4 md:p-8">
             <div className="max-w-4xl mx-auto">
-                <img src={article.image || ''} alt={article.title || 'Article'} className="w-full h-96 object-cover rounded-lg shadow-lg mb-8" />
+                {article.image && (
+                    <img src={article.image} alt={article.title || 'Article'} className="w-full h-96 object-cover rounded-lg shadow-lg mb-8" />
+                )}
                 <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-6">{article.title || 'Untitled'}</h1>
                 <div className="flex items-center text-gray-500 mb-8 space-x-6">
                     <div className="flex items-center">
@@ -90,7 +92,8 @@ const Article = () => {
                     </div>
                 </div>
                 <div 
-                    className="prose prose-lg max-w-none"
+                    className="prose prose-lg max-w-none bg-gray-100 rounded p-4 my-4 overflow-auto"
+                    style={{maxHeight: '250px', wordBreak: 'break-word'}}
                     dangerouslySetInnerHTML={{ __html: article.content || '' }}
                 />
             </div>

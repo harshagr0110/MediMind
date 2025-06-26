@@ -1,5 +1,8 @@
 {
   "dependencies": {
-    "jwt-decode": "^4.0.0"
+    "@vitejs/plugin-react": "^4.6.0",
+    "jwt-decode": "^4.0.0",
+    "tailwindcss": "^4.1.10",
+    "vite": "^7.0.0"
   }
 }

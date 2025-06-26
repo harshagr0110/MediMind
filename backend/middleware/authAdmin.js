@@ -13,11 +13,9 @@ const adminAuth = (req, res, next) => {
     }
 
     const decoded = jwt.verify(aToken, process.env.JWT_SECRET);
-    // Now decoded is an object { email: '...', iat: ..., exp: ... }
     if (decoded.email !== process.env.ADMIN_EMAIL) {
       return res.status(401).json({ message: "Unauthorized: Invalid token" });
     }
-
     next();
   } catch (error) {
     console.error("adminAuth error:", error);

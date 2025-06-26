@@ -21,9 +21,9 @@ const authAll = async (req, res, next) => {
         }
 
         // Check if it's an admin
-        user = await adminModel.findById(decoded.id).select('name'); // Assuming admin has 'name' field
+        user = await adminModel.findById(decoded.id).select('name email');
         if (user) {
-            req.user = { id: user._id, model: 'Admin', name: user.name };
+            req.user = { id: user._id, model: 'Admin', name: user.name, email: user.email };
             return next();
         }
 

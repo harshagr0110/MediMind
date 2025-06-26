@@ -9,7 +9,8 @@ import {
     deleteAppointment,
     createStripeSession,
     verifyStripe,
-    diseasePrediction
+    diseasePrediction,
+    getAppointmentById
 } from '../controllers/userController.js';
 import userAuth from '../middleware/authUser.js';
 import { upload } from '../middleware/multer.js';
@@ -19,7 +20,7 @@ const userRouter = express.Router();
 // PUBLIC
 userRouter.post('/register', registerUser);
 userRouter.post('/login', loginUser);
-userRouter.post("/verifystripe", verifyStripe);
+userRouter.get("/verifystripe", verifyStripe);
 
 // PROTECTED
 userRouter.use(userAuth);
@@ -28,6 +29,7 @@ userRouter.get('/get-profile', getProfile);
 userRouter.post('/update-profile', upload.single('image'), updateProfile);
 userRouter.post('/book-appointment', bookAppointment);
 userRouter.get('/appointments', listAppointment);
+userRouter.get('/appointment/:id', getAppointmentById);
 userRouter.delete('/delete-appointment/:id', deleteAppointment);
 userRouter.post("/create-stripe-session", createStripeSession);
 userRouter.post('/disease-prediction', upload.single('image'), diseasePrediction);

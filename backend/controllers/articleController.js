@@ -5,7 +5,17 @@ import { v2 as cloudinary } from 'cloudinary';
 const createArticle = async (req, res) => {
     try {
         const { title, content } = req.body;
-        const { id: authorId, model: authorModel, name: authorName } = req.user; // From auth middleware
+        // Support both req.user (old) and req.admin (env admin)
+        let authorId = 'admin', authorModel = 'Admin', authorName = 'Admin';
+        if (req.user) {
+            authorId = req.user.id;
+            authorModel = req.user.model || 'Admin';
+            authorName = req.user.name || 'Admin';
+        } else if (req.admin) {
+            authorId = req.admin.email || 'admin';
+            authorModel = 'Admin';
+            authorName = req.admin.email || 'Admin';
+        }
 
         if (!title || !content) {
             return res.status(400).json({ success: false, message: 'Title and content are required.' });
@@ -14,10 +24,12 @@ const createArticle = async (req, res) => {
         const newArticleData = {
             title,
             content,
-            author: authorId,
             authorModel,
             authorName,
         };
+        if (authorModel === 'Doctor' && authorId) {
+            newArticleData.author = authorId;
+        }
 
         if (req.file) {
              const result = await new Promise((resolve, reject) => {
