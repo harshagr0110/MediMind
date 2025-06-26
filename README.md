@@ -1,6 +1,6 @@
 # MediMind: Doctor Appointment & Payment Platform
 
-A modern, full-stack web application for seamless doctor appointment booking, management, and payments. Features dedicated Admin and Doctor panels, real-time scheduling, and secure online payments. Built with React (Vite), Node.js/Express, MongoDB, and Tailwind CSS.
+A modern, full-stack web application for doctor appointment booking, payment, and management, featuring dedicated admin and doctor panels. Built with React (Vite), Node.js/Express, and Tailwind CSS.
 
 ---
 
@@ -13,6 +13,7 @@ A modern, full-stack web application for seamless doctor appointment booking, ma
 - View, reschedule, or cancel upcoming appointments
 - Access appointment history and download invoices
 - Minimal, modern, mobile-friendly UI
+- disease prediction 
 
 ### 🩺 Doctor Panel
 - Dashboard with stats (appointments, patients, earnings)
@@ -57,14 +58,14 @@ A modern, full-stack web application for seamless doctor appointment booking, ma
 ## 🛠️ Tech Stack
 - **Frontend:** React (Vite), Tailwind CSS, Axios
 - **Admin Panel:** React (Vite), Tailwind CSS
-- **Backend:** Node.js, Express, MongoDB, Mongoose
-- **Authentication:** JWT, bcrypt
-- **Payments:** Stripe
-- **File Uploads:** Cloudinary
+- **Backend:** Node.js, Express, MongoDB
+- **Authentication:** JWT
+- **Payments:** Stripe, Razorpay
+- **Deployment:** Vercel (recommended), Netlify, or any Node/Static host
 
+---
 
-
-## 📁 Folder Structure
+## Folder Structure
 
 ```
 doctor/
@@ -131,35 +132,22 @@ cd ../admin && npm install
   ```bash
   npm run build
   ```
-- **Backend:** Deploy to Node.js host (Netlify, Heroku, Render, etc.)
-
-
-## 🧩 API Overview
-
-### Main Endpoints
-- `/api/user` — User registration, login, appointments
-- `/api/doctor` — Doctor profile, appointments, availability
-- `/api/admin` — Admin actions, doctor/user/article management
-- `/api/article` — Public and admin article/blog endpoints
-
-> See backend `routes/` and `controllers/` for full API details.
+- **Backend:** Deploy to Node.js host (Vercel, Heroku, etc.)
 
 ---
 
-## 🧑‍💻 Contributing
+## Deployment
+- Recommended: Deploy frontend, admin, and backend as separate apps/services.
+- Vercel/Netlify for frontend/admin (static build output in `dist/`)
+- Vercel/Heroku/Render for backend (Node.js server)
+- Set environment variables in your deployment platform.
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/YourFeature`)
-3. Commit your changes (`git commit -am 'Add new feature'`)
-4. Push to the branch (`git push origin feature/YourFeature`)
-5. Open a Pull Request
+---
 
-## 🙏 Acknowledgements
-- [React](https://react.dev/)
-- [Vite](https://vitejs.dev/)
-- [Tailwind CSS](https://tailwindcss.com/)
-- [Node.js](https://nodejs.org/)
-- [Express](https://expressjs.com/)
-- [MongoDB](https://www.mongodb.com/)
-- [Stripe](https://stripe.com/)
-- [Cloudinary](https://cloudinary.com/)
+## License
+MIT
+
+---
+
+## Author
+- Built by [Your Name] (replace with your name or org) 
