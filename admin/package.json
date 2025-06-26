@@ -23,7 +23,8 @@
     "react-modal": "^3.16.3",
     "react-router-dom": "^7.6.2",
     "react-toastify": "^11.0.5",
-    "tailwindcss": "^4.1.8"
+    "tailwindcss": "^4.1.8",
+    "autoprefixer": "^10.4.19"
   },
   "devDependencies": {
     "@eslint/js": "^9.25.0",
