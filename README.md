@@ -1,6 +1,6 @@
 # MediMind Doctor Appointment & Payment Platform
 
-A modern, full-stack web application for doctor appointment booking, payment, and management, featuring dedicated admin and doctor panels. Built with React (Vite), Node.js/Express, and Tailwind CSS.
+A modern, full-stack web application for doctor appointment booking, disease prediction using AI, payment, and management, featuring dedicated admin and doctor panels. Built with React (Vite), Node.js/Express, and Tailwind CSS.
 
 ---
 
@@ -12,6 +12,7 @@ A modern, full-stack web application for doctor appointment booking, payment, an
 - Secure online payments (Stripe/Razorpay integration)
 - View and manage upcoming and past appointments
 - Minimal, modern, mobile-friendly UI
+- disease prediction 
 
 ### Doctor Panel
 - Dashboard with stats (appointments, patients, earnings)
@@ -39,8 +40,9 @@ A modern, full-stack web application for doctor appointment booking, payment, an
 - **Admin Panel:** React (Vite), Tailwind CSS
 - **Backend:** Node.js, Express, MongoDB
 - **Authentication:** JWT
-- **Payments:** Stripe, Razorpay
-- **Deployment:** Vercel (recommended), Netlify, or any Node/Static host
+- **Payments:** Stripe
+- **Deployment:** Vercel
+- **AI** Gemini Api
 
 ---
 
@@ -111,22 +113,15 @@ cd ../admin && npm install
   ```bash
   npm run build
   ```
-- **Backend:** Deploy to Node.js host (Vercel, Heroku, etc.)
+- **Backend:** Deploy to Node.js host (Vercel)
 
 ---
 
 ## Deployment
-- Recommended: Deploy frontend, admin, and backend as separate apps/services.
-- Vercel/Netlify for frontend/admin (static build output in `dist/`)
-- Vercel/Heroku/Render for backend (Node.js server)
-- Set environment variables in your deployment platform.
+-  frontend, admin, and backend as separate apps/services.
+- Vercel for frontend/admin (static build output in `dist/`)
+- Vercel for backend (Node.js server)
 
----
 
-## License
-MIT
+--
 
----
-
-## Author
-- Built by [Your Name] (replace with your name or org) 
