@@ -1,50 +1,70 @@
-# MediMind Doctor Appointment & Payment Platform
+# MediMind: Doctor Appointment & Payment Platform
 
-A modern, full-stack web application for doctor appointment booking, payment, and management, featuring dedicated admin and doctor panels. Built with React (Vite), Node.js/Express, and Tailwind CSS.
+A modern, full-stack web application for seamless doctor appointment booking, management, and payments. Features dedicated Admin and Doctor panels, real-time scheduling, and secure online payments. Built with React (Vite), Node.js/Express, MongoDB, and Tailwind CSS.
 
 ---
 
-## Features
+## 🚀 Features
 
-### User/Patient
-- Browse and search for doctors by specialty
-- Book appointments with real-time availability
-- Secure online payments (Stripe/Razorpay integration)
-- View and manage upcoming and past appointments
+### 👤 User/Patient
+- Browse/search doctors by specialty, location, or name
+- Book appointments with real-time availability and instant confirmation
+- Secure online payments (Stripe)
+- View, reschedule, or cancel upcoming appointments
+- Access appointment history and download invoices
 - Minimal, modern, mobile-friendly UI
 
-### Doctor Panel
+### 🩺 Doctor Panel
 - Dashboard with stats (appointments, patients, earnings)
-- Manage and complete appointments
-- View patient details
-- Edit doctor profile and availability
+- Manage & complete appointments (accept, reject, mark as done)
+- View patient details and appointment history
+- Edit profile, set availability, and manage time slots
+- Receive notifications for new bookings and cancellations
 - Responsive, professional interface
 
-### Admin Panel
-- Dashboard with platform stats and quick actions
-- Manage doctors (add, approve, delete)
-- Manage articles/blogs (add, view, delete)
-- Platform announcements and admin tips
-- Clean, black and white, sharp-cornered UI
+### 🛡️ Admin Panel
+- Dashboard with platform stats, charts, and quick actions
+- Manage doctors (add, approve, suspend, delete)
+- Manage users (view, block, delete)
+- Manage articles/blogs (add, view, edit, delete)
+- Platform announcements & admin tips
+- View and manage all appointments
+- Clean, blue-themed, modern UI
 
-### Articles/Blogs
-- Admin can add, view, and delete articles
+### 📝 Articles/Blogs
+- Admin can add, view, edit, and delete articles
 - Minimal, text-only articles (no images)
 - Public blog page for users
+- SEO-friendly URLs for articles
+
+### 💳 Payments
+- Secure payment integration with Stripe
+- Doctors can view earnings and withdrawal history
+- Admin can manage payouts and view platform revenue
+
+### 🔒 Security
+- JWT-based authentication for all users
+- Role-based access control (Admin, Doctor, User)
+- Input validation and error handling
+- Secure password storage (bcrypt)
+
+### 📱 Responsive Design
+- Fully responsive UI for mobile, tablet, and desktop
+- Modern, accessible, and user-friendly layouts
 
 ---
 
-## Tech Stack
-- **Frontend:** React (Vite), Tailwind CSS
+## 🛠️ Tech Stack
+- **Frontend:** React (Vite), Tailwind CSS, Axios
 - **Admin Panel:** React (Vite), Tailwind CSS
-- **Backend:** Node.js, Express, MongoDB
-- **Authentication:** JWT
-- **Payments:** Stripe, Razorpay
-- **Deployment:** Vercel (recommended), Netlify, or any Node/Static host
+- **Backend:** Node.js, Express, MongoDB, Mongoose
+- **Authentication:** JWT, bcrypt
+- **Payments:** Stripe
+- **File Uploads:** Cloudinary
 
----
 
-## Folder Structure
+
+## 📁 Folder Structure
 
 ```
 doctor/
@@ -55,41 +75,41 @@ doctor/
 
 ---
 
-## Setup & Development
+## ⚡ Quickstart
 
-### Prerequisites
+### 1. Prerequisites
 - Node.js (v18+ recommended)
 - npm
 - MongoDB database (local or cloud)
 
-### 1. Clone the repository
+### 2. Clone the Repository
 ```bash
 git clone <repo-url>
 cd doctor
 ```
 
-### 2. Install dependencies
+### 3. Install Dependencies
 ```bash
 cd backend && npm install
 cd ../frontend && npm install
 cd ../admin && npm install
 ```
 
-### 3. Environment Variables
+### 4. Environment Variables
 - Create `.env` files in `backend`, `frontend`, and `admin` as needed.
-- Example for backend:
+- **Backend example:**
   ```env
   MONGODB_URI=your_mongodb_uri
   CLOUDINARY_API_KEY=your_cloudinary_key
   CLOUDINARY_SECRET_KEY=your_cloudinary_secret
   GEMINI_API_KEY=your_gemini_key
   ```
-- Example for frontend/admin:
+- **Frontend/Admin example:**
   ```env
   VITE_BACKEND_URL=https://your-backend-url.com
   ```
 
-### 4. Running Locally
+### 5. Running Locally
 - **Backend:**
   ```bash
   cd backend
@@ -106,27 +126,40 @@ cd ../admin && npm install
   npm run dev
   ```
 
-### 5. Building for Production
+### 6. Building for Production
 - **Frontend/Admin:**
   ```bash
   npm run build
   ```
-- **Backend:** Deploy to Node.js host (Vercel, Heroku, etc.)
+- **Backend:** Deploy to Node.js host (Netlify, Heroku, Render, etc.)
+
+
+## 🧩 API Overview
+
+### Main Endpoints
+- `/api/user` — User registration, login, appointments
+- `/api/doctor` — Doctor profile, appointments, availability
+- `/api/admin` — Admin actions, doctor/user/article management
+- `/api/article` — Public and admin article/blog endpoints
+
+> See backend `routes/` and `controllers/` for full API details.
 
 ---
 
-## Deployment
-- Recommended: Deploy frontend, admin, and backend as separate apps/services.
-- Vercel/Netlify for frontend/admin (static build output in `dist/`)
-- Vercel/Heroku/Render for backend (Node.js server)
-- Set environment variables in your deployment platform.
+## 🧑‍💻 Contributing
 
----
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/YourFeature`)
+3. Commit your changes (`git commit -am 'Add new feature'`)
+4. Push to the branch (`git push origin feature/YourFeature`)
+5. Open a Pull Request
 
-## License
-MIT
-
----
-
-## Author
-- Built by [Your Name] (replace with your name or org) 
+## 🙏 Acknowledgements
+- [React](https://react.dev/)
+- [Vite](https://vitejs.dev/)
+- [Tailwind CSS](https://tailwindcss.com/)
+- [Node.js](https://nodejs.org/)
+- [Express](https://expressjs.com/)
+- [MongoDB](https://www.mongodb.com/)
+- [Stripe](https://stripe.com/)
+- [Cloudinary](https://cloudinary.com/)
