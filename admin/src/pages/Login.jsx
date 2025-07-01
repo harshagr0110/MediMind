@@ -20,7 +20,8 @@ const Login = () => {
     setError('');
     setLoading(true);
     try {
-      const endpoint = role === 'admin' ? '/api/admin/login' : '/api/doctor/login';
+      const endpoint = `${import.meta.env.VITE_BACKEND_URL}${role === 'admin' ? '/api/admin/login' : '/api/doctor/login'}`;
+
       const { data } = await axios.post(endpoint, { email, password });
       if (data.success && data.token) {
         if (role === 'admin') {
