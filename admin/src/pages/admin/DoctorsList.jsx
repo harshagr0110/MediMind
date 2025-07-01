@@ -21,7 +21,7 @@ const DoctorsList = () => {
     setLoading(true);
     setError('');
     try {
-      const { data } = await axios.get('/api/admin/all-doctors', {
+      const { data } = await axios.get('https://medimind-backend.vercel.app/api/admin/all-doctors', {
         headers: { Authorization: `Bearer ${aToken}` },
       });
       setDoctors(data.data || []);
@@ -41,7 +41,7 @@ const DoctorsList = () => {
     if (!window.confirm('Are you sure you want to delete this doctor?')) return;
     setDeletingId(id);
     try {
-      await axios.delete(`/api/admin/delete-doctor/${id}`, {
+      await axios.delete('https://medimind-backend.vercel.app/api/admin/delete-doctor/' + id, {
         headers: { Authorization: `Bearer ${aToken}` },
       });
       await fetchDoctors();
@@ -55,7 +55,7 @@ const DoctorsList = () => {
   const handleStatus = async (id, status) => {
     setUpdatingId(id + status);
     try {
-      await axios.post('/api/admin/update-doctor-status', { doctorId: id, status }, {
+      await axios.post('https://medimind-backend.vercel.app/api/admin/update-doctor-status', { doctorId: id, status }, {
         headers: { Authorization: `Bearer ${aToken}` },
       });
       await fetchDoctors();

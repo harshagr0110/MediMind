@@ -13,7 +13,7 @@ const Profile = () => {
       setLoading(true);
       setError('');
       try {
-        const { data } = await axios.get('/api/admin/profile', {
+        const { data } = await axios.get('https://medimind-backend.vercel.app/api/admin/profile', {
           headers: { Authorization: `Bearer ${aToken}` },
         });
         setProfile({

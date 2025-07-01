@@ -17,7 +17,7 @@ const Appointments = () => {
     setLoading(true);
     setError('');
     try {
-      const { data } = await axios.get(`${backendUrl}/api/doctor/appointments`, {
+      const { data } = await axios.get('https://medimind-backend.vercel.app/api/doctor/appointments', {
         headers: { Authorization: `Bearer ${dToken}` },
       });
       setAppointments(data.data || []);
@@ -38,8 +38,8 @@ const Appointments = () => {
     setSuccess('');
     setError('');
     try {
-      const endpoint = type === 'complete' ? '/api/doctor/complete-appointment' : '/api/doctor/cancel-appointment';
-      await axios.post(`${backendUrl}${endpoint}`, { appointmentId: id }, {
+      const endpoint = type === 'complete' ? 'https://medimind-backend.vercel.app/api/doctor/complete-appointment' : 'https://medimind-backend.vercel.app/api/doctor/cancel-appointment';
+      await axios.post(endpoint, { appointmentId: id }, {
         headers: { Authorization: `Bearer ${dToken}` },
       });
       setSuccess(`Appointment ${type}d successfully!`);

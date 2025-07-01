@@ -4,6 +4,8 @@ import Spinner from '../../components/Spinner';
 import { AdminContext } from '../../context/Admincontext';
 import { Link } from 'react-router-dom';
 
+const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+
 const Dashboard = () => {
   const { aToken } = useContext(AdminContext);
   const [stats, setStats] = useState({ doctors: 0, patients: 0, appointments: 0, earnings: 0 });
@@ -16,7 +18,7 @@ const Dashboard = () => {
       setLoading(true);
       setError('');
       try {
-        const { data } = await axios.get('/api/admin/dashboard', {
+        const { data } = await axios.get(`${backendUrl}/api/admin/dashboard`, {
           headers: { Authorization: `Bearer ${aToken}` },
         });
         setStats({
@@ -33,7 +35,7 @@ const Dashboard = () => {
     };
     const fetchRecent = async () => {
       try {
-        const { data } = await axios.get('/api/admin/recent-appointments', {
+        const { data } = await axios.get(`${backendUrl}/api/admin/recent-appointments`, {
           headers: { Authorization: `Bearer ${aToken}` },
         });
         setRecent(data.data || []);

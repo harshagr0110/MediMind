@@ -9,6 +9,8 @@ const AddArticle = () => {
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
 
+  const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+
   const handleChange = e => {
     const { name, value } = e.target;
     setForm(f => ({ ...f, [name]: value }));
@@ -23,7 +25,7 @@ const AddArticle = () => {
       const formData = new FormData();
       formData.append('title', form.title);
       formData.append('content', form.content);
-      const { data } = await axios.post('/api/articles/', formData, {
+      const { data } = await axios.post(`${backendUrl}/api/articles/`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           Authorization: `Bearer ${aToken}`,

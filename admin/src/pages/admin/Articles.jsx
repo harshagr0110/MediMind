@@ -27,11 +27,13 @@ const Articles = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedArticle, setSelectedArticle] = useState(null);
 
+  const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+
   const fetchArticles = async () => {
     setLoading(true);
     setError('');
     try {
-      const { data } = await axios.get('/api/articles/', {
+      const { data } = await axios.get(`${backendUrl}/api/articles/`, {
         headers: { Authorization: `Bearer ${aToken}` },
       });
       setArticles(data.data || []);
@@ -51,7 +53,7 @@ const Articles = () => {
     if (!window.confirm('Are you sure you want to delete this article?')) return;
     setDeletingId(id);
     try {
-      await axios.delete(`/api/articles/article/${id}`, {
+      await axios.delete('https://medimind-backend.vercel.app/api/articles/article/' + id, {
         headers: { Authorization: `Bearer ${aToken}` },
       });
       await fetchArticles();

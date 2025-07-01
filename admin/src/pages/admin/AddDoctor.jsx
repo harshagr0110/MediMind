@@ -21,6 +21,8 @@ const AddDoctor = () => {
   const [error, setError] = useState('');
   const { aToken } = useContext(AdminContext);
 
+  const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+
   const handleChange = e => {
     const { name, value, files } = e.target;
     setForm(f => ({ ...f, [name]: files ? files[0] : value }));
@@ -38,7 +40,7 @@ const AddDoctor = () => {
         formData.append(key, value);
       });
       formData.set('available', form.available === 'yes');
-      const { data } = await axios.post('/api/admin/add-doctor', formData, {
+      const { data } = await axios.post(`${backendUrl}/api/admin/add-doctor`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           Authorization: `Bearer ${aToken}`,

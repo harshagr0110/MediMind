@@ -38,7 +38,7 @@ const DoctorAppointment = () => {
     console.log('handleAction called:', { id, type });
     try {
       const endpoint = type === 'complete' ? '/api/doctor/complete-appointment' : '/api/doctor/cancel-appointment';
-      console.log('POST to:', `${backendUrl}${endpoint}`);
+      console.log('POST to:', endpoint);
       await axios.post(`${backendUrl}${endpoint}`, { appointmentId: id }, {
         headers: { Authorization: `Bearer ${dToken}` },
       });
@@ -59,9 +59,8 @@ const DoctorAppointment = () => {
     setError('');
     setSuccess('');
     try {
-      const response = await axios.post(
-        `${backendUrl}/api/doctor/cancel-appointment`,
-        { appointmentId },
+      const response = await axios.post(`${backendUrl}/api/doctor/cancel-appointment`, {
+        appointmentId },
         { headers: { Authorization: `Bearer ${dToken}` } }
       );
       setSuccess('Appointment cancelled successfully');
