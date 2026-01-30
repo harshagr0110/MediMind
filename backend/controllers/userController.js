@@ -389,7 +389,7 @@ export const diseasePrediction = async (req, res) => {
         if (!hasSymptoms && !hasImage) {
             return res.status(400).json({ success: false, message: "Please provide symptoms or upload an image." });
         }
-        const model = genAI.getGenerativeModel({ model: "gemini-2-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
         let prompt = '';
         let input = [];
         // Strict JSON prompt
