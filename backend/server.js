@@ -8,10 +8,9 @@ import DoctorRouter from './routes/doctorRoute.js';
 import userRouter from './routes/userRoute.js';
 import helmet from 'helmet';
 // import rateLimit from 'express-rate-limit'; // Disabled rate limiting for development
-import articleRouter from './routes/articleRoute.js';
-import { createArticle, getArticles, getArticleById } from './controllers/articleController.js';
 import authAll from './middleware/authAll.js';
 import { upload } from './middleware/multer.js';
+import Appointment from './models/appointmentModel.js';
 
 const app = express();
 const port = 4000;
@@ -40,7 +39,6 @@ app.use(helmet());
 app.use('/api/admin', adminRouter);
 app.use('/api/doctor', DoctorRouter);
 app.use('/api/user', userRouter);
-app.use('/api/articles', articleRouter);
 
 // Move root route here
 app.get('/', (req, res) => {
@@ -48,6 +46,27 @@ app.get('/', (req, res) => {
 })
 
 console.log('JWT_SECRET:', process.env.JWT_SECRET);
+
+// Cleanup expired reservations every 2 minutes
+setInterval(async () => {
+    try {
+        const result = await Appointment.updateMany(
+            {
+                reservationExpiry: { $lt: new Date() },
+                paymentStatus: 'pending',
+                cancelled: false
+            },
+            {
+                $set: { cancelled: true }
+            }
+        );
+        if (result.modifiedCount > 0) {
+            console.log(`[CLEANUP] Cancelled ${result.modifiedCount} expired reservations`);
+        }
+    } catch (error) {
+        console.error('[CLEANUP] Error cleaning expired reservations:', error);
+    }
+}, 2 * 60 * 1000); // Run every 2 minutes
 
 // 404 handler
 app.use((req, res, next) => {

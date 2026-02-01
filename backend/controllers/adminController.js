@@ -34,7 +34,7 @@ export const addDoctor = async (req, res) => {
         const newDoctor = new Doctor({
             ...req.body,
             password: hashedPassword,
-            available: available === true || available === 'yes' || available === true || available === 'true',
+            available: available === true || available === 'yes' || available === 'true',
             ...(imageUrl && { image: imageUrl }),
         });
         const savedDoctor = await newDoctor.save();
@@ -99,7 +99,7 @@ export const getDashboardData = async (req, res) => {
         const totalDoctors = await Doctor.countDocuments();
         const totalPatients = await User.countDocuments();
         const totalAppointments = await Appointment.countDocuments();
-        const completedAppointments = await Appointment.find({ isCompleted: true });
+        const completedAppointments = await Appointment.find({ isCompleted: true, paymentStatus: 'paid' });
         const totalEarnings = completedAppointments.reduce((sum, app) => sum + (app.amount || 0), 0);
         
         res.status(200).json({

@@ -19,8 +19,8 @@ const userAuth = (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    // Now decoded is an object { email: '...', iat: ..., exp: ... }
-    req.user = decoded;  // ✅ Store user data safely without modifying `req.body`
+    // Ensure req.user.id is consistently set for all middleware
+    req.user = { id: decoded.id, ...decoded };
     next();
   } catch (error) {
     console.error("adminAuth error:", error);

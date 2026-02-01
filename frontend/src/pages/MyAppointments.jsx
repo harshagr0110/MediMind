@@ -32,6 +32,9 @@ const MyAppointments = () => {
 
   useEffect(() => {
     fetchAppointments();
+    // Auto-refresh every 5 seconds to check for doctor-completed appointments
+    const interval = setInterval(fetchAppointments, 5000);
+    return () => clearInterval(interval);
     // eslint-disable-next-line
   }, [token]);
 
@@ -49,10 +52,11 @@ const MyAppointments = () => {
   }, [location.search, navigate]);
 
   const cancelAppointment = async (appointmentId) => {
-    if (!window.confirm('Are you sure you want to cancel this appointment?')) return;
+    if (!window.confirm('Are you sure you want to cancel this appointment? This action cannot be undone.')) return;
     try {
-      const { data } = await axios.delete(
-        `${backendUrl}/api/user/delete-appointment/${appointmentId}`,
+      const { data } = await axios.post(
+        `${backendUrl}/api/user/cancel-appointment/${appointmentId}`,
+        {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (data.success) {
@@ -128,14 +132,20 @@ const MyAppointments = () => {
               const isPaid = app.paymentStatus === 'paid';
               const isCancelled = app.cancelled;
               const isCompleted = isPaid && app.isCompleted;
+              const isPending = !isPaid && !isCancelled;
+              
+              // Check if appointment is in the past
+              const appointmentDateTime = new Date(`${app.slotDate} ${app.slotTime}`);
+              const isPast = appointmentDateTime < new Date();
+              
               return (
                 <div
                   key={app._id}
                   className="flex flex-col md:flex-row items-center bg-white rounded-2xl shadow-2xl p-8 gap-8 w-full border border-blue-100 hover:shadow-3xl transition-all duration-200"
-                  style={{ opacity: isCancelled ? 0.7 : 1 }}
+                  style={{ opacity: isCancelled || (isPast && !isCompleted) ? 0.6 : 1 }}
                 >
                   <img
-                    src={doc.image || assets.profile_pic || ''}
+                    src={doc.image || assets.logo || ''}
                     alt={doc.fullName || 'Doctor'}
                     className="w-24 h-24 rounded-full object-cover border-4 border-blue-200 shadow-lg"
                   />
@@ -158,10 +168,16 @@ const MyAppointments = () => {
                       )}
                     </div>
                     <div className="flex flex-col gap-1 min-w-[120px] items-center">
-                      <span className={`text-xs font-bold rounded-full px-3 py-1 mt-1 ${isCancelled ? 'bg-red-100 text-red-700 border border-red-300' : 'bg-blue-100 text-blue-700 border border-blue-300'}`}>{isCancelled ? 'Cancelled' : 'Active'}</span>
+                      <span className={`text-xs font-bold rounded-full px-3 py-1 mt-1 ${
+                        isCancelled ? 'bg-red-100 text-red-700 border border-red-300' : 
+                        isPast && !isCompleted ? 'bg-gray-100 text-gray-600 border border-gray-300' :
+                        'bg-blue-100 text-blue-700 border border-blue-300'
+                      }`}>
+                        {isCancelled ? 'Cancelled' : isPast && !isCompleted ? 'Expired' : 'Active'}
+                      </span>
                     </div>
                     <div className="flex flex-col gap-2 min-w-[120px] items-center">
-                      {!isCancelled && !isPaid && (
+                      {!isCancelled && !isPaid && !isPast && (
                         <button
                           onClick={() => handlePayOnline(app._id)}
                           className="bg-green-500 text-white px-4 py-2 rounded-lg font-bold shadow hover:bg-green-600 transition w-full"
@@ -169,7 +185,7 @@ const MyAppointments = () => {
                           Pay Now
                         </button>
                       )}
-                      {!isCancelled && !isPaid && (
+                      {!isCancelled && isPending && !isPast && (
                         <button
                           onClick={() => cancelAppointment(app._id)}
                           className="bg-red-500 text-white px-4 py-2 rounded-lg font-bold shadow hover:bg-red-600 transition w-full"

@@ -14,8 +14,6 @@ import Verify from './pages/Verify'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import DiseasePrediction from './pages/DiseasePrediction'
-import Blog from './pages/Blog'
-import Article from './pages/Article'
 
 function App() {
   return (
@@ -49,8 +47,6 @@ function App() {
           <Route path='/doctors/:speciality' element={<Doctors />} />
           <Route path='/payment-success' element={<Verify />} />
           <Route path='/disease-prediction' element={<DiseasePrediction />} />
-          <Route path='/blog' element={<Blog />} />
-          <Route path='/blog/:id' element={<Article />} />
           <Route path='/verify' element={<Verify />} />
         </Routes> 
 

@@ -58,6 +58,7 @@ const Appointment = () => {
     const [availableSlots, setAvailableSlots] = useState([]);
     const [loading, setLoading] = useState(true);
     const [booking, setBooking] = useState(false);
+    const [reservationTimer, setReservationTimer] = useState(null);
 
     useEffect(() => {
         const getDoctorDetails = async () => {
@@ -91,14 +92,34 @@ const Appointment = () => {
             }
         };
         getAvailability();
+        
+        // Set up auto-refresh every 5 seconds to show real-time availability
+        const interval = setInterval(getAvailability, 5000);
+        return () => clearInterval(interval);
     }, [selectedDate, docId, backendurl]);
 
     useEffect(() => {
-        setAvailableSlots(ALL_TIME_SLOTS.filter(slot => !bookedSlots.includes(slot)));
-    }, [bookedSlots]);
+        // Filter out booked slots and past time slots for today
+        const now = moment();
+        const isToday = moment(selectedDate).isSame(now, 'day');
+        
+        let filteredSlots = ALL_TIME_SLOTS.filter(slot => !bookedSlots.includes(slot));
+        
+        if (isToday) {
+            // Filter out past time slots for today
+            filteredSlots = filteredSlots.filter(slot => {
+                const slotTime = moment(slot, 'hh:mm A');
+                const slotDateTime = moment(selectedDate)
+                    .set({ hour: slotTime.hours(), minute: slotTime.minutes() });
+                return slotDateTime.isAfter(now);
+            });
+        }
+        
+        setAvailableSlots(filteredSlots);
+    }, [bookedSlots, selectedDate]);
 
-    // Generate next 7 days
-    const next7Days = Array.from({ length: 7 }, (_, i) => moment().add(i, 'days').toDate());
+    // Generate next 7 days (starting from today)
+    const next7Days = Array.from({ length: 7 }, (_, i) => moment().startOf('day').add(i, 'days').toDate());
 
     const handleBooking = async () => {
         if (!selectedSlot) {
@@ -107,6 +128,7 @@ const Appointment = () => {
         if (!token) {
             return toast.error("Please log in to book an appointment.", { onclose: () => navigate('/login') });
         }
+        
         setBooking(true);
         try {
             const { data } = await axios.post(
@@ -122,13 +144,33 @@ const Appointment = () => {
             );
 
             if (data.success) {
-                toast.success(data.message);
-                navigate('/my-appointments');
+                // Slot reserved! Proceed directly to payment
+                const payment = await axios.post(
+                    `${backendurl}/api/user/create-stripe-session`,
+                    { appointmentId: data.appointmentId },
+                    { headers: { Authorization: `Bearer ${token}` } }
+                );
+                if (payment.data?.success && payment.data?.url) {
+                    window.location.href = payment.data.url;
+                } else {
+                    toast.error('Could not initiate payment. Please try again.');
+                    // Optionally, cancel the appointment if payment setup fails
+                    try {
+                        await axios.post(
+                            `${backendurl}/api/user/cancel-appointment/${data.appointmentId}`,
+                            {},
+                            { headers: { Authorization: `Bearer ${token}` } }
+                        );
+                    } catch (cancelErr) {
+                        console.error('Failed to cancel appointment:', cancelErr);
+                    }
+                }
             } else {
-                toast.error(data.message);
+                toast.error(data.message || 'Failed to reserve slot.');
             }
         } catch (error) {
-            toast.error("Booking failed. Please try again.");
+            const errorMsg = error.response?.data?.message || "Booking failed. Please try again.";
+            toast.error(errorMsg);
             console.error("Booking Error:", error);
         } finally {
             setBooking(false);

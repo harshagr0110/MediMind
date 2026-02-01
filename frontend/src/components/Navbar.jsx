@@ -24,7 +24,6 @@ const Navbar = () => {
     { name: 'All Doctors', to: '/doctors' },
     { name: 'About', to: '/about' },
     { name: 'Contact', to: '/contact' },
-    { name: 'Blog', to: '/blog' },
   ];
 
   return (
@@ -91,7 +90,7 @@ const Navbar = () => {
               onMouseLeave={() => setProfileMenu(false)}
             >
               <img
-                src={userData?.image || assets.profile_pic || 'https://i.pravatar.cc/40'}
+                src={userData?.image || assets.logo || 'https://i.pravatar.cc/40'}
                 alt="Profile"
                 className="h-12 w-12 rounded-full cursor-pointer border-2 border-blue-400 shadow"
               />

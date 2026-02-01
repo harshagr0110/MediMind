@@ -31,7 +31,7 @@ const About = () => {
       <div className="w-full bg-white rounded-2xl shadow-2xl p-8 md:p-14 flex flex-col items-center border border-blue-100">
         <div className="flex flex-col items-center mb-8 w-full">
           <img
-            src={assets.about_image}
+            src={assets.logo}
             alt="About"
             className="w-36 md:w-48 rounded-2xl shadow-lg border-4 border-blue-100 mb-6"
           />

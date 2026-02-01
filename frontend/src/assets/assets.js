@@ -1,6 +1,3 @@
-import appointment_img from './appointment_img.png'
-import header_img from './header_img.png'
-import about_image from './about_image.png'
 import logo from './logo.png'
 import dropdown_icon from './dropdown_icon.svg'
 import menu_icon from './menu_icon.svg'
@@ -40,19 +37,12 @@ import Radiologist from './General_physician.svg'
 
 
 export const assets = {
-    appointment_img,
-    header_img,
-
     logo,
     chats_icon,
     verified_icon,
     info_icon,
-
     arrow_icon,
-
-    about_image,
     menu_icon,
-
     dropdown_icon,
     upload_icon,
     stripe_logo,

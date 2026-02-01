@@ -10,7 +10,7 @@ const TopDoctors = () => {
         <div className="w-full bg-white rounded-2xl shadow-xl p-6 flex flex-col items-center">
             <h2 className="text-2xl font-bold text-blue-700 mb-4">Top Doctors</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 w-full">
-                {doctors.map((doc) => (
+                {doctors.slice(0, 6).map((doc) => (
                     <div
                         key={doc._id}
                         className="bg-blue-50 rounded-xl shadow p-6 flex flex-col items-center text-center border border-blue-100 hover:shadow-2xl hover:border-blue-300 transition-all duration-200 hover:-translate-y-2"

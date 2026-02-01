@@ -3,37 +3,11 @@ import SpecialityMenu from '../components/SpecialityMenu';
 import TopDoctors from '../components/TopDoctors';
 import Banner from '../components/Banner';
 import { useNavigate } from 'react-router-dom';
-import HeaderImg from '../assets/header_img.png';
-
-class ErrorBoundary extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { hasError: false, error: null };
-  }
-  static getDerivedStateFromError(error) {
-    return { hasError: true, error };
-  }
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="min-h-screen flex items-center justify-center bg-blue-50">
-          <div className="bg-white p-10 rounded-3xl shadow-2xl max-w-xl w-full text-center">
-            <h2 className="text-2xl font-bold text-red-600 mb-4">Something went wrong</h2>
-            <p className="text-gray-700 mb-4">{this.state.error?.message || 'An unexpected error occurred.'}</p>
-            <button className="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold shadow hover:bg-blue-700" onClick={() => window.location.reload()}>Reload</button>
-          </div>
-        </div>
-      );
-    }
-    return this.props.children;
-  }
-}
 
 const Home = () => {
   const navigate = useNavigate();
   return (
-    <ErrorBoundary>
-      <div className="min-h-screen bg-blue-50 text-gray-900 flex flex-col w-full">
+    <div className="min-h-screen bg-blue-50 text-gray-900 flex flex-col w-full">
         <main className="w-full flex flex-col items-center gap-16 py-0 px-0">
           {/* Minimal Header Section */}
           <section className="w-full flex flex-col md:flex-row items-center justify-between gap-8 bg-white py-16 px-4 md:px-16 border-b border-blue-100">
@@ -50,12 +24,15 @@ const Home = () => {
               </div>
             </div>
             <div className="flex-1 flex justify-center items-center">
-              <img
-                src={HeaderImg}
-                alt="Doctor Booking Hero"
-                className="w-full max-w-md rounded-2xl shadow border-2 border-blue-100 bg-white"
-                loading="lazy"
-              />
+              <div className="w-full max-w-md h-96 rounded-2xl shadow border-2 border-blue-100 bg-gradient-to-br from-blue-100 to-teal-100 flex items-center justify-center">
+                <div className="text-center p-8">
+                  <svg className="w-32 h-32 mx-auto text-blue-600 mb-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                  </svg>
+                  <h3 className="text-2xl font-bold text-blue-800">Your Health Journey</h3>
+                  <p className="text-blue-600 mt-2">Starts Here</p>
+                </div>
+              </div>
             </div>
           </section>
           {/* Features Section */}
@@ -90,14 +67,7 @@ const Home = () => {
           </section>
         </main>
       </div>
-    </ErrorBoundary>
   );
 };
 
-const HomePage = (props) => (
-  <ErrorBoundary>
-    <Home {...props} />
-  </ErrorBoundary>
-);
-
-export default HomePage;
+export default Home;

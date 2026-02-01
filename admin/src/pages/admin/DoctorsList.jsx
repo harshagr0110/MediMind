@@ -34,6 +34,9 @@ const DoctorsList = () => {
 
   useEffect(() => {
     fetchDoctors();
+    // Auto-refresh every 5 seconds to show doctor list updates
+    const interval = setInterval(fetchDoctors, 5000);
+    return () => clearInterval(interval);
     // eslint-disable-next-line
   }, [aToken]);
 

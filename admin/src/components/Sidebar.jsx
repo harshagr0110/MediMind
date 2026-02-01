@@ -1,14 +1,12 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { FaTachometerAlt, FaUserMd, FaPlus, FaFileAlt, FaUserCircle, FaRegNewspaper, FaTimes } from 'react-icons/fa';
+import { FaTachometerAlt, FaUserMd, FaPlus, FaFileAlt, FaUserCircle, FaTimes } from 'react-icons/fa';
 
 const navItems = {
   admin: [
     { to: '/admin-dashboard', label: 'Dashboard', icon: <FaTachometerAlt /> },
     { to: '/doctor-list', label: 'Doctors', icon: <FaUserMd /> },
     { to: '/add-doctor', label: 'Add Doctor', icon: <FaPlus /> },
-    { to: '/articles', label: 'Articles', icon: <FaFileAlt /> },
-    { to: '/add-article', label: 'Add Article', icon: <FaRegNewspaper /> },
   ],
   doctor: [
     { to: '/doctor-dashboard', label: 'Dashboard', icon: <FaTachometerAlt /> },

@@ -29,7 +29,7 @@ const Header = () => {
                 </div>
                 <div className="flex-1 flex justify-center items-center">
                     <img
-                        src={assets.header_img}
+                        src={assets.logo}
                         alt="AI Disease Prediction"
                         className="w-4/5 md:w-full max-w-xs md:max-w-md rounded-2xl shadow-xl border-4 border-[#b2f7ef] bg-white"
                         loading="lazy"

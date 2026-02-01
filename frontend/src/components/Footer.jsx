@@ -25,9 +25,6 @@ const Footer = () => {
               <li>
                 <a href="/careers" className="hover:underline transition font-medium">Careers</a>
               </li>
-              <li>
-                <a href="/blog" className="hover:underline transition font-medium">Blog</a>
-              </li>
             </ul>
           </div>
           <div className="flex flex-col items-center md:items-start">

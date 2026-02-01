@@ -8,10 +8,8 @@ import Sidebar from "./components/Sidebar";
 import Login from "./pages/Login";
 import AddDoctors from "./pages/admin/AddDoctors";
 import AddDoctor from "./pages/admin/AddDoctor";
-import AddArticle from "./pages/admin/AddArticle";
 import Dashboard from "./pages/admin/Dashboard";
 import DoctorsList from "./pages/admin/DoctorsList";
-import Articles from "./pages/admin/Articles";
 import Profile from "./pages/admin/Profile";
 import Settings from "./pages/admin/Settings";
 import DoctorDashboard from "./pages/doctor/DoctorDashboard";
@@ -59,8 +57,6 @@ function AppRoutes() {
                 <Route path="/admin-dashboard" element={<Dashboard />} />
                 <Route path="/doctor-list" element={<DoctorsList />} />
                 <Route path="/add-doctor" element={<AddDoctor />} />
-                <Route path="/articles" element={<Articles />} />
-                <Route path="/add-article" element={<AddArticle />} />
                 <Route path="/admin-profile" element={<Profile />} />
                 <Route path="/admin-settings" element={<Settings />} />
                 <Route path="*" element={<Navigate to="/admin-dashboard" />} />

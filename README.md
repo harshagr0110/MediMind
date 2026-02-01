@@ -27,16 +27,9 @@ A modern, full-stack web application for doctor appointment booking, payment, an
 - Dashboard with platform stats, charts, and quick actions
 - Manage doctors (add, approve, suspend, delete)
 - Manage users (view, block, delete)
-- Manage articles/blogs (add, view, edit, delete)
 - Platform announcements & admin tips
 - View and manage all appointments
 - Clean, blue-themed, modern UI
-
-### 📝 Articles/Blogs
-- Admin can add, view, edit, and delete articles
-- Minimal, text-only articles (no images)
-- Public blog page for users
-- SEO-friendly URLs for articles
 
 ### 💳 Payments
 - Secure payment integration with Stripe

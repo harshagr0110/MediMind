@@ -36,7 +36,7 @@ export const getDoctorDashboard = async (req, res) => {
         const totalAppointments = await Appointment.countDocuments({ docId: doctorId });
         const uniquePatients = await Appointment.distinct('userId', { docId: doctorId });
         const totalPatients = uniquePatients.length;
-        const paidAppointments = await Appointment.find({ docId: doctorId, paymentStatus: 'paid' });
+        const paidAppointments = await Appointment.find({ docId: doctorId, paymentStatus: 'paid', isCompleted: true });
         const totalEarnings = paidAppointments.reduce((acc, app) => acc + (app.amount || 0), 0);
         const upcomingAppointments = await Appointment.find({
             docId: doctorId,
@@ -136,10 +136,19 @@ export const cancelAppointment = async (req, res) => {
     console.log('[cancelAppointment] called. req.body:', req.body, 'req.user:', req.user);
     try {
         const { appointmentId } = req.body;
-        const result = await Appointment.findByIdAndUpdate(appointmentId, { cancelled: true, isCompleted: false });
-        if (!result) {
+        
+        // First, find the appointment and verify it belongs to this doctor
+        const appointment = await Appointment.findById(appointmentId);
+        if (!appointment) {
             return res.status(404).json({ success: false, message: 'Appointment not found' });
         }
+        
+        // Security check: ensure the appointment belongs to this doctor
+        if (appointment.docId !== req.user.id) {
+            return res.status(403).json({ success: false, message: 'Unauthorized: This appointment does not belong to you' });
+        }
+        
+        const result = await Appointment.findByIdAndUpdate(appointmentId, { cancelled: true, isCompleted: false });
         res.json({ success: true, message: 'Appointment cancelled' });
     } catch (error) {
         console.error('[cancelAppointment] Error:', error, error?.stack);
@@ -151,11 +160,34 @@ export const completeAppointment = async (req, res) => {
     console.log('[completeAppointment] called. req.body:', req.body, 'req.user:', req.user);
     try {
         const { appointmentId } = req.body;
-        await Appointment.findByIdAndUpdate(appointmentId, { isCompleted: true });
-        res.json({ success: true, message: 'Appointment marked as completed' });
+        const appointment = await Appointment.findById(appointmentId);
+        
+        if (!appointment) {
+            return res.status(404).json({ success: false, message: 'Appointment not found' });
+        }
+        
+        // Security check: ensure the appointment belongs to this doctor
+        if (appointment.docId !== req.user.id) {
+            return res.status(403).json({ success: false, message: 'Unauthorized: This appointment does not belong to you' });
+        }
+        
+        if (appointment.cancelled) {
+            return res.status(400).json({ success: false, message: 'Cannot complete cancelled appointment' });
+        }
+        
+        if (appointment.paymentStatus !== 'paid') {
+            return res.status(400).json({ success: false, message: 'Cannot complete unpaid appointment' });
+        }
+        
+        if (appointment.isCompleted) {
+            return res.status(400).json({ success: false, message: 'Appointment already completed' });
+        }
+        
+        const result = await Appointment.findByIdAndUpdate(appointmentId, { isCompleted: true }, { new: true });
+        res.json({ success: true, message: 'Appointment marked as completed', data: result });
     } catch (error) {
         console.error('[completeAppointment] Error:', error, error?.stack);
-        res.status(500).json({ success: false, message: 'Failed to complete appointment', error: error.message, stack: error.stack });
+        res.status(500).json({ success: false, message: 'Failed to complete appointment', error: error.message });
     }
 };
 
@@ -178,8 +210,33 @@ export const getDoctorAvailability = async (req, res) => {
         if (!date) {
             return res.status(400).json({ success: false, message: 'Date is required' });
         }
-        // Find all appointments for this doctor and date
-        const appointments = await Appointment.find({ docId: doctorId, slotDate: date });
+        
+        // Clean up expired reservations first
+        await Appointment.updateMany(
+            {
+                reservationExpiry: { $lt: new Date() },
+                paymentStatus: 'pending',
+                cancelled: false
+            },
+            {
+                $set: { cancelled: true }
+            }
+        );
+        
+        // Find paid appointments or active reservations (not expired, not cancelled)
+        const appointments = await Appointment.find({
+            docId: doctorId,
+            slotDate: date,
+            cancelled: false,
+            $or: [
+                { paymentStatus: 'paid' },
+                {
+                    paymentStatus: 'pending',
+                    reservationExpiry: { $gt: new Date() }
+                }
+            ]
+        });
+        
         // Return the booked slot times
         const bookedSlots = appointments.map(app => app.slotTime);
         res.json({ success: true, data: bookedSlots });

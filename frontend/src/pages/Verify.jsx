@@ -24,7 +24,7 @@ const Verify = () => {
     }
 
     if (success === "true") {
-      // Only fetch the appointment details and check payment status using the new endpoint
+      // Payment was successful, verify appointment status
       const checkStatus = async () => {
         setChecking(true);
         try {
@@ -33,13 +33,20 @@ const Verify = () => {
             { headers: token ? { Authorization: `Bearer ${token}` } : {} }
           );
           const appt = data.appointment;
-          if (appt && appt.paymentStatus === 'paid') {
+          if (appt && appt.paymentStatus === 'paid' && !appt.cancelled) {
             setStatus("success");
+            toast.success('Appointment confirmed successfully!');
+          } else if (appt && appt.cancelled) {
+            setStatus("cancelled");
+            toast.error('This appointment was cancelled.');
           } else {
             setStatus("failed");
+            toast.error('Payment verification failed. Please contact support.');
           }
         } catch (err) {
+          console.error('Error verifying payment:', err);
           setStatus("failed");
+          toast.error('Could not verify payment status.');
         } finally {
           setChecking(false);
         }

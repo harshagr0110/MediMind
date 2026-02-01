@@ -179,7 +179,7 @@ const Profile = () => {
           {availLoading && <span className="ml-2 animate-spin h-5 w-5 border-t-2 border-b-2 border-black rounded-full"></span>}
         </div>
         <img
-          src={editMode ? (imageFile ? URL.createObjectURL(imageFile) : form.image || '/default-profile.png') : (profile.image || '/default-profile.png')}
+          src={editMode ? (imageFile ? URL.createObjectURL(imageFile) : form.image || 'https://i.pravatar.cc/150') : (profile.image || 'https://i.pravatar.cc/150')}
           alt="Profile"
           className="w-28 h-28 rounded-full object-cover border-4 border-gray-200 mb-4"
         />

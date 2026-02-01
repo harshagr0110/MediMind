@@ -44,9 +44,6 @@ router.patch('/update-availability', updateDoctorAvailability);
 router.post('/cancel-appointment', cancelAppointment);
 router.post('/complete-appointment', completeAppointment);
 
-router.get('/availability', getDoctorAvailability);
-router.post('/availability', updateDoctorAvailability);
-
 // DYNAMIC ROUTES MUST COME LAST
 router.get('/:id', getDoctorDetails);
 

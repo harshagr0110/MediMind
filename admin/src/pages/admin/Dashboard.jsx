@@ -43,6 +43,12 @@ const Dashboard = () => {
     };
     fetchStats();
     fetchRecent();
+    // Auto-refresh every 5 seconds to show updated stats
+    const interval = setInterval(() => {
+      fetchStats();
+      fetchRecent();
+    }, 5000);
+    return () => clearInterval(interval);
   }, [aToken]);
 
   return (

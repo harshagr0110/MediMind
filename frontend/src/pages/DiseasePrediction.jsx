@@ -71,13 +71,16 @@ const DiseasePrediction = () => {
                     'Content-Type': 'multipart/form-data'
                 }
             });
+            console.log('[DiseasePrediction] Response received:', response.data);
             if (response.data.success) {
+                console.log('[DiseasePrediction] Data to set:', response.data.data);
                 setPrediction(response.data.data);
             } else {
                 toast.error(response.data.message);
             }
         } catch (err) {
             const errorMsg = err.response?.data?.message || "An error occurred.";
+            console.error('[DiseasePrediction] Error:', err);
             toast.error(errorMsg);
         } finally {
             setLoading(false);
@@ -86,6 +89,8 @@ const DiseasePrediction = () => {
 
     // Robust guards for prediction rendering
     let disclaimer = '';
+    let diseaseName = '';
+    let diseaseDescription = '';
     let specialist = null;
     let analysis = [];
     let symptomsList = [];
@@ -93,9 +98,16 @@ const DiseasePrediction = () => {
     let preventionList = [];
     let evidenceList = [];
     let potentialConditions = [];
+    
     if (prediction) {
+        console.log('[DiseasePrediction] Processing prediction:', prediction);
+        console.log('[DiseasePrediction] Causes from prediction:', prediction.causes);
+        console.log('[DiseasePrediction] Prevention from prediction:', prediction.prevention);
+        
         if (prediction.raw) {
             disclaimer = 'This is an AI-generated suggestion. Please consult a real doctor.';
+            diseaseName = 'Analysis Result';
+            diseaseDescription = '';
             specialist = { name: 'Specialist', reason: 'Consult a specialist for your symptoms.' };
             analysis = [];
             symptomsList = [];
@@ -105,6 +117,8 @@ const DiseasePrediction = () => {
             potentialConditions = [prediction.raw];
         } else {
             disclaimer = prediction.disclaimer || 'This is an AI-generated suggestion. Please consult a real doctor.';
+            diseaseName = prediction.disease_name || 'Unknown Disease';
+            diseaseDescription = prediction.disease_description || '';
             specialist = prediction.specialist || { name: 'Specialist', reason: 'Consult a specialist for your symptoms.' };
             analysis = Array.isArray(prediction.analysis) ? prediction.analysis : (prediction.analysis ? [prediction.analysis] : []);
             symptomsList = Array.isArray(prediction.symptoms) ? prediction.symptoms : [];
@@ -112,122 +126,127 @@ const DiseasePrediction = () => {
             preventionList = Array.isArray(prediction.prevention) ? prediction.prevention : [];
             evidenceList = Array.isArray(prediction.evidence) ? prediction.evidence : [];
             potentialConditions = Array.isArray(prediction.potential_conditions) ? prediction.potential_conditions : [prediction.potential_conditions || 'No conditions found.'];
+            
+            console.log('[DiseasePrediction] Extracted causesList:', causesList);
+            console.log('[DiseasePrediction] Extracted preventionList:', preventionList);
         }
     }
 
     return (
         <ErrorBoundary>
-        <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-blue-500 via-blue-400 to-blue-700">
-            <div className="w-full max-w-4xl bg-white shadow-2xl rounded-3xl p-10 md:p-16 flex flex-col items-center">
-                <h1 className="text-4xl font-extrabold text-center text-blue-800 mb-6 drop-shadow-lg">AI Symptom Analyzer</h1>
-                <p className="text-center text-gray-600 mb-8 text-lg">Enter symptoms and/or upload an image, and our AI will suggest a specialist to consult. This is not a medical diagnosis.</p>
-                <form onSubmit={handlePredict} className="w-full">
-                    <textarea
-                        value={symptoms}
-                        onChange={(e) => setSymptoms(e.target.value)}
-                        className="w-full p-5 border-2 border-blue-200 rounded-xl focus:ring-4 focus:ring-blue-400 transition-shadow text-lg min-h-[120px] resize-none mb-6 shadow-sm"
-                        rows="5"
-                        placeholder="For example: 'I have a persistent headache, dizziness, and blurred vision...'"
-                    />
-                    <div className="mt-4">
-                        <label className="block text-blue-700 font-semibold mb-2">Upload an Image (Optional)</label>
-                        <div className="flex items-center gap-4">
-                            <button type="button" onClick={() => fileInputRef.current.click()} className="flex items-center gap-2 bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold py-2 px-4 rounded-lg shadow">
-                                <FaCamera /> Choose Image
-                            </button>
-                            <input type="file" ref={fileInputRef} onChange={handleImageChange} className="hidden" accept="image/*"/>
-                            {imagePreview && (
-                                <div className="relative">
-                                    <img src={imagePreview} alt="Preview" className="h-20 w-20 rounded-xl object-cover border-2 border-blue-300 shadow" />
-                                    <button type="button" onClick={() => { setImage(null); setImagePreview(''); fileInputRef.current.value = null;}} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow">
-                                        <FaTimes />
-                                    </button>
-                                </div>
-                            )}
+        <div className="min-h-screen w-full bg-gradient-to-b from-gray-50 to-gray-100 py-12 px-4">
+            <div className="w-full max-w-5xl mx-auto">
+                {/* Header */}
+                <div className="mb-12">
+                    <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-2">Medical Symptom Analysis</h1>
+                    <p className="text-lg text-gray-600">AI-assisted preliminary assessment - Not a substitute for professional medical advice</p>
+                </div>
+
+                {/* Input Form */}
+                <div className="bg-white rounded-lg shadow-md p-8 mb-12 border border-gray-200">
+                    <form onSubmit={handlePredict} className="w-full">
+                        <div className="mb-6">
+                            <label className="block text-gray-800 font-semibold mb-3 text-lg">Describe Your Symptoms</label>
+                            <textarea
+                                value={symptoms}
+                                onChange={(e) => setSymptoms(e.target.value)}
+                                className="w-full p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-700 resize-none"
+                                rows="5"
+                                placeholder="Example: I have a persistent headache for 3 days, accompanied by dizziness and sensitivity to light..."
+                            />
                         </div>
-                    </div>
-                    <div className="text-center mt-8">
-                        <button type="submit" disabled={loading} className="bg-blue-600 text-white font-bold py-4 px-12 rounded-xl text-lg hover:bg-blue-700 disabled:bg-gray-400 transition-transform transform hover:scale-105 shadow-lg flex items-center justify-center gap-2">
-                            {loading ? 'Analyzing...' : 'Analyze Symptoms'}
-                        </button>
-                    </div>
-                </form>
+
+                        <div className="mb-8">
+                            <label className="block text-gray-800 font-semibold mb-3 text-lg">Upload Medical Image (Optional)</label>
+                            <div className="flex items-center gap-4">
+                                <button type="button" onClick={() => fileInputRef.current.click()} className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-3 px-6 rounded-lg border border-gray-300 transition">
+                                    <FaCamera className="text-lg" /> Choose Image
+                                </button>
+                                <input type="file" ref={fileInputRef} onChange={handleImageChange} className="hidden" accept="image/*"/>
+                                {imagePreview && (
+                                    <div className="relative">
+                                        <img src={imagePreview} alt="Preview" className="h-24 w-24 rounded-lg object-cover border-2 border-gray-300 shadow" />
+                                        <button type="button" onClick={() => { setImage(null); setImagePreview(''); fileInputRef.current.value = null;}} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow hover:bg-red-600">
+                                            <FaTimes />
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="text-center">
+                            <button type="submit" disabled={loading} className="bg-blue-600 text-white font-semibold py-4 px-16 rounded-lg text-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors shadow-md">
+                                {loading ? 'Analyzing...' : 'Analyze Symptoms'}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                {/* Results */}
                 {prediction && (
-                    <div className="mt-12 w-full animate-fade-in">
-                        {/* Disease/Condition Analysis */}
-                        {analysis.length > 0 && (
-                            <div className="bg-blue-50 border border-blue-200 rounded-2xl p-8 mb-6 shadow">
-                                <h2 className="text-2xl font-bold text-blue-800 mb-3 flex items-center"><FaLightbulb className="mr-2" /> Disease/Condition Analysis</h2>
-                                <ul className="list-disc list-inside space-y-1 text-gray-700 text-lg">
-                                    {analysis.map((item, idx) => <li key={idx}>{item}</li>)}
-                                </ul>
+                    <div className="space-y-6 animate-fade-in">
+                        {/* Disease Name & Description */}
+                        {prediction.disease_name && prediction.disease_name !== 'Analysis Unavailable' ? (
+                            <div className="bg-blue-50 rounded-lg shadow-md p-8 border-l-4 border-blue-600">
+                                <h2 className="text-3xl font-bold text-blue-900 mb-3">Identified Condition: {prediction.disease_name}</h2>
+                                {prediction.disease_description && (
+                                    <p className="text-gray-700 text-lg leading-relaxed">{prediction.disease_description}</p>
+                                )}
                             </div>
-                        )}
-                        {/* Symptoms */}
-                        {symptomsList.length > 0 && (
-                            <div className="bg-gray-50 border border-gray-200 rounded-2xl p-8 mb-6 shadow">
-                                <h2 className="text-2xl font-bold text-gray-800 mb-3 flex items-center"><FaLightbulb className="mr-2" /> Symptoms</h2>
-                                <ul className="list-disc list-inside space-y-1 text-gray-700 text-lg">
-                                    {symptomsList.map((symptom, idx) => <li key={idx}>{symptom}</li>)}
-                                </ul>
-                            </div>
-                        )}
-                        {/* Causes */}
+                        ) : null}
+
+                        {/* Causes Section */}
                         {causesList.length > 0 && (
-                            <div className="bg-gray-50 border border-gray-200 rounded-2xl p-8 mb-6 shadow">
-                                <h2 className="text-2xl font-bold text-gray-800 mb-3 flex items-center"><FaLightbulb className="mr-2" /> Causes</h2>
-                                <ul className="list-disc list-inside space-y-1 text-gray-700 text-lg">
-                                    {causesList.map((cause, idx) => <li key={idx}>{cause}</li>)}
-                                </ul>
-                            </div>
-                        )}
-                        {/* Prevention */}
-                        {preventionList.length > 0 && (
-                            <div className="bg-gray-50 border border-gray-200 rounded-2xl p-8 mb-6 shadow">
-                                <h2 className="text-2xl font-bold text-gray-800 mb-3 flex items-center"><FaLightbulb className="mr-2" /> Prevention</h2>
-                                <ul className="list-disc list-inside space-y-1 text-gray-700 text-lg">
-                                    {preventionList.map((item, idx) => <li key={idx}>{item}</li>)}
-                                </ul>
-                            </div>
-                        )}
-                        {/* Evidence */}
-                        {evidenceList.length > 0 && (
-                            <div className="bg-gray-50 border border-gray-200 rounded-2xl p-8 mb-6 shadow">
-                                <h2 className="text-2xl font-bold text-gray-800 mb-3 flex items-center"><FaLightbulb className="mr-2" /> Evidence</h2>
-                                <ul className="list-disc list-inside space-y-1 text-gray-700 text-lg">
-                                    {evidenceList.map((evidence, idx) => <li key={idx}>{evidence}</li>)}
-                                </ul>
-                            </div>
-                        )}
-                        {/* Potential Conditions */}
-                        {potentialConditions.length > 0 && (
-                            <div className="bg-gray-50 border border-gray-200 rounded-2xl p-8 mb-6 shadow">
-                                <h2 className="text-2xl font-bold text-gray-800 mb-3 flex items-center"><FaLightbulb className="mr-2" /> Potential Conditions</h2>
-                                <ul className="list-disc list-inside space-y-1 text-gray-700 text-lg">
-                                    {potentialConditions.map((condition, index) => (
-                                        <li key={index}>{condition}</li>
+                            <div className="bg-white rounded-lg shadow-md p-8 border border-gray-200">
+                                <h3 className="text-2xl font-bold text-gray-900 mb-4">Common Causes</h3>
+                                <ul className="space-y-3">
+                                    {causesList.map((cause, idx) => (
+                                        <li key={idx} className="flex gap-3 text-gray-700">
+                                            <span className="text-blue-600 font-bold flex-shrink-0">•</span>
+                                            <span className="text-lg">{cause}</span>
+                                        </li>
                                     ))}
                                 </ul>
                             </div>
                         )}
-                        {/* Specialist Suggestion */}
-                        <div className="bg-blue-50 border border-blue-200 rounded-2xl p-8 mb-6 shadow">
-                            <h2 className="text-2xl font-bold text-blue-800 mb-3 flex items-center"><FaStethoscope className="mr-2" /> Suggested Specialist</h2>
-                            <p className="text-3xl font-semibold text-gray-900">{specialist?.name || 'Specialist'}</p>
-                            <p className="text-gray-600 mt-1 text-lg">{specialist?.reason || 'Consult a specialist for your symptoms.'}</p>
-                            <div className="mt-6 text-center">
-                                <button onClick={() => navigate(`/doctors/${specialist?.name || 'Specialist'}`)} className="bg-green-500 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-600 text-lg shadow">
-                                    Find a {specialist?.name || 'Specialist'}
+
+                        {/* Precautions Section */}
+                        {preventionList.length > 0 && (
+                            <div className="bg-white rounded-lg shadow-md p-8 border border-gray-200">
+                                <h3 className="text-2xl font-bold text-gray-900 mb-4">Recommended Precautions</h3>
+                                <ul className="space-y-3">
+                                    {preventionList.map((item, idx) => (
+                                        <li key={idx} className="flex gap-3 text-gray-700">
+                                            <span className="text-green-600 font-bold flex-shrink-0">✓</span>
+                                            <span className="text-lg">{item}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+
+                        {/* Recommended Specialist */}
+                        {specialist?.name && (
+                            <div className="bg-blue-600 text-white rounded-lg shadow-md p-8">
+                                <h3 className="text-2xl font-bold mb-3">Recommended Specialist</h3>
+                                <p className="text-xl mb-2">{specialist.name}</p>
+                                <p className="text-blue-100 mb-6">{specialist.reason}</p>
+                                <button 
+                                    onClick={() => navigate(`/doctors/${specialist.name}`)} 
+                                    className="bg-white text-blue-600 font-bold py-3 px-8 rounded-lg hover:bg-blue-50 transition-colors shadow-md"
+                                >
+                                    Find a {specialist.name}
                                 </button>
                             </div>
-                        </div>
-                        {/* Disclaimer */}
-                        <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded-lg mt-6" role="alert">
-                            <div className="flex">
-                                <FaExclamationTriangle className="text-2xl mr-3" />
+                        )}
+
+                        {/* Medical Disclaimer */}
+                        <div className="bg-yellow-50 rounded-lg shadow-md p-8 border-l-4 border-yellow-600">
+                            <div className="flex gap-4">
+                                <FaExclamationTriangle className="text-2xl text-yellow-600 flex-shrink-0 mt-1" />
                                 <div>
-                                    <p className="font-bold">Important Disclaimer</p>
-                                    <p>{disclaimer}</p>
+                                    <h3 className="text-lg font-bold text-yellow-900 mb-2">Important Medical Disclaimer</h3>
+                                    <p className="text-gray-700">{disclaimer}</p>
                                 </div>
                             </div>
                         </div>

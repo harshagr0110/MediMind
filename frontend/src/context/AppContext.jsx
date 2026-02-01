@@ -84,21 +84,21 @@ const AppContextProvider = ({ children }) => {
     else setUserData(null);
   }, [token]);
 
-  // Remove appointment by ID
+  // Cancel appointment by ID (renamed from removeAppointment for clarity)
   const removeAppointment = async (id) => {
     try {
-      const { data } = await axios.delete(`${backendurl}/api/user/delete-appointment/${id}`, {
+      const { data } = await axios.post(`${backendurl}/api/user/cancel-appointment/${id}`, {}, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (data.success) {
-        toast.success('Appointment removed successfully');
+        toast.success('Appointment cancelled successfully');
         return true;
       } else {
-        toast.error(data.message || 'Failed to remove appointment');
+        toast.error(data.message || 'Failed to cancel appointment');
         return false;
       }
     } catch (err) {
-      toast.error(err?.response?.data?.message || 'Failed to remove appointment');
+      toast.error(err?.response?.data?.message || 'Failed to cancel appointment');
       return false;
     }
   };

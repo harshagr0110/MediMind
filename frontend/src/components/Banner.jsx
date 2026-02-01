@@ -32,7 +32,7 @@ const Banner = () => {
                 {/* Right: Full Image */}
                 <div className="flex items-center justify-center w-full md:w-1/2 bg-white">
                     <img
-                        src={assets.appointment_img}
+                        src={assets.logo}
                         alt="Doctor Appointment"
                         className="w-full h-64 md:h-full object-cover object-center rounded-b-3xl md:rounded-b-none md:rounded-r-3xl shadow-lg"
                     />

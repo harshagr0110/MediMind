@@ -6,7 +6,7 @@ import {
     updateProfile,
     bookAppointment,
     listAppointment,
-    deleteAppointment,
+    cancelAppointment,
     createStripeSession,
     verifyStripe,
     diseasePrediction,
@@ -30,7 +30,7 @@ userRouter.post('/update-profile', upload.single('image'), updateProfile);
 userRouter.post('/book-appointment', bookAppointment);
 userRouter.get('/appointments', listAppointment);
 userRouter.get('/appointment/:id', getAppointmentById);
-userRouter.delete('/delete-appointment/:id', deleteAppointment);
+userRouter.post('/cancel-appointment/:id', cancelAppointment);
 userRouter.post("/create-stripe-session", createStripeSession);
 userRouter.post('/disease-prediction', upload.single('image'), diseasePrediction);
 
