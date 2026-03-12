@@ -5,13 +5,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { AppContext } from '../context/AppContext';
 import axios from 'axios';
 import { FaMapMarkerAlt, FaUserMd, FaGraduationCap, FaMoneyBillWave } from 'react-icons/fa';
-import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import Spinner from '../components/Spinner';
 import { toast } from 'react-toastify';
-
-const localizer = momentLocalizer(moment);
 
 const ALL_TIME_SLOTS = [
     '09:00 AM', '09:30 AM', '10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM',
@@ -47,10 +44,6 @@ const Appointment = () => {
     const navigate = useNavigate();
     const { token, backendurl } = useContext(AppContext);
 
-    if (!docId) {
-        return <div className="text-center p-8 text-red-600 font-bold">Invalid doctor link. No doctor ID provided.</div>;
-    }
-
     const [doctor, setDoctor] = useState(null);
     const [selectedDate, setSelectedDate] = useState(moment().toDate());
     const [selectedSlot, setSelectedSlot] = useState('');
@@ -58,9 +51,13 @@ const Appointment = () => {
     const [availableSlots, setAvailableSlots] = useState([]);
     const [loading, setLoading] = useState(true);
     const [booking, setBooking] = useState(false);
-    const [reservationTimer, setReservationTimer] = useState(null);
 
     useEffect(() => {
+        if (!docId) {
+            setLoading(false);
+            return;
+        }
+
         const getDoctorDetails = async () => {
             try {
                 const { data } = await axios.get(`${backendurl}/api/doctor/public/${docId}`);
@@ -79,7 +76,7 @@ const Appointment = () => {
 
     useEffect(() => {
         const getAvailability = async () => {
-            if (!selectedDate) return;
+            if (!selectedDate || !docId) return;
             try {
                 const dateStr = moment(selectedDate).format('YYYY-MM-DD');
                 const { data } = await axios.get(`${backendurl}/api/doctor/availability/${docId}?date=${dateStr}`);
@@ -92,10 +89,6 @@ const Appointment = () => {
             }
         };
         getAvailability();
-        
-        // Set up auto-refresh every 5 seconds to show real-time availability
-        const interval = setInterval(getAvailability, 5000);
-        return () => clearInterval(interval);
     }, [selectedDate, docId, backendurl]);
 
     useEffect(() => {
@@ -177,15 +170,9 @@ const Appointment = () => {
         }
     };
 
+    if (!docId) return <div className="text-center p-8 text-red-600 font-bold">Invalid doctor link. No doctor ID provided.</div>;
     if (loading) return <Spinner />;
     if (!doctor) return <div className="text-center p-8">Doctor not found.</div>;
-    
-    const calendarEvents = bookedSlots.map(slot => {
-        const timeParts = moment(slot, 'hh:mm A').toObject();
-        const start = moment(selectedDate).set({ hours: timeParts.hours, minutes: timeParts.minutes }).toDate();
-        const end = moment(start).add(30, 'minutes').toDate();
-        return { title: 'Booked', start, end };
-    });
 
     const safeDoctor = doctor || {};
 

@@ -1,9 +1,52 @@
 import React, { useState, useContext, useEffect } from "react";
 import axios from "axios";
-import { assets } from "../assets/assets";
 import { AppContext } from "../context/AppContext";
 import "react-toastify/dist/ReactToastify.css";
 import { toast } from "react-toastify";
+
+const MAX_UPLOAD_BYTES = 3.5 * 1024 * 1024;
+
+const readImageDimensions = (file) =>
+  new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve({ width: img.width, height: img.height, img });
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("Invalid image file"));
+    };
+    img.src = url;
+  });
+
+const compressImage = async (file) => {
+  const { width, height, img } = await readImageDimensions(file);
+  const maxDimension = 1600;
+  const scale = Math.min(1, maxDimension / Math.max(width, height));
+  const targetWidth = Math.max(1, Math.round(width * scale));
+  const targetHeight = Math.max(1, Math.round(height * scale));
+
+  const canvas = document.createElement("canvas");
+  canvas.width = targetWidth;
+  canvas.height = targetHeight;
+
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Image processing not supported in this browser.");
+  ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+
+  let quality = 0.85;
+  let compressed = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", quality));
+
+  while (compressed && compressed.size > MAX_UPLOAD_BYTES && quality > 0.45) {
+    quality -= 0.1;
+    compressed = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", quality));
+  }
+
+  if (!compressed) throw new Error("Could not process image.");
+  return new File([compressed], `profile-${Date.now()}.jpg`, { type: "image/jpeg" });
+};
 
 const Myprofile = () => {
   const { userData, setUserData, backendurl, token } = useContext(AppContext);
@@ -32,13 +75,33 @@ const Myprofile = () => {
     setProfile((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleImageChange = (e) => {
+  const handleImageChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
-      setImageFile(file);
+      if (!file.type.startsWith("image/")) {
+        toast.error("Please select a valid image file.");
+        return;
+      }
+
+      let finalFile = file;
+      if (file.size > MAX_UPLOAD_BYTES) {
+        try {
+          finalFile = await compressImage(file);
+        } catch (err) {
+          toast.error(err?.message || "Failed to process image.");
+          return;
+        }
+      }
+
+      if (finalFile.size > MAX_UPLOAD_BYTES) {
+        toast.error("Image is too large. Please choose a smaller image.");
+        return;
+      }
+
+      setImageFile(finalFile);
       setProfile((prev) => ({
         ...prev,
-        profileImage: URL.createObjectURL(file),
+        profileImage: URL.createObjectURL(finalFile),
       }));
     }
   };

@@ -3,8 +3,6 @@ import Spinner from '../../components/Spinner';
 import axios from 'axios';
 import { DoctorContext } from '../../context/Doctorcontext';
 
-const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
-
 const Appointments = () => {
   const { dToken } = useContext(DoctorContext);
   const [appointments, setAppointments] = useState([]);

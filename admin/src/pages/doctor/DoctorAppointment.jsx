@@ -29,10 +29,9 @@ const DoctorAppointment = () => {
   };
 
   useEffect(() => {
+    if (!dToken) return;
+
     fetchAppointments();
-    // Auto-refresh every 5 seconds to show appointment status updates
-    const interval = setInterval(fetchAppointments, 5000);
-    return () => clearInterval(interval);
     // eslint-disable-next-line
   }, [dToken]);
 

@@ -2,8 +2,7 @@ import React, { useState, useContext, useRef } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { AppContext } from "../context/AppContext";
-import Spinner from "../components/Spinner";
-import { FaStethoscope, FaExclamationTriangle, FaLightbulb, FaCamera, FaTimes } from 'react-icons/fa';
+import { FaExclamationTriangle, FaCamera, FaTimes } from 'react-icons/fa';
 import { useNavigate } from "react-router-dom";
 
 // ErrorBoundary for this page
@@ -15,7 +14,6 @@ class ErrorBoundary extends React.Component {
     static getDerivedStateFromError(error) {
         return { hasError: true, error };
     }
-    componentDidCatch(error, errorInfo) {}
     render() {
         if (this.state.hasError) {
             return (
@@ -89,15 +87,9 @@ const DiseasePrediction = () => {
 
     // Robust guards for prediction rendering
     let disclaimer = '';
-    let diseaseName = '';
-    let diseaseDescription = '';
     let specialist = null;
-    let analysis = [];
-    let symptomsList = [];
     let causesList = [];
     let preventionList = [];
-    let evidenceList = [];
-    let potentialConditions = [];
     
     if (prediction) {
         console.log('[DiseasePrediction] Processing prediction:', prediction);
@@ -106,26 +98,14 @@ const DiseasePrediction = () => {
         
         if (prediction.raw) {
             disclaimer = 'This is an AI-generated suggestion. Please consult a real doctor.';
-            diseaseName = 'Analysis Result';
-            diseaseDescription = '';
             specialist = { name: 'Specialist', reason: 'Consult a specialist for your symptoms.' };
-            analysis = [];
-            symptomsList = [];
             causesList = [];
             preventionList = [];
-            evidenceList = [];
-            potentialConditions = [prediction.raw];
         } else {
             disclaimer = prediction.disclaimer || 'This is an AI-generated suggestion. Please consult a real doctor.';
-            diseaseName = prediction.disease_name || 'Unknown Disease';
-            diseaseDescription = prediction.disease_description || '';
             specialist = prediction.specialist || { name: 'Specialist', reason: 'Consult a specialist for your symptoms.' };
-            analysis = Array.isArray(prediction.analysis) ? prediction.analysis : (prediction.analysis ? [prediction.analysis] : []);
-            symptomsList = Array.isArray(prediction.symptoms) ? prediction.symptoms : [];
             causesList = Array.isArray(prediction.causes) ? prediction.causes : [];
             preventionList = Array.isArray(prediction.prevention) ? prediction.prevention : [];
-            evidenceList = Array.isArray(prediction.evidence) ? prediction.evidence : [];
-            potentialConditions = Array.isArray(prediction.potential_conditions) ? prediction.potential_conditions : [prediction.potential_conditions || 'No conditions found.'];
             
             console.log('[DiseasePrediction] Extracted causesList:', causesList);
             console.log('[DiseasePrediction] Extracted preventionList:', preventionList);

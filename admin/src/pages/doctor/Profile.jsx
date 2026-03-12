@@ -28,7 +28,6 @@ const Profile = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [availLoading, setAvailLoading] = useState(false);
-  const [appointments, setAppointments] = useState([]);
 
   // Fetch profile from backend
   const fetchProfile = async () => {
@@ -70,21 +69,8 @@ const Profile = () => {
     }
   };
 
-  // Fetch appointments
-  const fetchAppointments = async () => {
-    try {
-      const { data } = await axios.get(`${backendUrl}/api/doctor/appointments`, {
-        headers: { Authorization: `Bearer ${dToken}` },
-      });
-      setAppointments(data.data || []);
-    } catch (err) {
-      // ignore for now
-    }
-  };
-
   useEffect(() => {
     fetchProfile();
-    fetchAppointments();
     // eslint-disable-next-line
   }, [dToken]);
 
@@ -148,7 +134,7 @@ const Profile = () => {
         setProfile(p => ({ ...p, available: data.data.available }));
         setForm(f => ({ ...f, available: data.data.available }));
       }
-    } catch (err) {
+    } catch {
       // ignore for now
     } finally {
       setAvailLoading(false);

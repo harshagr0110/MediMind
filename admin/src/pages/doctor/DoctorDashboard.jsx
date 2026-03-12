@@ -32,10 +32,9 @@ const DoctorDashboard = () => {
         setLoading(false);
       }
     };
+    if (!dToken) return;
+
     fetchStats();
-    // Auto-refresh every 5 seconds to show updated stats
-    const interval = setInterval(fetchStats, 5000);
-    return () => clearInterval(interval);
   }, [dToken]);
 
   return (

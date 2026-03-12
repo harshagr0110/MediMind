@@ -31,10 +31,9 @@ const MyAppointments = () => {
   };
 
   useEffect(() => {
+    if (!token) return;
+
     fetchAppointments();
-    // Auto-refresh every 5 seconds to check for doctor-completed appointments
-    const interval = setInterval(fetchAppointments, 5000);
-    return () => clearInterval(interval);
     // eslint-disable-next-line
   }, [token]);
 

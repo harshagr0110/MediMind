@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import 'dotenv/config'
+import multer from 'multer';
 import connectDB from './config/mongodb.js';
 import connectCloudinary from './config/cloudinary.js';
 import adminRouter from './routes/adminRoute.js';
@@ -77,6 +78,19 @@ app.use((req, res, next) => {
 app.use((err, req, res, next) => {
     console.error('[GLOBAL ERROR HANDLER] Error:', err.stack || err);
     console.error('[GLOBAL ERROR HANDLER] Request:', req.method, req.originalUrl, '| Headers:', req.headers, '| Body:', req.body, '| User:', req.user);
+
+    if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(413).json({ success: false, message: 'Image is too large. Please upload an image under 4MB.' });
+    }
+
+    if (err?.message === 'Only image uploads are allowed') {
+        return res.status(400).json({ success: false, message: err.message });
+    }
+
+    if (err?.status === 413 || err?.type === 'entity.too.large') {
+        return res.status(413).json({ success: false, message: 'Request payload too large.' });
+    }
+
     res.status(500).json({ message: 'Internal Server Error', error: err.message });
 });
 

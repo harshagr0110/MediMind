@@ -3,19 +3,12 @@ import Spinner from '../../components/Spinner';
 import axios from 'axios';
 import { AdminContext } from '../../context/Admincontext';
 
-const statusColors = {
-  approved: 'bg-green-100 text-green-700',
-  pending: 'bg-yellow-100 text-yellow-700',
-  rejected: 'bg-red-100 text-red-700',
-};
-
 const DoctorsList = () => {
   const [loading, setLoading] = useState(true);
   const [doctors, setDoctors] = useState([]);
   const [error, setError] = useState('');
   const { aToken } = useContext(AdminContext);
   const [deletingId, setDeletingId] = useState(null);
-  const [updatingId, setUpdatingId] = useState(null);
 
   const fetchDoctors = async () => {
     setLoading(true);
@@ -33,10 +26,9 @@ const DoctorsList = () => {
   };
 
   useEffect(() => {
+    if (!aToken) return;
+
     fetchDoctors();
-    // Auto-refresh every 5 seconds to show doctor list updates
-    const interval = setInterval(fetchDoctors, 5000);
-    return () => clearInterval(interval);
     // eslint-disable-next-line
   }, [aToken]);
 
@@ -52,20 +44,6 @@ const DoctorsList = () => {
       setError(err.response?.data?.message || 'Failed to delete doctor');
     } finally {
       setDeletingId(null);
-    }
-  };
-
-  const handleStatus = async (id, status) => {
-    setUpdatingId(id + status);
-    try {
-      await axios.post('https://medimind-backend.vercel.app/api/admin/update-doctor-status', { doctorId: id, status }, {
-        headers: { Authorization: `Bearer ${aToken}` },
-      });
-      await fetchDoctors();
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to update status');
-    } finally {
-      setUpdatingId(null);
     }
   };
 

@@ -9,7 +9,6 @@ const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 const Dashboard = () => {
   const { aToken } = useContext(AdminContext);
   const [stats, setStats] = useState({ doctors: 0, patients: 0, appointments: 0, earnings: 0 });
-  const [recent, setRecent] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -33,22 +32,9 @@ const Dashboard = () => {
         setLoading(false);
       }
     };
-    const fetchRecent = async () => {
-      try {
-        const { data } = await axios.get(`${backendUrl}/api/admin/recent-appointments`, {
-          headers: { Authorization: `Bearer ${aToken}` },
-        });
-        setRecent(data.data || []);
-      } catch {}
-    };
+    if (!aToken) return;
+
     fetchStats();
-    fetchRecent();
-    // Auto-refresh every 5 seconds to show updated stats
-    const interval = setInterval(() => {
-      fetchStats();
-      fetchRecent();
-    }, 5000);
-    return () => clearInterval(interval);
   }, [aToken]);
 
   return (

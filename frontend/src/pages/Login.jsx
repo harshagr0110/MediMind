@@ -77,7 +77,9 @@ const Login = () => {
             try {
               const decoded = jwtDecode(data.token);
               userId = decoded.id;
-            } catch {}
+            } catch (decodeError) {
+              console.error('Token decode failed:', decodeError?.message || decodeError);
+            }
           }
           setUserId(userId);
           localStorage.setItem("token", data.token);
