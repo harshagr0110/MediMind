@@ -51,6 +51,7 @@ const Appointment = () => {
     const [availableSlots, setAvailableSlots] = useState([]);
     const [loading, setLoading] = useState(true);
     const [booking, setBooking] = useState(false);
+    const [doctorNotFound, setDoctorNotFound] = useState(false);
 
     useEffect(() => {
         if (!docId) {
@@ -60,13 +61,20 @@ const Appointment = () => {
 
         const getDoctorDetails = async () => {
             try {
+                setDoctorNotFound(false);
                 const { data } = await axios.get(`${backendurl}/api/doctor/public/${docId}`);
                 if (data.success) {
                     setDoctor(data.data);
                 }
             } catch (error) {
                 console.error("Error fetching doctor details:", error);
-                toast.error("Failed to load doctor details.");
+                if (error?.response?.status === 404) {
+                    setDoctor(null);
+                    setDoctorNotFound(true);
+                    toast.error("This doctor profile no longer exists. Please choose another doctor.");
+                } else {
+                    toast.error("Failed to load doctor details.");
+                }
             } finally {
                 setLoading(false);
             }
@@ -76,7 +84,7 @@ const Appointment = () => {
 
     useEffect(() => {
         const getAvailability = async () => {
-            if (!selectedDate || !docId) return;
+            if (!selectedDate || !docId || doctorNotFound || !doctor?._id) return;
             try {
                 const dateStr = moment(selectedDate).format('YYYY-MM-DD');
                 const { data } = await axios.get(`${backendurl}/api/doctor/availability/${docId}?date=${dateStr}`);
@@ -89,7 +97,7 @@ const Appointment = () => {
             }
         };
         getAvailability();
-    }, [selectedDate, docId, backendurl]);
+    }, [selectedDate, docId, backendurl, doctorNotFound, doctor?._id]);
 
     useEffect(() => {
         // Filter out booked slots and past time slots for today
@@ -172,6 +180,19 @@ const Appointment = () => {
 
     if (!docId) return <div className="text-center p-8 text-red-600 font-bold">Invalid doctor link. No doctor ID provided.</div>;
     if (loading) return <Spinner />;
+    if (doctorNotFound) {
+        return (
+            <div className="text-center p-8">
+                <p className="text-red-600 font-semibold mb-4">Doctor not found. This profile may have been removed.</p>
+                <button
+                    onClick={() => navigate('/doctors')}
+                    className="bg-blue-600 text-white px-5 py-2 rounded-lg font-semibold hover:bg-blue-700"
+                >
+                    Browse Doctors
+                </button>
+            </div>
+        );
+    }
     if (!doctor) return <div className="text-center p-8">Doctor not found.</div>;
 
     const safeDoctor = doctor || {};
